@@ -1,0 +1,4 @@
+2024-09-02 Massimo Manghi <massimo.manghi@gmail.com>
+	* monitor/: initial commit of the Tcl based monitor 
+	server (with related CLI client) and code for the 
+	initial development of a web based user interface
