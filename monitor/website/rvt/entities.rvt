@@ -1,0 +1,19 @@
+<?
+    set form_name [namespace current]::ent_select
+
+    catch {$form_name destroy}
+
+    set form [form [namespace current]::select_ -method   GET \
+                                                -action   [::rivetweb::composeUrl entdisplayent 1] \
+                                                -name     display_entity]
+
+    set eids [lsort -integer [dict keys $entities]]
+    set eids_descr [lmap eid $eids { dict get $entities $eid }]
+
+    $form start
+    $form select eid -values $eids -labels $eids_descr
+    $form submit listeids -label Show -value listentrecs
+    $form end
+    $form destroy
+
+?>

@@ -1,0 +1,27 @@
+namespace eval ::ngis {
+
+    variable HOST               "snig.naturalgis.pt"
+    variable USERNAME           "dgt"
+    variable PASSWORD           "W8a1kCUOx0mupUAF"
+    variable DB_NAME            "snig"
+    variable TABLE_NAME         "testsuite.uris_long"
+    variable PORT               "5432"
+    variable COLUMN_NAMES       "gid,uri,record_entity,record_description"
+
+    variable SERVICE_STATUS     "testsuite.service_status"
+
+    variable max_workers_number 10
+
+    variable tpool_min_workers  10
+    variable tpool_max_workers  20
+    variable unix_socket_name   /tmp/ngis.socket
+    variable end_of_answer      "----"
+    variable rescheduling_delay 100
+    variable curldir            "" 
+
+    variable tcpaddr            127.0.0.1
+    variable tcpport            4422
+
+}
+
+package provide ngis::conf 1.1
