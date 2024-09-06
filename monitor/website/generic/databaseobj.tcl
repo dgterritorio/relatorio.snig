@@ -173,7 +173,6 @@ package require DIO
 
 }
 
-
 # -- notnull 
 #
 #   Query a column to establish if it's not_null

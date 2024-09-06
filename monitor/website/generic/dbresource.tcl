@@ -7,14 +7,17 @@
 package require Itcl
 package require ngis::logger
 package require ngis::configuration
-package require ngis::confgenerator
 package require safelock
 package require DIO
 package require uri
 
 namespace eval ::ngis {
 
-   ::itcl::class DBResource {
+   ::itcl::class Resource {
+
+        private common dbobj_cnts
+
+        array set dbobj_cnts {}
 
         private variable fields
         private variable resource_table
@@ -87,6 +90,20 @@ namespace eval ::ngis {
             } else {
                 return 0
             }
+        }
+
+        public proc get_dbobj {class_name} {
+
+            set class_name [namespace tail $class_name]
+
+            if {[info exists dbobj_cnts($class_name)]} {
+                set cnt [incr dbobj_cnts($class_name)]
+            } else {
+                set cnt 0
+                set dbobj_cnts($class_name) $cnt
+            }
+
+            return "::ngis::[string tolower $class_name]${cnt}"
         }
 
         public method build_where_clause {key} {
@@ -374,5 +391,22 @@ namespace eval ::ngis {
         } 
         return ""
     }
+
+    ::itcl::class Entity {
+        inherit Resource
+
+        constructor {table_name} \
+                    {Resource::constructor $table_name {eid description}} {
+
+        }
+
+        public proc mkobj {} {
+            ::ngis::conf readconf entities_table
+
+            return [::ngis::Entity [::ngis::Resource::get_dbobj "Entity"] $entities_table]
+        }
+
+    }
+
 }
 package provide ngis::dbresource 1.0
