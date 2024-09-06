@@ -12,7 +12,11 @@
 
     $form start
     $form select eid -values $eids -labels $eids_descr
-    $form submit listeids -label Show -value listentrecs
+
+    ?>
+    <button type="submit" value="showrecs" name="entity">Display</button>
+    <?
+    #$form button listeids -label Show -value listentrecs -type submit
     $form end
     $form destroy
 

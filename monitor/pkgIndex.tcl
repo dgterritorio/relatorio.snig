@@ -1,7 +1,7 @@
 
 package ifneeded ngis::procedures       0.1 [list source [file join $dir tcl procedures.tcl]]
 package ifneeded ngis::msglogger        0.1 [list source [file join $dir tcl ngis_msglogger.tcl]]
-package ifneeded ngis::clientmsg        1.0 [list source [file join $dir tcloo client_messages.tcl]]
+package ifneeded ngis::protocol         1.1 [list source [file join $dir tcloo protocol.tcl]]
 package ifneeded termio                 1.1 [list source [file join $dir tcl termio.tcl]]
 package ifneeded ngis::conf             1.1 [list source [file join $dir ngis_monitor_conf.tcl]]
 package ifneeded ngis::job              1.0 [list source [file join $dir tcloo job.tcl]]
@@ -13,7 +13,3 @@ package ifneeded ngis::jobcontroller    1.0 [list source [file join $dir tcloo j
 package ifneeded ngis::server           1.0 [list source [file join $dir tcloo server.tcl]]
 package ifneeded ngis::client           1.0 [list source [file join $dir tcloo client.tcl]]
 package ifneeded ngis::threads          1.0 [list source [file join $dir tcloo thread_master.tcl]]
-
-if {$::ngis::curldir != ""} {
-    package ifneeded TclCurl 7.22.1 [list load [file join $::ngis::curldir libTclCurl7.22.1.so]]
-}

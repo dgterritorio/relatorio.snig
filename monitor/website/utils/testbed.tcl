@@ -1,11 +1,16 @@
 set auto_path [concat "/home/manghi/apache2/lib/rivet3" $auto_path]
+set dot [lsearch "." $auto_path]
+if {$dot < 0} {
+    set auto_path [concat "." $auto_path]
+} elseif {$dot > 0} {
+    set auto_path [concat "." [lreplace $auto_path $dot $dot]]
+}
 
+package require ngis::configuration
 package require DIO 1.2
 package require dio_Tdbc 0.2
 
-package require ngis::conf::generator
 ::ngis::conf init
-package require ngis::configuration
 
 source "/home/manghi/apache2/lib/rivet3/rivet-tcl/lempty.tcl"
 

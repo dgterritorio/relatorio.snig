@@ -78,7 +78,6 @@ namespace eval ::ngis::procedures {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
         } e einfo]} {
             ::ngis::logger emit "error: $e $einfo"
-            #return [list $jobname error $e $einfo ""]
             return [::ngis::tasks::make_error_result $jobname $e $einfo ""]
         }
         ::ngis::logger emit "got [string length $script_results] characters"
@@ -116,20 +115,6 @@ namespace eval ::ngis::procedures {
         }
         $curl cleanup
         return $status
-
-        #set tk      [::http::geturl $url -timeout 5000 -validate true]
-        #set state [::http::status $tk]
-        #if {$state == "ok"} {
-        #    set http_code   [::http::ncode $tk]
-        #    if {$http_code == 200} {
-        #        return [list [$job_o jobname] ok "" "" ""]
-        #    } else {
-        #        return [list [$job_o jobname] error "http_error" "" "http_code = $http_code"]
-        #    }
-        #} elseif {$state == "timeout"} {
-        #    return [list [$job_o jobname] error "timeout_error" "" "5 secs timeout"]
-        #}
-
     }
 
     proc data_congruence {job_o f} {

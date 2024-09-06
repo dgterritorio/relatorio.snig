@@ -313,7 +313,7 @@ namespace eval ::ngis::conf {
             ngis::log "rigenerazione della configurazione" notice
             sections_database
             generate    $currentdefs
-            #generate_sh $currentdefs_sh
+            generate_sh $currentdefs_sh
         }
     }
     namespace export init

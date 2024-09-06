@@ -13,6 +13,9 @@ A collection of scripts to harvest and (health) check the services published at 
 * xmllint
 * parallel
 * postgresql
+* Tcl
+* libapache2-mod-rivet (enable either mpm prefork or worker)
+* apache2
 
 ## System setup:
 

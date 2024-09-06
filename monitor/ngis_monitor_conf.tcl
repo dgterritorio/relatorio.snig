@@ -5,6 +5,7 @@ namespace eval ::ngis {
     variable PASSWORD           "W8a1kCUOx0mupUAF"
     variable DB_NAME            "snig"
     variable TABLE_NAME         "testsuite.uris_long"
+    variable ENTITY_TABLE_NAME  "testsuite.entities"
     variable PORT               "5432"
     variable COLUMN_NAMES       "gid,uri,record_entity,record_description"
 

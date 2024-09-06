@@ -1,11 +1,11 @@
 package require TclOO
 package require yajltcl
 
-catch { ::ngis::ClientMessages destroy }
+catch { ::ngis::Protocol destroy }
 
-oo::class create ngis::ClientMessages
+oo::class create ngis::Protocol
 
-oo::define ngis::ClientMessages {
+oo::define ngis::Protocol {
     variable formatter
     variable CodeMessages
     variable json_o
@@ -28,7 +28,7 @@ oo::define ngis::ClientMessages {
                                       102     "Stopping operations"       \
                                       104     "current format %s"         \
                                       103     "Monitor is running"        \
-                                      105     "Monitor Inconsistent status" \
+                                      105     "Monitor Inconsistent Status" \
                                       106     "%d running jobs\n%s" \
                                       501     "Server internal error: %s"]
 
@@ -227,10 +227,115 @@ oo::define ngis::ClientMessages {
     method compose {code args} { 
         return [eval my $formatter $code $args]
     }
+
+    method parse_cmd {args} {
+
+        set msg [string trim $args]
+        puts "msg >$msg ([llength $msg])<"
+        if {[regexp -nocase {^(\w+)\s*.*$} $msg m cmd] == 0} {
+            return "001: unrecognized command '$msg'"
+        } else {
+            set arguments  [lrange $msg 1 end]
+            set narguments [llength $arguments]
+            #puts "arguments: '$arguments' ($narguments)"
+            switch [string toupper $cmd] {
+                CHECK {
+                    if {$narguments < 1} {
+                        return [my compose 003 $arguments]
+						break
+                    }
+
+                    if {[catch {
+	                    set service_check [lindex $arguments 0]
+                        set job_controller [$::ngis_server get_job_controller]
+						if {[string is integer $service_check]} {
+							set service_d [::ngis::service load_by_gid $service_check]
+							if {$service_d == ""} {
+								return [my compose 005 $service_check]
+							} else {
+                                if {[dict exists $service_d record_description]} {
+                                    set description [dict get $service_d record_description]
+                                } elseif {[dict exists $service_d record_entity]} {
+                                    set description [dict get $service_d record_entity]
+                                } else {
+                                    set description "Unnamed record (gid=$service_check)"
+                                }
+
+								$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
+									[::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
+
+								return [my compose 002]
+							}
+						} else {
+							set entity $service_check
+                            set limit 0
+							::ngis::logger emit "CHECK arguments $arguments"
+                            if {$narguments == 2} { 
+                                set limit [lindex $arguments 1] 
+                                if {!([string is integer $limit] && ($limit > 0))} {
+                                    return [my compose 011]
+                                    break
+                                }
+                            }
+							set resultset [::ngis::service load_by_entity $entity -limit $limit -resultset]
+
+							$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
+																	[::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
+							return [my compose 002]
+						}
+					} e einfo]} {
+						return [my compose 007 $e $einfo]
+					}
+                }
+                STOP {
+                    [$::ngis_server get_job_controller] stop_operations
+                    return [my compose 102]
+                }
+                QUERY {
+                    if {$narguments == 0} {
+						set jc_status [[$::ngis_server get_job_controller] status]
+                        return [my compose 106 {*}$jc_status]
+                    } else {
+						return [my compose 009 "[string toupper $cmd] $arguments"]
+					}
+                }
+                FORMAT {
+                    if {$narguments == 0} {
+                        return [my compose 104 [my format]]
+                    } elseif {$narguments == 1} {
+                        set fmt [lindex $arguments 0]
+                        switch -nocase $fmt {
+                            RAW -
+                            JSON -
+                            HR {
+                                my set_format [string toupper $fmt]
+                                return [my compose 104 [my format]]
+                            }
+                            default {
+                                return [my compose 001 $msg]
+                            }
+                        }
+                    } else {
+                        return [my compose 003 $arguments]
+                    }
+                }
+                SET {
+
+                }
+                EXIT {
+                    $::ngis_server shutdown
+                    return [my compose 000]
+                }
+                default {
+                    return [my compose 001 $msg]
+                }
+            }
+        }
+    }
 }
 
-namespace eval ::ngis::ClientMessages {
-    proc mkretcodes {} { return [::ngis::ClientMessages new] }
+namespace eval ::ngis::Protocol {
+    proc mkprotocol {} { return [::ngis::Protocol new] }
 }
 
-package provide ngis::clientmsg 1.0
+package provide ngis::protocol 1.1

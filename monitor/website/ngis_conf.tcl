@@ -2,7 +2,7 @@
 # -- ./ngis_conf.tcl
 #
 #
-# Configuration file regenerated 02-09-2024 11:57:10 
+# Configuration file regenerated 05-09-2024 16:27:31 
 #
 
 package require ngis::conf::generator

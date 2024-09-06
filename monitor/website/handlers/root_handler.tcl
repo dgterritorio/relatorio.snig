@@ -45,7 +45,7 @@ namespace eval ::rwdatas {
         inherit NGIS
 
         public method init {args} {
-            $this key_class_map snig_homepage ::rwpage::SnigHome tcl/snig.tcl
+            $this key_class_map snig_homepage ::rwpage::SnigHome   tcl/snig.tcl
             $this key_class_map snig_entity   ::rwpage::SnigEntity tcl/snigentity.tcl
         }
 
@@ -55,14 +55,11 @@ namespace eval ::rwdatas {
             if {$::rivetweb::is_homepage} {
                 set key snig_homepage
                 return -code break -errorcode rw_ok
-            } elseif {[dict exists $arglist listentrecs]} {
-
-                if {[dict exists $arglist eids] && \
-                    [string is integer [dict get $arglist eids]]} {
-                    set key snig_entity
-                    return -code break -errorcode rw_ok
-                }
-
+            } elseif {[dict exists $arglist entity] && \
+                      [dict exists $arglist eid] && \
+                      [string is integer [dict get $arglist eids]]} {
+                set key snig_entity
+                return -code break -errorcode rw_ok
             }
             return -code continue -errorcode rw_continue
         }

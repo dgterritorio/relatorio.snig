@@ -8,10 +8,12 @@ package require tclreadline
 ::oo::class create ::ngis::Client {
     variable n
 	variable cmdcount
+    variable pending_exit
 	
     constructor {} {
         set n 0
         set cmdcount 0
+        set pending_exit false
     }
     
     method parse_cmd_line {cmdline cmd_args_v} {
@@ -31,16 +33,17 @@ package require tclreadline
                 return $cmd
             }
             default {
-                puts "comando '$cmd' non riconosciuto"
+                puts "Unknown Command '$cmd'"
             }
         }
     }
 
 
     method process_server_message {con msg} {
-        #puts "getting '$msg'"
         if {$msg == "----"} {
-            after 10 [namespace code [list my terminal_input $con]]
+            if {[string is false $pending_exit]} {
+                after 10 [namespace code [list my terminal_input $con]]
+            }
         } else {
             puts "[incr n] --> $msg"
         }
@@ -56,6 +59,7 @@ package require tclreadline
         if {[chan eof $con]} { 
             puts "eof detected"
             chan close $con
+            my stop_client
             return
         }
 
@@ -67,6 +71,10 @@ package require tclreadline
     method send_to_server {chanid args} {
         chan puts $chanid [join $args]
         chan flush $chanid
+    }
+
+    method stop_client {} {
+        incr ::client_event_loop_variable
     }
 
     method terminal_input {con} {
@@ -83,7 +91,8 @@ package require tclreadline
                     my send_to_server $con [list CHECK {*}$cmd_args]
                 } else {
                     puts "missing command argument"
-                }   
+                    after 10 [namespace code [list my terminal_input $con]]
+                }
             }
             F {
                 my send_to_server $con [concat FORMAT $cmd_args]
@@ -102,10 +111,14 @@ package require tclreadline
                 }
             }
             SX {
+                set pending_exit true
                 my send_to_server $con EXIT
             }
             X {
-                incr ::client_event_loop_variable
+                my stop_client
+            }
+            default {
+                after 10 [namespace code [list my terminal_input $con]]
             }
         }
     }

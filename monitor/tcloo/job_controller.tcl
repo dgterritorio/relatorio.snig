@@ -49,7 +49,6 @@ namespace eval ::ngis {
 
         method wait_for_operations_shutdown {} {
             if {([incr shutdown_counter -1] == 0) || ([llength $sequence_list] == 0)} {
-                incr ::wait_for_events
                 return
             }
             ::ngis::logger emit "$shutdown_counter: still [llength $sequence_list] sequences running"
@@ -57,7 +56,7 @@ namespace eval ::ngis {
             after 1000 [list [self] wait_for_operations_shutdown]
         }
 
-        method shutdown_server {} {
+        method server_shutdown {} {
             my stop_operations
             set shutdown_counter 11
 
