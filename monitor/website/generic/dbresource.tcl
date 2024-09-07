@@ -408,5 +408,21 @@ namespace eval ::ngis {
 
     }
 
+    ::itcl::class URL {
+        inherit Resource
+
+        constructor {table_name} \
+                    {Resource::constructor $table_name {gid record_uuid record_entity 
+                                                        record_description uri uri_type eid}} {
+            $this set_ascii_key uri
+        }
+
+        public proc mkobj {} {
+            ::ngis::conf readconf uris_table
+
+            return [::ngis::URL [::ngis::Resource::get_dbobj "URL"] $uris_table]
+        }
+    }
+
 }
 package provide ngis::dbresource 1.0

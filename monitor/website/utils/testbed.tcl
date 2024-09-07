@@ -7,8 +7,8 @@ if {$dot < 0} {
 }
 
 package require ngis::configuration
-package require DIO 1.2
-package require dio_Tdbc 0.2
+package require DIO 
+package require dio_Tdbc
 
 ::ngis::conf init
 

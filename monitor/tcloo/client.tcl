@@ -11,9 +11,9 @@ package require tclreadline
     variable pending_exit
 	
     constructor {} {
-        set n 0
-        set cmdcount 0
-        set pending_exit false
+        set n               0
+        set cmdcount        0
+        set pending_exit    false
     }
     
     method parse_cmd_line {cmdline cmd_args_v} {
@@ -56,7 +56,7 @@ package require tclreadline
 
     method socket_readable {con} {
 
-        if {[chan eof $con]} { 
+        if {[chan eof $con]} {
             puts "eof detected"
             chan close $con
             my stop_client
@@ -130,7 +130,16 @@ package require tclreadline
     }
 
     method run {args} {
-        ::tclreadline::readline initialize .ngishistory
+
+        if {[info exists env(HOME)]} {
+            set homedir $env(HOME)
+        } else {
+            set homedir "."
+        }
+
+        set client_history [file join $homedir .ngishistory]
+
+        ::tclreadline::readline initialize $client_history
 
         if {[llength $args] == 2} {
             lassign $args tcpaddr tcpport
@@ -143,8 +152,7 @@ package require tclreadline
 
         vwait ::client_event_loop_variable
 
-        ::tclreadline::readline write .ngishistory
-
+        ::tclreadline::readline write $client_history
         puts "client exits"
     }
 }

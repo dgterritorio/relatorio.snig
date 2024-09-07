@@ -27,10 +27,10 @@ oo::define ngis::Protocol {
                                       100     "Starting server"           \
                                       102     "Stopping operations"       \
                                       104     "current format %s"         \
-                                      103     "Monitor is running"        \
                                       105     "Monitor Inconsistent Status" \
-                                      106     "%d running jobs\n%s" \
-                                      501     "Server internal error: %s"]
+                                      106     "%d running jobs\n%s"         \
+                                      501     "Server internal error: %s"   \
+                                      503     "Missing argument for code %d"]
 
         set formatter HR
         set json_o    ""
@@ -74,7 +74,20 @@ oo::define ngis::Protocol {
         if {$json_o == ""} { set json_o [yajl create [namespace current]::json -beautify 1] }
         $json_o map_open string code string $code
         switch $code {
+            000 {
+                $json_o string message string [format $fstring] 
+            }
+            002 {
+                $json string message string $fstring
+            }
+            102 {
+                $json_o string format string [my format] \
+                        string message string [format $fstring [my format]
+            }
             007 {
+                if {[llength $args] < 2} {
+                    return [my JSON 503 $code]
+                }
                 lassign $args ecode einfo
                 $json_o string error_code string $ecode \
                         string error_info string $einfo \
@@ -82,9 +95,10 @@ oo::define ngis::Protocol {
             }
             009 -
             003 -
+            005 -
             001 {
                 if {[llength $args] < 1} {
-                    return -code error -errorcode missing_argument "missing argument for error code $code"
+                    return [my JSON 503 $code]
                 }
                 lassign $args command_arg
                 set strmsg [format $fstring $command_arg]
