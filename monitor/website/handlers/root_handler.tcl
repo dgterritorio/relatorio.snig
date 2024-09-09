@@ -57,7 +57,7 @@ namespace eval ::rwdatas {
                 return -code break -errorcode rw_ok
             } elseif {[dict exists $arglist entity] && \
                       [dict exists $arglist eid] && \
-                      [string is integer [dict get $arglist eids]]} {
+                      [string is integer [dict get $arglist eid]]} {
                 set key snig_entity
                 return -code break -errorcode rw_ok
             }

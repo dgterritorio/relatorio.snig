@@ -43,6 +43,7 @@ proc do_single_task {job_o task_o} {
     ::ngis::logger emit "task $task_o returns $task_ret_status"
 
     if {$task_ret_status == "ok"} {
+        # continue
     } elseif {$task_ret_status == "warning"} {
         ::ngis::logger emit "task for [$job_o jobname] returned '$task_data'"
     } else {

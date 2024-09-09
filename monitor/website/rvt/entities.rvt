@@ -4,7 +4,7 @@
     catch {$form_name destroy}
 
     set form [form [namespace current]::select_ -method   GET \
-                                                -action   [::rivetweb::composeUrl entdisplayent 1] \
+                                                -action   [::rivetweb::composeUrl] \
                                                 -name     display_entity]
 
     set eids [lsort -integer [dict keys $entities]]
@@ -14,9 +14,9 @@
     $form select eid -values $eids -labels $eids_descr
 
     ?>
+    <hr />
     <button type="submit" value="showrecs" name="entity">Display</button>
     <?
-    #$form button listeids -label Show -value listentrecs -type submit
     $form end
     $form destroy
 

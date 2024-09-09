@@ -87,7 +87,7 @@ package require ngis::sequence
 
             set protocol [my get_protocol $con]
 
-            if {[catch { set ret2client [$protocol parse_cmd $msg] } e einfo]} {
+            if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
                 my send_to_client $con [$protocol compose 501 $e $einfo]
             } else {
                 my send_to_client $con $ret2client
@@ -101,7 +101,6 @@ package require ngis::sequence
             ::ngis::logger emit "empty line on read, ignoring"
             catch {my send_to_client $con "empty line on read, ignoring"}
         }
-
     }
 
     method get_job_controller {} { return $job_controller }
@@ -127,9 +126,10 @@ package require ngis::sequence
         set listen [unix_sockets::listen $::ngis::unix_socket_name [namespace code [list my accept]]]
         ::ngis::logger emit "server listening on socket '$listen'"
 
-        set tcp_channel [socket -server [namespace code [list my accept_tcp_connection]] 4422]
-        ::ngis::logger emit "server listening on tcp socket '$tcp_channel'"
-
+        if {$::ngis::tcpaddr != ""} {
+            set tcp_channel [socket -myaddr $::ngis::tcpaddr -server [namespace code [list my accept_tcp_connection]] 4422]
+            ::ngis::logger emit "server listening on tcp socket '$tcp_channel'"
+        }
         # the job_controller_object has a global accessible and defined name
 
         set job_controller [::ngis::JobController create ::the_job_controller $max_workers]
@@ -139,7 +139,7 @@ package require ngis::sequence
         ::ngis::logger emit "monitor server shuts down"
 
         chan close $listen
-        chan close $tcp_channel
+        if {[info exists tcl_channel]} { chan close $tcp_channel }
     }
 
 }
