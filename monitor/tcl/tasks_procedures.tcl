@@ -31,6 +31,9 @@ proc job_completed {job_o} {
     $job_o destroy
 }
 
+proc task_completed {task_o} {
+}
+
 proc do_single_task {job_o task_o} {
     if {($task_o == "DONE") || [string is true $::stop_signal]} {
         job_completed $job_o
@@ -42,15 +45,22 @@ proc do_single_task {job_o task_o} {
     lassign $task_status task_name task_ret_status e einfo task_data
     ::ngis::logger emit "task $task_o returns $task_ret_status"
 
+    set task_fatal false
     if {$task_ret_status == "ok"} {
         # continue
     } elseif {$task_ret_status == "warning"} {
         ::ngis::logger emit "task for [$job_o jobname] returned '$task_data'"
     } else {
+        # error: the task sequence is interruped
+        set task_fatal true
+    }
+
+    task_completed $task_o
+
+    if {$task_fatal} {
         job_completed $job_o
         return
     }
-
     set task_o [$task_o next]
     after 10 [list do_single_task $job_o $task_o]
 }

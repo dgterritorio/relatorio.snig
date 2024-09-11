@@ -65,7 +65,7 @@ namespace eval ::ngis::tasks {
         ::ngis::logger emit "running procedure '$procedure' (function '$function') for job [$job_o jobname]"
 
         if {[catch {set status [::ngis::procedures::${procedure} $job_o $function]} e einfo]} {
-            set status [::ngis::tasks make_error_result [$job_o jobname] error $e [dict get $einfo -errorcode] ""]
+            set status [::ngis::tasks::make_error_result [$job_o jobname] $e [dict get $einfo -errorcode] ""]
         }
         return $status
     }
@@ -84,6 +84,7 @@ namespace eval ::ngis::tasks {
         }
         return -code 1 -errorcode invalid_task
     }
+
 }
 
 package provide ngis::task 0.1

@@ -75,8 +75,8 @@ namespace eval ::ngis {
             my RescheduleRoundRobin
         }
 
-        method post_task_results {tasks_results} {
-            $task_results_queue put $tasks_results
+        method post_task_results {task_results} {
+            $task_results_queue put $task_results
             if {([$task_results_queue size] >= 10) && \
                 ($task_results_chore == "")} {
                 after 100 [list $::ngis_server sync_results $task_results_queue] 

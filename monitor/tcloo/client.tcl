@@ -131,13 +131,15 @@ package require tclreadline
 
     method run {args} {
 
-        if {[info exists env(HOME)]} {
-            set homedir $env(HOME)
+        if {[info exists ::env(HOME)]} {
+            set homedir $::env(HOME)
         } else {
             set homedir "."
         }
 
         set client_history [file join $homedir .ngishistory]
+
+        puts "history file: $client_history"
 
         ::tclreadline::readline initialize $client_history
 

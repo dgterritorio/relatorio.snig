@@ -63,8 +63,7 @@ catch {::ngis::ThreadMaster destroy }
             my move_to_running $thread_id
         }
 
-        ::ngis::logger emit \
-            "[array size running_threads] running, [$idle_thread_queue size] idle threads"
+        ::ngis::logger emit "[array size running_threads] running, [$idle_thread_queue size] idle threads"
         return $thread_id
     }
 
