@@ -124,9 +124,9 @@ oo::define ngis::Protocol {
                         $json_o map_open string $sclass integer [llength [set $sclass]]
                         $json_o array_open
                         foreach s [set $sclass] {
-                            $json_o map_open string "object"      string      $s \
-                                             string "description" string     [$s description] \
-                                             string "active_jobs" integer    [$s active_jobs] \
+                            $json_o map_open string "object"         string   $s \
+                                             string "description"    string  [$s description] \
+                                             string "active_jobs"    integer [$s active_jobs] \
                                              string "completed_jobs" integer [$s completed_jobs] \
                                     map_close     
                         }
@@ -204,7 +204,7 @@ oo::define ngis::Protocol {
             003 -
             001 {
                 if {[llength $args] < 1} {
-                    return -code error -errorcode missing_argument "missing argument for error code $code"
+                    return [my JSON 503 $code]
                 }
                 lassign $args command_arg
                 set strmsg [format $fstring $command_arg]
@@ -221,7 +221,7 @@ oo::define ngis::Protocol {
 				set seql [lindex $args 0]
                 set pending [lindex $args 2]
                 if {[llength $seql] == 0} {
-                    set strmsg  "no running sequences ([llength $pending] pending)"
+                    set strmsg  "no running sequences ([llength $pending] pending sequences)"
                 } else {
                     set strmsg "[lindex $args 1] running jobs\n[llength $pending] pending sequences"
                     set seqs_l [lmap s $seql { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs] }]
@@ -294,7 +294,7 @@ oo::define ngis::Protocol {
 							set resultset [::ngis::service load_by_entity $entity -limit $limit -resultset]
 
 							$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-																	[::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
+														  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
 							return [my compose 002]
 						}
 					} e einfo]} {

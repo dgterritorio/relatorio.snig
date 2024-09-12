@@ -31,8 +31,7 @@ proc job_completed {job_o} {
     $job_o destroy
 }
 
-proc task_completed {task_o} {
-}
+proc task_completed {task_o} { }
 
 proc do_single_task {job_o task_o} {
     if {($task_o == "DONE") || [string is true $::stop_signal]} {
