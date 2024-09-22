@@ -1,3 +1,6 @@
+2024-09-22 Giovanni Manghi <giovanni.manghi@naturalgis.pt>
+	* initial commits of standalone scripts
+
 2024-09-06 Massimo Manghi <massimo.manghi@gmail.com>
 	* website/generic/dbresource.tcl: add class ::ngis::Entity
 
