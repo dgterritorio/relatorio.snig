@@ -35,16 +35,15 @@ namespace eval ::ngis::service {
         return [$sql_st execute]
     }
 
-    proc update_task_results {task_results_d} {
-        set tasks [dict get $task_results_d tasks]
-        set gid   [dict get $task_results_d gid]
-
+    proc update_task_results {tasks_list} {
         set values_l {}
-        foreach t $tasks {
+        foreach t $tasks_list {
+
+            set gid    [dict get $t job gid]
             set task   [dict get $t task]
             set status [dict get $t status]
             if {$status == ""} { break }
-            lassign $status jobname exit_status exit_info exit_trace exit_info timestamp
+            lassign $status exit_status exit_info exit_trace exit_info timestamp
             lappend values_l "($gid,to_timestamp($timestamp),'$task','$exit_status','$exit_info')"
         }
         set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info) "

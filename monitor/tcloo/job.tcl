@@ -7,37 +7,76 @@
 package require TclOO
 package require ngis::task
 package require Thread
-
-catch { ::oo::class destroy ::ngis::Job }
+package require struct::queue
 
 ::oo::class create ::ngis::Job
 
 ::oo::define ::ngis::Job {
+    variable sequence
     variable service_d
-    variable tasks
+    variable tasks_q
+    variable tasks_l
+    variable scheduled_tasks
     variable jobname
-    variable http_data
 
-    constructor {service_d_} {
-        set tasks       {}
-        set service_d [dict filter $service_d_ key gid record_uuid record_entity record_description uri uri_type]
-        set http_data   ""
-        if {[dict exists $service_d_ jobname]} {
-           set jobname [dict get $service_d_ jobname]
-        } else {
-           set jobname [self]
-        }
-    }
-
-    method clear_tasks {} {
-        foreach t $tasks { $t destroy }
-        set tasks {}
+    constructor {service_d_ tasks} {
+        set sequence    ""
+        set tasks_l     $tasks
+        set tasks_q     [::struct::queue] 
+        set service_d   [dict filter $service_d_ key gid record_uuid record_entity record_description uri uri_type jobname]
+        if {[dict exists $service_d jobname] == 0} { set jobname [self] }
     }
 
     destructor {
-        my clear_tasks
     }
  
+    method task_queue {} { return $tasks_q }
+
+    method set_sequence {its_sequence} { set sequence $its_sequence }
+
+    method initialize {} {
+        if {[$tasks_q size] > 0} {
+            $tasks_q clear
+        }
+
+        set scheduled_tasks $tasks_l
+        $tasks_q put {*}[lmap t $scheduled_tasks { ::ngis::tasks mktask $t [self] }]
+    }
+
+    method post_task {thread_id} {
+        if {[catch { set task_d [$tasks_q get] } e einfo]} {
+            return false
+        }
+
+        ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+
+        thread::send -async $thread_id [list do_task $task_d [thread::id]]
+
+        return true
+    }
+
+    method task_completed {thread_id task_d} {
+        dict with task_d {
+            ::ngis::logger emit "task $task for job [self] ends with status '$status'"
+
+            set task_idx [lsearch $scheduled_tasks $task]
+            if {$task_idx < 0} {
+                ::ngis::logger emit "\[ERROR\] task $task not found in job data."
+            } else {
+                set scheduled_tasks [lreplace $scheduled_tasks $task_idx $task_idx]
+                if {[llength $scheduled_tasks] == 0} {
+                    $sequence job_completed [self]
+                }
+            }
+                
+        }
+        ::the_job_controller move_thread_to_idle $thread_id
+
+        # this call is supposed to reschedule the job sequence round robin
+
+        ::the_job_controller post_task_results $task_d
+    }
+
     method serialize {} {
         return [my WholeObj]
     }
@@ -49,34 +88,12 @@ catch { ::oo::class destroy ::ngis::Job }
         } else {
             set jobname [self]
         }
-        set http_data ""
-        if {[dict exists $d http_data]} {
-            set http_data [dict get $d http_data]
-        }
         set tasks {}
-        if {[dict exists $d tasks]} {
-            foreach t [dict get $d tasks] {
-                lappend tasks [::ngis::tasks::mktask [dict get $t task]] 
-            }
-            set prev ""
-            foreach t $tasks {
-                if {$prev == ""} {
-                    set prev $t
-                    continue
-                } else {
-                    $t set_previous $prev
-                    $prev set_next $t
-                    set prev $t
-                }
-            }
-        }
+        if {[dict exists $d tasks]} { set tasks [dict get $d tasks] }
     }
 
     method WholeObj {} {
-        set task_l [lmap t $tasks { $t serialize }]
-
-        return [dict merge $service_d [dict create  tasks     $task_l  \
-                                                    http_data $http_data \
+        return [dict merge $service_d [dict create  tasks     $tasks_l \
                                                     jobname   $jobname]]
     }
 
@@ -119,14 +136,7 @@ catch { ::oo::class destroy ::ngis::Job }
         }
     }
 
-
     method set_jobname {n} { if {[string length $n] > 0} {set jobname $n} }
-
-    method append_http_data {d} {
-        append http_data $d
-    }
-
-    method get_http_data {} { return $http_data }
 
     method unknown {method_s args} {
         error "method '$method_s' not found"
@@ -138,22 +148,12 @@ catch { ::oo::class destroy ::ngis::Job }
 
     method seq_begin {seq_l} {
         my clear_tasks
-        set sequence $seq_l
 
-        set tasks [lmap t $seq_l { ::ngis::tasks::mktask $t }]
-        set prev ""
-        foreach t $tasks {
-            if {$prev == ""} {
-                set prev $t
-                continue
-            } else {
-                $t set_previous $prev
-                $prev set_next $t
-                set prev $t
-            }
-        }
+        set url [my url]
+
+        set tasks [lmap t $seq_l { ::ngis::tasks::mktask $t [self] }]
         return [lindex $tasks 0]
     }
 }
 
-package provide ngis::job 1.0
+package provide ngis::job 1.1

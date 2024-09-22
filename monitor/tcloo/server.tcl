@@ -61,7 +61,7 @@ package require ngis::sequence
         ::ngis::logger emit "syncing [$result_queue size] results"
         
         while {[$result_queue size] > 0} {
-            ::ngis::service::update_task_results [$result_queue get]
+            ::ngis::service::update_task_results [$result_queue get [$result_queue size]]
         }
     }
 
