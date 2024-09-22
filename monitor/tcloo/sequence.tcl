@@ -84,7 +84,7 @@ catch { ::ngis::JobSequence destroy }
             if {$new_job == ""} {
 
                 ::ngis::logger emit "no more jobs to send, [my running_jobs_count] still running"
-                MarkForTermination
+                my MarkForTermination
                 return false
 
             } else {
@@ -133,7 +133,7 @@ catch { ::ngis::JobSequence destroy }
 
             set gid [dict get $res_d gid]
 
-            set job_o [::ngis::Job create [self object]::job${gid} [self] $res_d $::ngis::tasks::tasks]
+            set job_o [::ngis::Job create [self object]::job${gid} $res_d $::ngis::tasks::tasks]
             #set job_o [::ngis::Job create [self object]::job${gid} $res_d [lrange $::ngis::tasks::tasks 0 1]]
             $job_o initialize
 

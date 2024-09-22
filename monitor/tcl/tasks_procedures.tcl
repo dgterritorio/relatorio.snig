@@ -46,7 +46,7 @@ proc do_task {task_d job_thread_id} {
         ::ngis::logger emit "task $task complete, putting it on a hold"
     }
 
-    after [expr 1000*60/2]
+    #after [expr 1000*60/2]
 
     set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list $job_o task_completed [thread::id] $task_d]
