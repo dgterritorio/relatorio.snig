@@ -20,8 +20,7 @@ set ::stop_signal false
 proc stop_thread {} { set ::stop_signal true }
 
 # we assume task_d is a well formed dictionary of data describing the task    
-# as it's supposed to be created in ::ngis::tasks::mktask
-#
+# as be created by calling ::ngis::tasks::mktask
 
 proc mockup_processing {task_d job_thread_id} {
 

@@ -9,6 +9,8 @@ oo::define ngis::Protocol {
     variable formatter
     variable CodeMessages
     variable json_o
+    variable ds_nseq
+    variable nseq
 
     constructor {} {
 
@@ -34,6 +36,8 @@ oo::define ngis::Protocol {
 
         set formatter HR
         set json_o    ""
+        set nseq    -1
+        set ds_nseq -1
     }
 
     destructor {
