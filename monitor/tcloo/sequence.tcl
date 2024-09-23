@@ -52,6 +52,7 @@ catch { ::ngis::JobSequence destroy }
             }
             set running_jobs [lreplace $running_jobs $j $j]
         }
+        $job_o destroy
     }
 
     method running_jobs_count {} {

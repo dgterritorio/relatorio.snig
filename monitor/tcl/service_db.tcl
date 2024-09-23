@@ -38,7 +38,6 @@ namespace eval ::ngis::service {
     proc update_task_results {tasks_list} {
         set values_l {}
         foreach t $tasks_list {
-
             set gid    [dict get $t job gid]
             set task   [dict get $t task]
             set status [dict get $t status]

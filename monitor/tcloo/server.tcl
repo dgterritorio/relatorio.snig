@@ -8,6 +8,7 @@
 package require TclOO
 package require Thread
 package require unix_sockets
+package require struct::queue
 package require ngis::msglogger
 package require json
 package require ngis::protocol
@@ -59,9 +60,25 @@ package require ngis::sequence
     method sync_results {result_queue} {
         if {[$result_queue size] == 0} { return }
         ::ngis::logger emit "syncing [$result_queue size] results"
-        
-        while {[$result_queue size] > 0} {
-            ::ngis::service::update_task_results [$result_queue get [$result_queue size]]
+        if {[$result_queue size] > 0} {
+
+            # hideous behavior of struct::queue. If it's returning
+            # one element, but it's a list, it becomes a list of elements
+            # It's documented, but still a despicable way Tcl works
+
+            if {[$result_queue size] == 1} {
+                set results_l [list [$result_queue get]]
+            } else {
+                set results_l [$result_queue get [$result_queue size]]
+            }
+
+            if {[catch {
+                ::ngis::service::update_task_results $results_l
+            } e einfo]} {
+                ::ngis::logger emit "error syncing results: $e"
+                ::ngis::logger emit "===== error_info ====="
+                foreach l [split $einfo "\n"] { ::ngis::logger emit $l }
+            }
         }
     }
 

@@ -57,7 +57,7 @@ package require struct::queue
 
     method task_completed {thread_id task_d} {
         dict with task_d {
-            ::ngis::logger emit "task $task for job [self] ends with status '$status'"
+            ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status'"
 
             set task_idx [lsearch $scheduled_tasks $task]
             if {$task_idx < 0} {

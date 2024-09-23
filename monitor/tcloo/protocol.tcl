@@ -278,7 +278,7 @@ oo::define ngis::Protocol {
 								$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
 									[::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
 
-								return [my compose 002]
+								set client_message [my compose 002]
 							}
 						} else {
 							set entity $service_check
@@ -295,11 +295,12 @@ oo::define ngis::Protocol {
 
 							$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
 														  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
-							return [my compose 002]
+							set client_message [my compose 002]
 						}
 					} e einfo]} {
-						return [my compose 007 $e $einfo]
+						return -code ok [my compose 007 $e $einfo]
 					}
+                    return $client_message
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
