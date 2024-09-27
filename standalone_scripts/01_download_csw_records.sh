@@ -10,7 +10,7 @@ do
 
     echo "Processing $step records starting at $i"
 
-    cp download_csw_records_payload_template.txt download_csw_records_payload.txt
+    cp 01_download_csw_records_payload_template.txt download_csw_records_payload.txt
     sed -i 's/XXX/'$i'/' download_csw_records_payload.txt
     sed -i 's/YYY/'$step'/' download_csw_records_payload.txt
 
