@@ -27,9 +27,21 @@ namespace eval ::rwpage {
             set eid [dict get $argsqs eid]
 
             ::ngis::conf readconf uris_table
+            set entity_recs {}
 
-            [$this get_dbhandle] forall "SELECT * from $uris_table where eid=$eid" r {
-                dict set entity_recs $r(gid) [dict create {*}[array get r]]
+            if {[dict exists $argsqs sort]} {
+                switch [dict get $argsqs sort] {
+                    gid {
+                        set sql "SELECT * from $uris_table where eid=$eid order by gid"
+                    }
+                    description -
+                    default {
+                        set sql "SELECT * from $uris_table where eid=$eid order by record_description"
+                    }
+                }
+            }
+            [$this get_dbhandle] forall $sql r {
+                lappend entity_recs [array get r]
             }
             set entity_o [::ngis::Entity::mkobj]
             set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
@@ -41,9 +53,7 @@ namespace eval ::rwpage {
 
         public method print_content {language args} {
             set rows_l {}
-            foreach gid [lsort -integer [dict keys $entity_recs]] {
-                set entity [dict get $entity_recs $gid]
-
+            foreach entity $entity_recs {
                 dict with entity {
 
                     set uri_d [dict create {*}[uri::split $uri]]
@@ -55,11 +65,11 @@ namespace eval ::rwpage {
 
                     lappend rows_l [::rivet::xml [join [list [::rivet::xml $gid td] \
                                                              [::rivet::xml $record_description td] \
-                                                             [::rivet::xml $host td]] ""] tr]
+                                                             [::rivet::xml $host td [list a href $uri]]] ""] tr]
                 }
 
-                puts [::rivet::xml [join $rows_l "\n"] [list table class table]]
             }
+            puts [::rivet::xml "<tr><th>gid</th><th>Description</th><th>Host</th></tr>[join $rows_l \n]" [list table class table]]
         }
     }
 

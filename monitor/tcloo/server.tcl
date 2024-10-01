@@ -53,7 +53,7 @@ package require ngis::sequence
 
     method send_to_client {con msg} {
         chan puts $con $msg
-        chan puts $con $::ngis::end_of_answer
+        #chan puts $con $::ngis::end_of_answer
         chan flush $con
     }
 
@@ -116,7 +116,7 @@ package require ngis::sequence
             # but no data were in the socket buffer
 
             ::ngis::logger emit "empty line on read, ignoring"
-            catch {my send_to_client $con "empty line on read, ignoring"}
+            #catch {my send_to_client $con "empty line on read, ignoring"}
         }
     }
 

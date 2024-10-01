@@ -68,13 +68,16 @@ package require struct::queue
                     $sequence job_completed [self]
                 }
             }
-                
+
         }
-        ::the_job_controller move_thread_to_idle $thread_id
+
+        set job_controller [$::ngis_server get_job_controller]
+
+        $job_controller move_thread_to_idle $thread_id
 
         # this call is supposed to reschedule the job sequence round robin
 
-        ::the_job_controller post_task_results $task_d
+        $job_controller post_task_results $task_d
     }
 
     method serialize {} {

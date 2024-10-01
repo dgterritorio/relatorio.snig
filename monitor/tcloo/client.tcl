@@ -9,11 +9,13 @@ package require tclreadline
     variable n
 	variable cmdcount
     variable pending_exit
-	
+	variable scheduled_input
+
     constructor {} {
         set n               0
         set cmdcount        0
         set pending_exit    false
+        set scheduled_input ""
     }
     
     method parse_cmd_line {cmdline cmd_args_v} {
@@ -38,15 +40,19 @@ package require tclreadline
         }
     }
 
-
     method process_server_message {con msg} {
-        if {$msg == "----"} {
-            if {[string is false $pending_exit]} {
-                after 10 [namespace code [list my terminal_input $con]]
-            }
-        } else {
-            puts "[incr n] --> $msg"
+        #if {$msg == "----"} {
+        #    if {[string is false $pending_exit]} {
+        #    }
+        #} else {
+        #    puts "[incr n] --> $msg"
+        #}
+
+        if {$scheduled_input != ""} {
+            after cancel $scheduled_input
         }
+        set scheduled_input [after 500 [namespace code [list my terminal_input $con]]]
+        puts "[incr n] --> $msg"
     }
 
     # actual asynchronous data reader.
@@ -78,6 +84,7 @@ package require tclreadline
     }
 
     method terminal_input {con} {
+        set scheduled_input ""
 		set line ""
 		incr cmdcount
 		while {$line == ""} {
@@ -118,7 +125,7 @@ package require tclreadline
                 my stop_client
             }
             default {
-                after 10 [namespace code [list my terminal_input $con]]
+                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
         }
     }
