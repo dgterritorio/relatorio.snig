@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" == "identify" ]; then
+    echo "{CWSCheck} {compare CSW records to template}"
+    exit 0
+fi
+
 rm CSW_RECORDS/*.xml
 
 i=1

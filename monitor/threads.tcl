@@ -1,6 +1,0 @@
-
-namespace ::ngis::threads {
-
-
-}
-

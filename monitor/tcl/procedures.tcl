@@ -65,7 +65,10 @@ namespace eval ::ngis::procedures {
     proc run_bash {url function} {
         array set uri_a [::uri::split $url]
         set script $function
-        set cmd "/bin/bash [file join tasks "${script}.sh"] \"$url\""
+
+        set tmpfile_root [file join / tmp "snig-[thread::id]"]
+
+        set cmd "/bin/bash [file join tasks "${script}.sh"] \"$url\" $tmpfile_root"
         ::ngis::logger emit "running command: $cmd"
         if {[catch {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
@@ -74,7 +77,8 @@ namespace eval ::ngis::procedures {
             return [::ngis::tasks::make_error_result $e $einfo ""]
         }
         ::ngis::logger emit "got [string length $script_results] characters"
-        return [::ngis::tasks::make_ok_result [string length $script_results]]
+        #return [::ngis::tasks::make_ok_result [string length $script_results]]
+        return $script_results
     }
 
     proc append_http_data {http_data} {
