@@ -33,7 +33,7 @@ set datasource      [::ngis::DBJobSequence create ::jbsequenceds $resultset]
 set the_sequence    [::ngis::JobSequence new $datasource]
 
 #set thread_id [$tm get_available_thread]
-#set job_o [::ngis::Job create ::job_object $the_sequence $gid_rec $::ngis::tasks::tasks]
+#set job_o [::ngis::Job create ::job_object $the_sequence $gid_rec [::ngis::tasks get_registered_tasks]]
 #$job_o initialize 
 #set q [$job_o task_queue]
 #set task_d [$q get]

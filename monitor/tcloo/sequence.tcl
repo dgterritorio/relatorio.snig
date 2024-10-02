@@ -89,6 +89,7 @@ catch { ::ngis::JobSequence destroy }
                 return false
 
             } else {
+
                 $new_job set_sequence [self]
 
                 if {$current_job != ""} { lappend running_jobs $current_job }
@@ -99,6 +100,7 @@ catch { ::ngis::JobSequence destroy }
 
                 ::ngis::logger emit "posting $current_job ([$current_job get_property record_description]) for new task"
                 $current_job post_task $thread_id
+
             }
         }
 
@@ -133,9 +135,7 @@ catch { ::ngis::JobSequence destroy }
             }
 
             set gid [dict get $res_d gid]
-
-            set job_o [::ngis::Job create [self object]::job${gid} $res_d $::ngis::tasks::tasks]
-            #set job_o [::ngis::Job create [self object]::job${gid} $res_d [lrange $::ngis::tasks::tasks 0 1]]
+            set job_o [::ngis::Job create [self object]::job${gid} $res_d [::ngis::tasks get_registered_tasks]]
             $job_o initialize
 
             return $job_o
@@ -154,7 +154,7 @@ catch { ::ngis::JobSequence destroy }
 
         foreach service_d $sl {
             set gid [dict get $service_d gid]
-            set job_o [::ngis::Job create [self object]::job${gid} $service_d $::ngis::tasks::tasks]
+            set job_o [::ngis::Job create [self object]::job${gid} $service_d [::ngis::tasks get_registered_tasks]]
             $job_o initialize
             lappend service_l $job_o
         }

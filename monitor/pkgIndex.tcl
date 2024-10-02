@@ -5,7 +5,7 @@ package ifneeded ngis::protocol         1.1 [list source [file join $dir tcloo p
 package ifneeded termio                 1.1 [list source [file join $dir tcl termio.tcl]]
 package ifneeded ngis::conf             1.1 [list source [file join $dir ngis_monitor_conf.tcl]]
 package ifneeded ngis::job              1.1 [list source [file join $dir tcloo job.tcl]]
-package ifneeded ngis::task             0.3 [list source [file join $dir tcloo task.tcl]]
+package ifneeded ngis::task             0.3 [list source [file join $dir tcl task.tcl]]
 package ifneeded ngis::taskmessages     1.0 [list source [file join $dir tcl task_messages.tcl]]
 package ifneeded ngis::servicedb        1.0 [list source [file join $dir tcl service_db.tcl]]
 package ifneeded ngis::sequence         1.0 [list source [file join $dir tcloo sequence.tcl]]
