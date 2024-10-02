@@ -139,6 +139,10 @@ package require ngis::sequence
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
+    method create_job_controller {max_workers} {
+        set job_controller [::ngis::JobController create ::the_job_controller $max_workers]
+    }
+
     method run {max_workers} {
         set listen [unix_sockets::listen $::ngis::unix_socket_name [namespace code [list my accept]]]
         ::ngis::logger emit "server listening on socket '$listen'"
@@ -149,7 +153,7 @@ package require ngis::sequence
         }
         # the job_controller_object has a global accessible and defined name
 
-        set job_controller [::ngis::JobController create ::the_job_controller $max_workers]
+        set job_controller [my create_job_controller $max_workers]
 
         vwait ::wait_for_events
 

@@ -10,7 +10,12 @@ if {$curr_dir_pos < 0} {
 }
 
 package require ngis::server
+package require ngis::task
 
 set ::ngis_server [::ngis::Server create ::ngis_server]
+
+# load the task database
+
+::ngis::tasks build_tasks_database [list [file join $current_dir tasks]]
 
 $::ngis_server run $::ngis::max_workers_number

@@ -7,6 +7,7 @@ package require syslog
 
 package require uri
 package require ngis::msglogger
+package require ngis::task
 package require -exact TclCurl 7.22.1
 package require ngis::taskmessages
 
@@ -15,22 +16,22 @@ namespace eval ::ngis::procedures {
 
     # --
 
-    proc null_processing {job f} {
-        set jobname  [dict get $job jobname]
-        set url      [dict get $job uri]
+    proc null_processing {task_d} {
+        set jobname  [::ngis::task job_name $task_d]
+        set url      [::ngis::task url $task_d]
         after 1000
         #return [list $jobname ok "" "" $url]
-        return [::ngis::tasks::make_ok_result $jobname $url]
+        return [::ngis::tasks::make_ok_result "($jobname) $url"]
     }
 
-    proc start {job function} {
+    proc start {task_d} {
         return [::ngis::tasks::make_ok_result ""]
     }
 
     # --
 
-    proc run_ping {job function} {
-        set url [dict get $job uri]
+    proc run_ping {task_d} {
+        set url [::ngis::tasks url $task_d]
         array set uri_a [::uri::split $url]
         ::ngis::logger emit "checking $url ping service"
         set cmd [list ping -W 20 -w 20 -c 2 -a $uri_a(host)]
@@ -44,8 +45,8 @@ namespace eval ::ngis::procedures {
         return [::ngis::tasks::make_ok_result $ping_results]
     }
 
-    proc get_url {job f} {
-        set url [dict get $job uri]
+    proc get_url {task_d} {
+        set url [::ngis::tasks url $task_d]
         if {[catch {
 
             ::ngis::logger emit "getting $url"
@@ -61,19 +62,19 @@ namespace eval ::ngis::procedures {
         return [::ngis::tasks::make_ok_result "[string length $http_returned_data] characters returned"]
     }
     
-
-    proc run_bash {url function} {
+    proc run_bash {task_d} {
+        set url [::ngis::tasks url $task_d]
         array set uri_a [::uri::split $url]
-        set script $function
+        set script [::ngis::tasks function $task_d]
 
         set tmpfile_root [file join / tmp "snig-[thread::id]"]
 
-        set cmd "/bin/bash [file join tasks "${script}.sh"] \"$url\" $tmpfile_root"
+        set cmd "/bin/bash $script \"$url\" $tmpfile_root"
         ::ngis::logger emit "running command: $cmd"
         if {[catch {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
         } e einfo]} {
-            ::ngis::logger emit "error: $e $einfo"
+            ::ngis::logger emit "bash script error: $e $einfo"
             return [::ngis::tasks::make_error_result $e $einfo ""]
         }
         ::ngis::logger emit "got [string length $script_results] characters"
@@ -85,8 +86,8 @@ namespace eval ::ngis::procedures {
         append ::ngis::procedures::http_data $http_data
     }
 
-    proc http_status {job f} {
-        set url [dict get $job uri]
+    proc http_status {task_d} {
+        set url [::ngis::tasks url $task_d]
 
         ::ngis::logger emit "http_status: checking HTTP response from $url"
 
@@ -115,7 +116,12 @@ namespace eval ::ngis::procedures {
         return $status
     }
 
-    proc data_congruence {job_d f} {
+    proc data_congruence {task_d} {
+
+        # TODO: this is not portable
+
+        set job_d [dict get $task_d job]
+
         foreach p [list uri record_entity record_description] {
             switch $p {
                 record_entity -
@@ -126,7 +132,7 @@ namespace eval ::ngis::procedures {
                 }
                 uri {
                     if {!([dict exists $job_d $p] && ([dict get $job_d $p] != ""))} {
-                        return [::ngis::tasks::make_error_result "missing_url" "" "Undefined url for gid [$job_o gid]"]
+                        return [::ngis::tasks::make_error_result "missing_url" "" "Undefined url for gid [$job_d gid]"]
                     }
                 }
             }

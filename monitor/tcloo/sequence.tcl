@@ -5,7 +5,6 @@
 package require Thread
 package require TclOO
 package require tdbc::postgres
-package require ngis::task
 package require ngis::job
 package require ngis::conf
 
@@ -175,4 +174,24 @@ catch { ::ngis::JobSequence destroy }
     }
 
 }
+
+::oo::class create ::ngis::SingleTaskJob {
+    variable job_o
+
+    constructor {service_d task_code} {
+        dict with service_d {
+            set job_o [::ngis::Job create [self object]::job${gid} $service_d $task_code]
+            $job_o initialize
+        }
+    }
+
+    destructor {
+        $job_o destroy
+    }
+
+    method get_next {} {
+        return ""
+    }
+}
+
 package provide ngis::sequence 1.0

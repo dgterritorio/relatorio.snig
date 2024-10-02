@@ -5,12 +5,16 @@ if [ "$1" == "identify" ]; then
     echo "{testbed} {Task to be used for development and not included}"
     exit 0
 fi
+. utils/shell_functions.sh
 
 if [ "$2" != "" ]; then
     invalid_command 
     ecode="$?"
-    test $ecode -ne 0 && echo error {invalid_command} {invalid command (error: $ecode)} {} && exit 0
+    if [ $ecode -ne 0 ]; then 
+        echo $(make_error_result "invalid_command" "invalid command (error: $ecode)")
+        exit 0
+    fi
 fi
-echo OK {} {} {}
+echo $(make_ok_result "Success")
 
 exit 0

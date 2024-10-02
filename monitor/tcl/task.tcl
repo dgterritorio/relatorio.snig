@@ -7,9 +7,9 @@ package require ngis::msglogger
 package require ngis::taskmessages
 
 namespace eval ::ngis::tasks {
-    variable base_tasks [list congruence      connectivity capabilities capabilities2]
-    variable procedures [list data_congruence http_status  get_url      run_bash]
-    variable functions  [list ""              ""           ""           readurl]
+    variable base_tasks [list congruence      connectivity capabilities]
+    variable procedures [list data_congruence http_status  get_url     ]
+    variable functions  [list ""              ""           ""          ]
     variable descriptions [list "Testing resource record data completeness and congruence" \
                                 "Analyze service HTTP/HTTPS response" \
                                 "Test service by checking response to HTTP requests (using Tcl's http package)" \
@@ -27,21 +27,21 @@ namespace eval ::ngis::tasks {
     # deserialization methods
 
     proc mktask {t job_o {t_args ""}} {
+        variable tasks_db
         variable tasks
-        variable procedures
-        variable functions
 
-        set task_id [lsearch $::ngis::tasks::tasks $t]
-        if {$task_id >= 0} {
+        if {[dict exists $tasks_db $t]} {
             set job_d [$job_o serialize]
             dict unset job_d tasks
-            return [dict create task        [lindex $tasks $task_id]        \
-                                procedure   [lindex $procedures $task_id]   \
-                                function    [lindex $functions $task_id]    \
-                                status      "" \
-                                data        "" \
-                                args        "" \
-                                job         $job_d]
+
+            set task_d [dict get $tasks_db $t]
+
+            dict set task_d task   $t
+            dict set task_d status ""
+            dict set task_d data   ""
+            dict set task_d args   ""
+            dict set task_d job    $job_d
+            return $task_d
         }
         return -code 1 -errorcode invalid_task
     }
@@ -49,6 +49,14 @@ namespace eval ::ngis::tasks {
     proc get_registered_tasks {} {
         variable tasks
         return $tasks
+    }
+
+    proc get_task {task} {
+        variable task_db
+        if {[dict exists $task_db $task]} {
+            return [dict get $task_db $task]
+        }
+        return -code error -errorcode unregistered_task "Unregistered task '$task'"
     }
 
     # -- Data access methods
@@ -59,13 +67,16 @@ namespace eval ::ngis::tasks {
 
     proc job_name {task_d} { return [dict get $task_d job jobname] }
     proc url {task_d} { return [dict get $task_d job uri] }
+    proc gid {task_d} { return [dict get $task_d job gid] }
+    proc procedure {task_d} { return [dict get $task_d procedure] }
+    proc function {task_d} { return [dict get $task_d function] }
 
     proc build_tasks_database {path_list} {
         variable tasks
         variable tasks_db
         variable base_tasks
         variable procedures
-        variable function
+        variable functions
         variable descriptions
 
         set tasks $base_tasks
@@ -86,7 +97,14 @@ namespace eval ::ngis::tasks {
                     continue
                 }
 
-                lassign identity task description
+                lassign $identity task description
+
+                #### testbed bash procedure: we don't include it ####
+
+                if {$task == "testbed"} { continue }
+
+                # this is not a useless redundancy: through this list we
+                # attempt to establish a priority sequence
 
                 lappend tasks $task
                 dict set tasks_db $task [dict create function    $shscript \

@@ -27,8 +27,7 @@ package require struct::queue
         if {[dict exists $service_d jobname] == 0} { set jobname [self] }
     }
 
-    destructor {
-    }
+    destructor { }
  
     method task_queue {} { return $tasks_q }
 
@@ -139,7 +138,7 @@ package require struct::queue
         }
     }
 
-    method set_jobname {n} { if {[string length $n] > 0} {set jobname $n} }
+    method set_jobname {n} { if {[string length $n] > 0} { set jobname $n } }
 
     method unknown {method_s args} {
         error "method '$method_s' not found"
@@ -148,15 +147,6 @@ package require struct::queue
     method gid {} { return [my get_property gid] }
     method url {} { return [my get_property uri] }
     method jobname {} { return [my get_property jobname] }
-
-    method seq_begin {seq_l} {
-        my clear_tasks
-
-        set url [my url]
-
-        set tasks [lmap t $seq_l { ::ngis::tasks::mktask $t [self] }]
-        return [lindex $tasks 0]
-    }
 }
 
 package provide ngis::job 1.1
