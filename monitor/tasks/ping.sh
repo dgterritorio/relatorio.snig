@@ -14,9 +14,13 @@ error_handler ()
     exit 0
 }
 
-echo "$1" | awk -F/ '{print $3}' | xargs /bin/ping -W 10 -w 10 -c 2
+ping_output=$(echo "$1" | awk -F/ '{print $3}' | xargs /bin/ping -W 1 -w 1 -c 2)
 ecode="$?"
 
-test $ecode -ne 0 && echo $(make_error_result pingerror {ping error} {ping error code $ecode}) && exit 0
+if [[ $ecode -ne 0 ]]; then
+    echo $(make_error_result pingerror "ping error" "ping error code $ecode")
+    exit 0
+fi
+
 echo $(make_ok_result "Success")
 exit 0

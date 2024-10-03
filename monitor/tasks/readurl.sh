@@ -11,6 +11,12 @@ fi
 
 OUT=$(/usr/bin/curl $1)
 
-echo "ok {} {} {${#OUT} character read, tmpfile $2}"
+ecode="$?"
 
+if [ $ecode ne 0 ]; then
+    echo $(make_error_result "curl_error" "error $ecode")
+    exit 0
+fi
+
+echo $(make_ok_result "${#OUT} character read, tmpfile $2")
 exit 0
