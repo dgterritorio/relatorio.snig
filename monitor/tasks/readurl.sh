@@ -2,12 +2,8 @@
 #
 #
 
-if [ "$1" == "identify" ]; then
-    echo "{capabilities2} {Curl based determination of capabilities}"
-    exit 0
-fi
-
 . utils/shell_functions.sh
+identify $1 "capabilities2" "Curl based determination of capabilities"
 
 url=${args["url"]}
 

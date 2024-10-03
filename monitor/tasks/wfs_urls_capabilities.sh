@@ -6,11 +6,8 @@
 #  $2: thread private disk space
 #  $3: uuid private disk space
 
-if [ "$1" == "identify" ]; then
-    echo "{wfs_capabilities} {WFS Capabilities}"
-    exit 0
-fi 
 . utils/shell_functions.sh
+identify $1 "wfs_capabilities" "WFS Capabilities" 
 
 tmp_space=$2
 uuid_space=$3
@@ -48,7 +45,7 @@ echo $XML > $capabilities_fn
 xmlvalid=$(xmlstarlet validate $capabilities_fn | grep invalid)
 
 if [ -z "$xmlvalid" ]; then 
-    echo $(make_ok_result "valid WFS Capabilities XML document version: $version")
+    echo $(make_ok_result "valid WFS Capabilities XML document version $version")
 else 
     echo $(make_error_result "invalidxml" "Invalid XML Capabilities Document $version")
 fi

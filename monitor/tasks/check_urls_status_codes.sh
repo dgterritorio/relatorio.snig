@@ -7,11 +7,9 @@
 #  $3: thread private disk space
 #  $4: uuid private disk space
 
-if [ "$1" == "identify" ]; then
-    echo "{url_status_codes} {Check URL Status Codes}"
-    exit 0
-fi 
 . utils/shell_functions.sh
+
+identify $1 "url_status_codes" "Check URL Status Codes"
 
 url=${args["url"]}
 #echo "Checking status code for $url"

@@ -2,11 +2,8 @@
 #
 #
 
-if [ "$1" == "identify" ]; then
-    echo "{pingservice} {Checks Connectivity Using Ping}"
-    exit 0
-fi 
 . utils/shell_functions.sh
+identify $1 "pingservice" "Checks Connectivity Using Ping"
 
 error_handler ()
 {

@@ -1,11 +1,8 @@
 #!/bin/bash
 #
 #
-if [ "$1" == "identify" ]; then
-    echo "{testbed} {Task to be used for development and not included}"
-    exit 0
-fi
 . utils/shell_functions.sh
+identify $1 "testbed" "Task to be used for development and not included"
 
 if [ "$2" != "" ]; then
     invalid_command 
