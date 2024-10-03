@@ -14,6 +14,8 @@ error_handler ()
     exit 0
 }
 
+url=${args["url"]}
+
 ping_output=$(echo "$1" | awk -F/ '{print $3}' | xargs /bin/ping -W 1 -w 1 -c 2)
 ecode="$?"
 

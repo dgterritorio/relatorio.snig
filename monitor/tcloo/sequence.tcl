@@ -162,7 +162,7 @@ catch { ::ngis::JobSequence destroy }
     }
 
     destructor {
-        foreach j $service_l { $j destroy }
+        #foreach j $service_l { $j destroy }
     }
 
     method get_next {} {
@@ -186,7 +186,7 @@ catch { ::ngis::JobSequence destroy }
     }
 
     destructor {
-        $job_o destroy
+        #$job_o destroy
     }
 
     method get_next {} {

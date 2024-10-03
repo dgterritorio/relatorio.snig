@@ -271,10 +271,10 @@ oo::define ngis::Protocol {
 							if {$service_d == ""} {
 								return [my compose 005 $service_check]
 							} else {
-                                if {[dict exists $service_d record_description]} {
-                                    set description [dict get $service_d record_description]
-                                } elseif {[dict exists $service_d record_entity]} {
-                                    set description [dict get $service_d record_entity]
+                                if {[dict exists $service_d description]} {
+                                    set description [dict get $service_d description]
+                                } elseif {[dict exists $service_d entity]} {
+                                    set description [dict get $service_d entity]
                                 } else {
                                     set description "Unnamed record (gid=$service_check)"
                                 }

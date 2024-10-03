@@ -68,6 +68,9 @@ namespace eval ::ngis::tasks {
     proc job_name {task_d} { return [dict get $task_d job jobname] }
     proc url {task_d} { return [dict get $task_d job uri] }
     proc gid {task_d} { return [dict get $task_d job gid] }
+    proc uuid {task_d} { return [dict get $task_d job uuid] }
+    proc type {task_d} { return [dict get $task_d job uri_type] }
+    proc version {task_d} { return [dict get $task_d job version] }
     proc procedure {task_d} { return [dict get $task_d procedure] }
     proc function {task_d} { return [dict get $task_d function] }
 

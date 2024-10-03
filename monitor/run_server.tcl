@@ -18,4 +18,12 @@ set ::ngis_server [::ngis::Server create ::ngis_server]
 
 ::ngis::tasks build_tasks_database [list [file join $current_dir tasks]]
 
+# create data root
+
+if {[file exists [file join $::ngis::data_root tmp]] == 0} {
+    file mkdir [file join $::ngis::data_root tmp]
+}
+if {[file exists [file join $::ngis::data_root data]] == 0} {
+    file mkdir [file join $::ngis::data_root data]
+}
 $::ngis_server run $::ngis::max_workers_number

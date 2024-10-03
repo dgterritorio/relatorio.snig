@@ -67,9 +67,19 @@ namespace eval ::ngis::procedures {
         array set uri_a [::uri::split $url]
         set script [::ngis::tasks function $task_d]
 
-        set tmpfile_root [file join / tmp "snig-[thread::id]"]
+        set tmpfile_root [file join $::ngis::data_root snig tmp [thread::id]]
+        set uuid [::ngis::tasks uuid $task_d]
+        set script_args [list   [::ngis::tasks gid $task_d] \
+                                [::ngis::tasks url $task_d] \
+                                $uuid                       \
+                                [::ngis::tasks type $task_d] \
+                                [::ngis::tasks version $task_d]]
 
-        set cmd "/bin/bash $script \"$url\" $tmpfile_root"
+        set uri_type [::ngis::tasks type $task_d]
+        set uuid_space [file join $::ngis::data_root snig data $uri_type $uuid]
+
+        set script_args [join $script_args |]
+        set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
         ::ngis::logger emit "running command: $cmd"
         if {[catch {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
@@ -77,7 +87,7 @@ namespace eval ::ngis::procedures {
             ::ngis::logger emit "bash script error: $e $einfo"
             return [::ngis::tasks::make_error_result $e $einfo ""]
         }
-        ::ngis::logger emit "got [string length $script_results] characters"
+        #::ngis::logger emit "got [string length $script_results] characters"
         #return [::ngis::tasks::make_ok_result [string length $script_results]]
         return $script_results
     }
@@ -122,10 +132,10 @@ namespace eval ::ngis::procedures {
 
         set job_d [dict get $task_d job]
 
-        foreach p [list uri record_entity record_description] {
+        foreach p [list uri entity description] {
             switch $p {
-                record_entity -
-                record_description {
+                entity -
+                description {
                     if {!([dict exists $job_d $p] && ([dict get $job_d $p] != ""))} {
                         return [::ngis::tasks::make_warning_result "undefined_$p" "" "Undefined description"]
                     }

@@ -9,7 +9,9 @@ fi
 
 . utils/shell_functions.sh
 
-OUT=$(/usr/bin/curl $1)
+url=${args["url"]}
+
+OUT=$(/usr/bin/curl $url)
 
 ecode="$?"
 

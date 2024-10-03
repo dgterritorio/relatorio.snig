@@ -41,11 +41,12 @@ namespace eval ::ngis::service {
             set gid    [dict get $t job gid]
             set task   [dict get $t task]
             set status [dict get $t status]
+            set uuid   [dict get $t job uuid]
             if {$status == ""} { break }
             lassign $status exit_status exit_info exit_trace exit_info timestamp
-            lappend values_l "($gid,to_timestamp($timestamp),'$task','$exit_status','$exit_info')"
+            lappend values_l "($gid,to_timestamp($timestamp),'$task','$exit_status','$exit_info','$uuid')"
         }
-        set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info) "
+        set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info,uuid) "
         append sql "VALUES [join $values_l ","] "
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
@@ -105,7 +106,7 @@ namespace eval ::ngis::service {
         }
 
         set sql \
-        "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME WHERE record_entity LIKE '$snig_entity' ORDER BY gid"
+        "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME WHERE entity LIKE '$snig_entity' ORDER BY gid"
 
         if {$limit > 0} {
             append sql " LIMIT $limit"

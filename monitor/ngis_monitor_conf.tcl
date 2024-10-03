@@ -7,10 +7,10 @@ namespace eval ::ngis {
     variable TABLE_NAME         "testsuite.uris_long"
     variable ENTITY_TABLE_NAME  "testsuite.entities"
     variable PORT               "5432"
-    variable COLUMN_NAMES       "gid,uri,record_entity,record_description"
+    variable COLUMN_NAMES       "gid,uuid,uri,entity,description,uri_type,version"
 
     variable SERVICE_STATUS     "testsuite.service_status"
-
+    variable data_root          [file join / tmp snig]
     variable max_workers_number 10
 
     variable tpool_min_workers  10

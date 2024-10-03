@@ -23,7 +23,7 @@ package require struct::queue
         set sequence    ""
         set tasks_l     $tasks
         set tasks_q     [::struct::queue] 
-        set service_d   [dict filter $service_d_ key gid record_uuid record_entity record_description uri uri_type jobname]
+        set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {[dict exists $service_d jobname] == 0} { set jobname [self] }
     }
 
@@ -84,7 +84,7 @@ package require struct::queue
     }
 
     method deserialize {d} {
-        set service_d [dict filter $d key gid record_uuid record_entity record_description uri uri_type]
+        set service_d [dict filter $d key gid uuid entity description uri uri_type version]
         if {[dict exists $d jobname]} {
             set jobname [dict get $d jobname]
         } else {
@@ -146,6 +146,9 @@ package require struct::queue
 
     method gid {} { return [my get_property gid] }
     method url {} { return [my get_property uri] }
+    method type {} { return [my get_property type] }
+    method version {} { return [my get_property version] }
+    method uuid {} { return [my get_property uuid] }
     method jobname {} { return [my get_property jobname] }
 }
 
