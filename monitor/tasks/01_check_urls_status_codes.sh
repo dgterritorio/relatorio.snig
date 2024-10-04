@@ -8,11 +8,7 @@
 #  $4: uuid private disk space
 
 . utils/shell_functions.sh
-
-identify $1 "url_status_codes" "Check URL Status Codes"
-
-url=${args["url"]}
-#echo "Checking status code for $url"
+identify $1 "url_status_codes" "Check URL Status Codes" $2 $3
 
 status_code_and_time=$( TIMEFORMAT="%R"; { time curl -X GET -m 25 -o /dev/null -Isw '%{http_code}\n' "$url"; } 2>&1 )
 status_code_and_time_single_line=$(echo "$status_code_and_time" | tr '\n' ' ')

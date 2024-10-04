@@ -51,7 +51,7 @@ namespace eval ::ngis::service {
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
         append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info"
-        #puts $sql
+        puts $sql
 
         set query_res [exec_sql_query $sql]
         $query_res close

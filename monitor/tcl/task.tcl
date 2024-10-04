@@ -7,13 +7,14 @@ package require ngis::msglogger
 package require ngis::taskmessages
 
 namespace eval ::ngis::tasks {
-    variable base_tasks [list congruence      connectivity capabilities]
-    variable procedures [list data_congruence http_status  get_url     ]
-    variable functions  [list ""              ""           ""          ]
-    variable descriptions [list "Testing resource record data completeness and congruence" \
-                                "Analyze service HTTP/HTTPS response" \
-                                "Test service by checking response to HTTP requests (using Tcl's http package)" \
-                                "Curl based determination of capabilities"]
+    variable base_tasks [list congruence     ]
+    variable procedures [list data_congruence]
+    variable functions  [list ""             ]
+
+    variable descriptions [list "Testing resource record data completeness and congruence"]
+                                #"Analyze service HTTP/HTTPS response" \
+                                #"Test service by checking response to HTTP requests (using Tcl's http package)" \
+                                #"Curl based determination of capabilities"
     variable tasks      [list]
     variable tasks_db   [dict create]
 

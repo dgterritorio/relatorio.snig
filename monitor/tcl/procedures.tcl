@@ -67,7 +67,7 @@ namespace eval ::ngis::procedures {
         array set uri_a [::uri::split $url]
         set script [::ngis::tasks function $task_d]
 
-        set tmpfile_root [file join $::ngis::data_root snig tmp [thread::id]]
+        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
         set uuid [::ngis::tasks uuid $task_d]
         set script_args [list   [::ngis::tasks gid $task_d] \
                                 [::ngis::tasks url $task_d] \
@@ -76,11 +76,11 @@ namespace eval ::ngis::procedures {
                                 [::ngis::tasks version $task_d]]
 
         set uri_type [::ngis::tasks type $task_d]
-        set uuid_space [file join $::ngis::data_root snig data $uri_type $uuid]
+        set uuid_space [file join $::ngis::data_root data $uri_type $uuid]
 
         set script_args [join $script_args |]
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
-        ::ngis::logger emit "running command: $cmd"
+        #::ngis::logger emit "running command: $cmd"
         if {[catch {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
         } e einfo]} {

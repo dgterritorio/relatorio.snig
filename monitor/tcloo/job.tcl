@@ -16,7 +16,7 @@ package require struct::queue
     variable service_d
     variable tasks_q
     variable tasks_l
-    variable scheduled_tasks
+    #variable scheduled_tasks
     variable jobname
 
     constructor {service_d_ tasks} {
@@ -33,50 +33,79 @@ package require struct::queue
 
     method set_sequence {its_sequence} { set sequence $its_sequence }
 
+    method notify_sequence {} {
+        ::ngis::logger emit "Job [self] terminates"
+        
+        if {$sequence != ""} { 
+            $sequence job_completed [self]
+        }
+    }
+
     method initialize {} {
         if {[$tasks_q size] > 0} {
             $tasks_q clear
         }
 
-        set scheduled_tasks $tasks_l
-        $tasks_q put {*}[lmap t $scheduled_tasks { ::ngis::tasks mktask $t [self] }]
+        $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
+    }
+
+    method start_job {thread_id} {
+        my initialize
+        return [my post_task $thread_id]
     }
 
     method post_task {thread_id} {
         if {[catch { set task_d [$tasks_q get] } e einfo]} {
+            my notify_sequence
             return false
         }
 
         ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
-
         thread::send -async $thread_id [list do_task $task_d [thread::id]]
 
         return true
     }
 
     method task_completed {thread_id task_d} {
+        set task_result ""
+        set job_controller [$::ngis_server get_job_controller]
         dict with task_d {
             ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status'"
+            set task_result $status
 
-            set task_idx [lsearch $scheduled_tasks $task]
-            if {$task_idx < 0} {
-                ::ngis::logger emit "\[ERROR\] task $task not found in job data."
+            lassign $task_result code
+            if {$code == "not_applicable"} { 
+                ::ngis::logger emit "task not applicable. Results not posted"
             } else {
-                set scheduled_tasks [lreplace $scheduled_tasks $task_idx $task_idx]
-                if {[llength $scheduled_tasks] == 0} {
-                    $sequence job_completed [self]
+                $job_controller post_task_results $task_d
+
+                # on an error code we interrupt the job
+
+                if {$code == "error"} {
+                    my notify_sequence
+                    return 
                 }
             }
 
+            my post_task $thread_id
+
+            #set task_idx [lsearch $scheduled_tasks $task]
+            #if {$task_idx < 0} {
+            #    ::ngis::logger emit "\[ERROR\] task $task not found in job data."
+            #} else {
+            #    set scheduled_tasks [lreplace $scheduled_tasks $task_idx $task_idx]
+            #    if {[llength $scheduled_tasks] == 0} {
+            #        $sequence job_completed [self]
+            #    }
+            #}
+
         }
 
-        set job_controller [$::ngis_server get_job_controller]
-
-        $job_controller move_thread_to_idle $thread_id
+        #set job_controller [$::ngis_server get_job_controller]
+        #$job_controller move_thread_to_idle $thread_id
 
         # this call is supposed to reschedule the job sequence round robin
 
-        $job_controller post_task_results $task_d
     }
 
     method serialize {} {

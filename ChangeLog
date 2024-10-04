@@ -1,3 +1,7 @@
+2024-10-04 Massimo Manghi <massimo.manghi@gmail.com>
+    * integration of standalone scripts within the 
+      monitor infrastructure
+
 2024-09-22 Giovanni Manghi <giovanni.manghi@naturalgis.pt>
 	* initial commits of standalone scripts
 

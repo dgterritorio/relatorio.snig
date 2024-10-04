@@ -7,17 +7,10 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wfs_capabilities" "WFS Capabilities" 
-
-tmp_space=$2
-uuid_space=$3
-
-url=${args["url"]}
-type=${args["type"]}
-version=${args["version"]}
+identify $1 "wfs_capabilities" "WFS Capabilities" $2 $3
 
 if [ $type != "WFS" ]; then
-    echo $(make_ok_error "not applicable")
+    echo $(make_not_applicable_result)
     exit 0
 fi
 
