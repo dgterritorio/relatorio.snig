@@ -13,11 +13,11 @@ catch {::ngis::ThreadMaster destroy }
     variable running_threads
 
     constructor {mtn} {
-        set max_threads_number $mtn
-        set thread_pnt        0
-        set thread_list       {}
-        set idle_thread_queue [::struct::queue]
-        array set running_threads {}
+        set max_threads_number      $mtn
+        set thread_pnt              0
+        set thread_list             {}
+        set idle_thread_queue       [::struct::queue]
+        array set running_threads   {}
     }
 
     destructor {
@@ -30,16 +30,17 @@ catch {::ngis::ThreadMaster destroy }
     method start_worker_thread {} {
 
         set thread_id [thread::create {
-
             source tcl/tasks_procedures.tcl
 
             ::ngis::logger emit "thread [thread::id] started"
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
+
         }]
 
         thread::preserve $thread_id
         return $thread_id
+
     }
 
     method thread_is_available {} {
@@ -76,6 +77,15 @@ catch {::ngis::ThreadMaster destroy }
 
     method move_to_running {thread_id} {
         set running_threads($thread_id) [clock seconds]
+    }
+
+    method running_threads {} { return [array names running_threads] }
+    method idle_threads {} {  
+        return [$idle_thread_queue peek [$idle_thread_queue size]]
+    }
+
+    method broadcast {cmd} {
+        foreach rt [my running_threads] { thread::send -async $rt $cmd }
     }
 
     method stop_threads {} {

@@ -5,7 +5,7 @@
 package require Thread
 package require TclOO
 package require tdbc::postgres
-package require ngis::task
+package require ngis::job
 package require ngis::conf
 
 catch { ::ngis::JobSequence destroy }
@@ -14,6 +14,7 @@ catch { ::ngis::JobSequence destroy }
     variable data_source
     variable description
     variable running_jobs
+    variable current_job
     variable stop_signal
     variable completed_jobs
 
@@ -21,7 +22,8 @@ catch { ::ngis::JobSequence destroy }
         set data_source     $ds
         set description     $dscr
         set stop_signal     false
-        array set running_jobs {}
+        set running_jobs    {}
+        set current_job     ""
         set completed_jobs  0
     }
 
@@ -30,61 +32,78 @@ catch { ::ngis::JobSequence destroy }
     }
 
 	method get_description {} { return $description }
-    method active_jobs {} { return [array size running_jobs] }
+    method active_jobs {} { return [my running_jobs_count] }
     method completed_jobs {} { return $completed_jobs }
 
-    method job_completed {thread_id tasks_results} {
-        ::ngis::logger emit "$tasks_results has completed ([self object])"
-        if {[info exists running_jobs($thread_id)]} { unset running_jobs($thread_id) }
+    method job_scheduling_completed {job_o} {
+        ::ngis::logger emit "$job_o scheduling has completed"
+        #if {[info exists running_jobs($thread_id)]} { unset running_jobs($thread_id) }
+    }
 
-        ::the_job_controller move_thread_to_idle $thread_id
-        ::the_job_controller post_task_results $tasks_results
-        incr completed_jobs
+    method job_completed {job_o} {
+        if {$job_o == $current_job} {
+            set current_job ""
+        } else {
+            set j [lsearch $running_jobs $job_o]
+            if {$j < 0} {
+                ::ngis::logger emit "\[ERROR\] internal ::ngis::Job class error: $job_o not registered"
+                return
+            }
+            set running_jobs [lreplace $running_jobs $j $j]
+        }
+        $job_o destroy
+    }
+
+    method running_jobs_count {} {
+        set rj_number [llength $running_jobs]
+        if {$current_job != ""} { incr rj_number }
+
+        return $rj_number
+    }
+
+    method MarkForTermination {} {
+        if {[my running_jobs_count] > 0} {
+            ::the_job_controller move_to_pending [self]
+        } else {
+            ::the_job_controller sequence_terminates [self]
+        }
     }
 
     method get_next_result {} { return [$data_source get_next] }
 
-    method get_job {{res_varname ""}} {
-        set my_next_result [my get_next_result]
-        if {$res_varname == ""} {
-            return $my_next_result
-        } else {
-            upvar 1 $res_varname vn
-
-            set vn $my_next_result
-            return [expr [llength $my_next_result] > 0]
-        }
-    }
-
-    method list_running_jobs {} {
-        foreach {thread job_o} [array get running_jobs] {
-            set job_d [$obj_o serialize]
-            catch { dict unset job_d tasks }
-
-            lappend active_job_list $job_d
-        }
-        return $active_job_list
-    }
-
     method post_job {thread_id} {
-        if {[my get_job job] && [string is false $stop_signal]} {
-            thread::send -async $thread_id [list exec_job [$job serialize] [self] [thread::id]]
-            set running_jobs($thread_id) $job
-            return true
-        } else {
-            if {[string is true $stop_signal]} {
-                ::ngis::logger emit "stop signal received: terminating [array size running_jobs] running jobs"
-            } else {
-                ::ngis::logger emit "no more jobs to send, [array size running_jobs] still running"
-            }
-
-            if {[array size running_jobs] > 0} {
-                ::the_job_controller move_to_pending [self]
-            } else {
-                ::the_job_controller sequence_terminates [self]
-            }
+        if {[string is true $stop_signal]} {
+            ::ngis::logger emit "stop signal received: terminating [my running_jobs_count] running jobs"
+            MarkForTermination
             return false
         }
+        
+        if {($current_job == "") || [string is false [$current_job post_task $thread_id]]} {
+            set new_job [my get_next_result]
+
+            if {$new_job == ""} {
+
+                ::ngis::logger emit "no more jobs to send, [my running_jobs_count] still running"
+                my MarkForTermination
+                return false
+
+            } else {
+
+                $new_job set_sequence [self]
+
+                if {$current_job != ""} { lappend running_jobs $current_job }
+                set current_job $new_job
+
+                 # this is a new job, we assume we have at least
+                 # one task to perform
+
+                ::ngis::logger emit "posting $current_job ([$current_job get_property record_description]) for new task"
+                $current_job post_task $thread_id
+
+            }
+        }
+
+        return true
     }
 
     method stop_sequence {} {
@@ -115,8 +134,10 @@ catch { ::ngis::JobSequence destroy }
             }
 
             set gid [dict get $res_d gid]
+            set job_o [::ngis::Job create [self object]::job${gid} $res_d [::ngis::tasks get_registered_tasks]]
+            $job_o initialize
 
-            return [::ngis::Job create [self object]::job${gid} $res_d]
+            return $job_o
         }
         return ""
     }
@@ -132,14 +153,16 @@ catch { ::ngis::JobSequence destroy }
 
         foreach service_d $sl {
             set gid [dict get $service_d gid]
-            lappend service_l [::ngis::Job create [self object]::job${gid} $service_d]
+            set job_o [::ngis::Job create [self object]::job${gid} $service_d [::ngis::tasks get_registered_tasks]]
+            $job_o initialize
+            lappend service_l $job_o
         }
 
         set service_idx -1
     }
 
     destructor {
-        foreach j $service_l { $j destroy }
+        #foreach j $service_l { $j destroy }
     }
 
     method get_next {} {
@@ -151,4 +174,24 @@ catch { ::ngis::JobSequence destroy }
     }
 
 }
+
+::oo::class create ::ngis::SingleTaskJob {
+    variable job_o
+
+    constructor {service_d task_code} {
+        dict with service_d {
+            set job_o [::ngis::Job create [self object]::job${gid} $service_d $task_code]
+            $job_o initialize
+        }
+    }
+
+    destructor {
+        #$job_o destroy
+    }
+
+    method get_next {} {
+        return ""
+    }
+}
+
 package provide ngis::sequence 1.0

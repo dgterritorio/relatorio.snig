@@ -126,7 +126,11 @@ https://templatemo.com/tm-582-tale-seo-agency
           <br>Design: <a href="https://templatemo.com" target="_blank">TemplateMo</a> Distribution: <a
             href="https://themewagon.com">ThemeWagon</a>
         </p>
-        <p><?= "is_homepage: $::rivetweb::is_homepage | thread id: [::rivet::thread_id]" ?></p>
+        <p><?= [join  [list "is_homepage: $::rivetweb::is_homepage" \
+                            "thread id: [::rivet::thread_id]" \
+                            "page: $::rivetweb::current_page" \
+                            "page class: [$::rivetweb::current_page info class]"] "|"]
+        ?></p>
       </div>
     </div>
   </footer>

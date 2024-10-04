@@ -8,6 +8,7 @@
 package require TclOO
 package require Thread
 package require unix_sockets
+package require struct::queue
 package require ngis::msglogger
 package require json
 package require ngis::protocol
@@ -52,16 +53,32 @@ package require ngis::sequence
 
     method send_to_client {con msg} {
         chan puts $con $msg
-        chan puts $con $::ngis::end_of_answer
+        #chan puts $con $::ngis::end_of_answer
         chan flush $con
     }
 
     method sync_results {result_queue} {
         if {[$result_queue size] == 0} { return }
         ::ngis::logger emit "syncing [$result_queue size] results"
-        
-        while {[$result_queue size] > 0} {
-            ::ngis::service::update_task_results [$result_queue get]
+        if {[$result_queue size] > 0} {
+
+            # hideous behavior of struct::queue. If it's returning
+            # one element, but it's a list, it becomes a list of elements
+            # It's documented, but still a despicable way Tcl works
+
+            if {[$result_queue size] == 1} {
+                set results_l [list [$result_queue get]]
+            } else {
+                set results_l [$result_queue get [$result_queue size]]
+            }
+
+            if {[catch {
+                ::ngis::service::update_task_results $results_l
+            } e einfo]} {
+                ::ngis::logger emit "error syncing results: $e"
+                ::ngis::logger emit "===== error_info ====="
+                foreach l [split $einfo "\n"] { ::ngis::logger emit $l }
+            }
         }
     }
 
@@ -99,7 +116,7 @@ package require ngis::sequence
             # but no data were in the socket buffer
 
             ::ngis::logger emit "empty line on read, ignoring"
-            catch {my send_to_client $con "empty line on read, ignoring"}
+            #catch {my send_to_client $con "empty line on read, ignoring"}
         }
     }
 
@@ -122,6 +139,10 @@ package require ngis::sequence
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
+    method create_job_controller {max_workers} {
+        set job_controller [::ngis::JobController create ::the_job_controller $max_workers]
+    }
+
     method run {max_workers} {
         set listen [unix_sockets::listen $::ngis::unix_socket_name [namespace code [list my accept]]]
         ::ngis::logger emit "server listening on socket '$listen'"
@@ -132,7 +153,7 @@ package require ngis::sequence
         }
         # the job_controller_object has a global accessible and defined name
 
-        set job_controller [::ngis::JobController create ::the_job_controller $max_workers]
+        set job_controller [my create_job_controller $max_workers]
 
         vwait ::wait_for_events
 

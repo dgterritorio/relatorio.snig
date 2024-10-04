@@ -13,66 +13,44 @@ package require ngis::msglogger
 package require ngis::task
 package require ngis::job
 package require ngis::procedures
+package require ngis::taskmessages
 
 set ::stop_signal false
 
 proc stop_thread {} { set ::stop_signal true }
 
-proc mockup_processing {job_o task} {
-    set    task_name    [$task name]
-    set    url          [$job_o url]
-    ::ngis::logger emit "mockup processing of task $task_name for job $job_o"
-    after 5000
-    return [list $task_name ok "" "" $url]
+# we assume task_d is a well formed dictionary of data describing the task    
+# as be created by calling ::ngis::tasks::mktask
+
+proc mockup_processing {task_d job_thread_id} {
+
+    dict with task_d {
+        ::ngis::logger emit "mockup processing of task $task for job [dict get $job jobname]"
+        after 5000
+        set status [::ngis::tasks::make_ok_result]
+    }
+    thread::send -async $job_thread_id [list $job_o task_completed $task_d]
+
 }
 
-proc job_completed {job_o} {
-    thread::send -async $::job_controller_thread [list $::the_sequence job_completed [thread::id] [$job_o serialize]]
-    $job_o destroy
-}
+proc do_task {task_d job_thread_id} {
+    variable wait_procedure
 
-proc task_completed {task_o} { }
 
-proc do_single_task {job_o task_o} {
-    if {($task_o == "DONE") || [string is true $::stop_signal]} {
-        job_completed $job_o
-        set ::stop_signal false
-        return
+    set url [::ngis::tasks url $task_d]
+    dict with task_d {
+        ::ngis::logger emit "running procedure '$procedure' (function '$function') for url '$url'"
+        if {[catch { set status [::ngis::procedures::${procedure} $task_d] } e einfo]} {
+            set status [::ngis::tasks::make_error_result $e [dict get $einfo -errorcode] ""]
+        }
     }
 
-    set task_status [$task_o run $job_o]
-    lassign $task_status task_name task_ret_status e einfo task_data
-    ::ngis::logger emit "task $task_o returns $task_ret_status"
+    #DEBUG
+    #after [expr 1000*60/2]
+    #DEBUG
 
-    set task_fatal false
-    if {$task_ret_status == "ok"} {
-        # continue
-    } elseif {$task_ret_status == "warning"} {
-        ::ngis::logger emit "task for [$job_o jobname] returned '$task_data'"
-    } else {
-        # error: the task sequence is interruped
-        set task_fatal true
-    }
+    set job_o [dict get $task_d job jobname]
+    thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 
-    task_completed $task_o
-
-    if {$task_fatal} {
-        job_completed $job_o
-        return
-    }
-    set task_o [$task_o next]
-    after 10 [list do_single_task $job_o $task_o]
-}
-
-proc exec_job {job_d the_sequence jc_thread} {
-    set ::the_sequence          $the_sequence
-    set ::job_controller_thread $jc_thread
-    set ::stop_signal           false
-
-    set job_o   [::ngis::Job create [dict get $job_d jobname] $job_d]
-    set task_o  [$job_o seq_begin $::ngis::tasks::tasks]
-    #set task   [$job_o seq_begin [list untested capabilities capabilities2]]
-
-    after 10 [list do_single_task $job_o $task_o]
 }
 

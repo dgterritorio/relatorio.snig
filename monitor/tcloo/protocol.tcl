@@ -9,6 +9,8 @@ oo::define ngis::Protocol {
     variable formatter
     variable CodeMessages
     variable json_o
+    variable ds_nseq
+    variable nseq
 
     constructor {} {
 
@@ -29,11 +31,14 @@ oo::define ngis::Protocol {
                                       104     "current format %s"         \
                                       105     "Monitor Inconsistent Status" \
                                       106     "%d running jobs\n%s"         \
+                                      108     "%d matching entities\n%s"    \
                                       501     "Server internal error: %s"   \
                                       503     "Missing argument for code %d"]
 
         set formatter HR
         set json_o    ""
+        set nseq    -1
+        set ds_nseq -1
     }
 
     destructor {
@@ -134,6 +139,15 @@ oo::define ngis::Protocol {
                     }
                 }
             }
+            108 {
+                set entities [lindex $args 0]
+                $json_o string entities array_open
+                foreach e $entities {
+                    lassign $e eid description
+                    $json_o map_open string "eid" integer $eid string description string $description map_close
+                }
+                $json_o array_close
+            }
             501 {
                 $json_o string message string "Server internal error"
                 $json_o array_open
@@ -228,6 +242,22 @@ oo::define ngis::Protocol {
                     set strmsg [format $fstring [lindex $args 1] [join $seqs_l "\n"]]
                 }
 			}
+            108 {
+                set entities [lindex $args 0]
+
+                set gid_l 1
+                foreach e $entities {
+                    lassign $e gid definition
+                    set gid_l [expr max([string length $gid]+1,$gid_l)]
+                }
+                set table ""
+                foreach e $entities {
+                    lassign $e gid definition
+                    lappend table [format "%-${gid_l}d %s" $gid $definition]
+                }
+                set table [join $table "\n"]
+                set strmsg [format $fstring [llength $entities] $table]
+            }
             501 {
                 set strmsg [format $fstring [join $args "\n === \n"]] 
             }
@@ -251,8 +281,11 @@ oo::define ngis::Protocol {
         } else {
             set arguments  [lrange $msg 1 end]
             set narguments [llength $arguments]
-            #puts "arguments: '$arguments' ($narguments)"
+            puts "arguments: '$arguments' ($narguments)"
             switch [string toupper $cmd] {
+                ENTITIES {
+                    return [my compose 108 [::ngis::service::list_entities $arguments]]
+                }
                 CHECK {
                     if {$narguments < 1} {
                         return [my compose 003 $arguments]
@@ -267,10 +300,10 @@ oo::define ngis::Protocol {
 							if {$service_d == ""} {
 								return [my compose 005 $service_check]
 							} else {
-                                if {[dict exists $service_d record_description]} {
-                                    set description [dict get $service_d record_description]
-                                } elseif {[dict exists $service_d record_entity]} {
-                                    set description [dict get $service_d record_entity]
+                                if {[dict exists $service_d description]} {
+                                    set description [dict get $service_d description]
+                                } elseif {[dict exists $service_d entity]} {
+                                    set description [dict get $service_d entity]
                                 } else {
                                     set description "Unnamed record (gid=$service_check)"
                                 }
@@ -278,7 +311,7 @@ oo::define ngis::Protocol {
 								$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
 									[::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
 
-								return [my compose 002]
+								set client_message [my compose 002]
 							}
 						} else {
 							set entity $service_check
@@ -295,11 +328,12 @@ oo::define ngis::Protocol {
 
 							$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
 														  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
-							return [my compose 002]
+							set client_message [my compose 002]
 						}
 					} e einfo]} {
-						return [my compose 007 $e $einfo]
+						return -code ok [my compose 007 $e $einfo]
 					}
+                    return $client_message
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations

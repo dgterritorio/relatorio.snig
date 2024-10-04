@@ -412,8 +412,8 @@ namespace eval ::ngis {
         inherit Resource
 
         constructor {table_name} \
-                    {Resource::constructor $table_name {gid record_uuid record_entity 
-                                                        record_description uri uri_type eid}} {
+                    {Resource::constructor $table_name {gid uuid entity 
+                                                        description uri uri_type version eid}} {
             $this set_ascii_key uri
         }
 
