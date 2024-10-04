@@ -31,6 +31,7 @@ oo::define ngis::Protocol {
                                       104     "current format %s"         \
                                       105     "Monitor Inconsistent Status" \
                                       106     "%d running jobs\n%s"         \
+                                      108     "%d matching entities\n%s"    \
                                       501     "Server internal error: %s"   \
                                       503     "Missing argument for code %d"]
 
@@ -138,6 +139,15 @@ oo::define ngis::Protocol {
                     }
                 }
             }
+            108 {
+                set entities [lindex $args 0]
+                $json_o string entities array_open
+                foreach e $entities {
+                    lassign $e eid description
+                    $json_o map_open string "eid" integer $eid string description string $description map_close
+                }
+                $json_o array_close
+            }
             501 {
                 $json_o string message string "Server internal error"
                 $json_o array_open
@@ -232,6 +242,22 @@ oo::define ngis::Protocol {
                     set strmsg [format $fstring [lindex $args 1] [join $seqs_l "\n"]]
                 }
 			}
+            108 {
+                set entities [lindex $args 0]
+
+                set gid_l 1
+                foreach e $entities {
+                    lassign $e gid definition
+                    set gid_l [expr max([string length $gid]+1,$gid_l)]
+                }
+                set table ""
+                foreach e $entities {
+                    lassign $e gid definition
+                    lappend table [format "%-${gid_l}d %s" $gid $definition]
+                }
+                set table [join $table "\n"]
+                set strmsg [format $fstring [llength $entities] $table]
+            }
             501 {
                 set strmsg [format $fstring [join $args "\n === \n"]] 
             }
@@ -255,8 +281,11 @@ oo::define ngis::Protocol {
         } else {
             set arguments  [lrange $msg 1 end]
             set narguments [llength $arguments]
-            #puts "arguments: '$arguments' ($narguments)"
+            puts "arguments: '$arguments' ($narguments)"
             switch [string toupper $cmd] {
+                ENTITIES {
+                    return [my compose 108 [::ngis::service::list_entities $arguments]]
+                }
                 CHECK {
                     if {$narguments < 1} {
                         return [my compose 003 $arguments]

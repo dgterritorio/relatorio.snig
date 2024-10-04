@@ -51,7 +51,7 @@ namespace eval ::ngis::service {
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
         append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info"
-        puts $sql
+        #puts $sql
 
         set query_res [exec_sql_query $sql]
         $query_res close
@@ -111,7 +111,7 @@ namespace eval ::ngis::service {
         if {$limit > 0} {
             append sql " LIMIT $limit"
         }
-        puts "exec sql: $sql"
+        #puts "exec sql: $sql"
         set query_result [exec_sql_query $sql]
         if {$as == "-resultset"} {
             return $query_result
@@ -122,9 +122,25 @@ namespace eval ::ngis::service {
         $query_result close
         return $snig_entities
     }
+
+    proc list_entities {pattern} {
+        set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
+        if {$pattern != ""} {
+            lappend sql "WHERE description LIKE '$pattern'"
+        }
+        lappend sql "ORDER BY eid"
+        set sql [join $sql " "]
+
+        puts $sql
+
+        set query_result [exec_sql_query $sql]
+        set entities [$query_result allrows -as lists]
+        $query_result close
+        return $entities
+    }
+
     namespace export *
     namespace ensemble create
-
 }
 
 package provide ngis::servicedb 1.0
