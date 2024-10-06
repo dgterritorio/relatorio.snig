@@ -14,7 +14,7 @@ oo::define ngis::Protocol {
 
     constructor {} {
 
-        # output can take 3 values: HR (human readable), RAW (parseable row data), JSON
+        # output can take 2 values: HR (human readable), JSON
 
         set output_format "HR"
         set CodeMessages [dict create 000     "Server is going to exit"   \
@@ -32,6 +32,7 @@ oo::define ngis::Protocol {
                                       105     "Monitor Inconsistent Status" \
                                       106     "%d running jobs\n%s"         \
                                       108     "%d matching entities\n%s"    \
+                                      110     "%d registered tasks\n%s"     \
                                       501     "Server internal error: %s"   \
                                       503     "Missing argument for code %d"]
 
@@ -52,12 +53,11 @@ oo::define ngis::Protocol {
     method set_format {f} {
         switch -nocase $f {
             HR -
-            RAW -
             JSON {
                 set formatter [string toupper $f]
             }
             default {
-                return -code 1 "Invalid formatter: must be either HR, JSON or RAW"
+                return -code 1 "Invalid formatter: must be either HR or JSON"
             }
         }
     }
@@ -145,6 +145,18 @@ oo::define ngis::Protocol {
                 foreach e $entities {
                     lassign $e eid description
                     $json_o map_open string "eid" integer $eid string description string $description map_close
+                }
+                $json_o array_close
+            }
+            110 {
+                set tasks [lindex $args 0]
+                $json_o string tasks array_open
+                foreach t $tasks {
+                    lassign $t  task func desc pro
+                    $json_o map_open string "task" string $task \
+                                     string "function" string $func \
+                                     string "description" string $desc \
+                                     string "procedure" string $pro map_close
                 }
                 $json_o array_close
             }
@@ -258,6 +270,32 @@ oo::define ngis::Protocol {
                 set table [join $table "\n"]
                 set strmsg [format $fstring [llength $entities] $table]
             }
+            110 {
+                set tasks [lindex $args 0]
+
+                set fw {0 0 0 0}
+                foreach t $tasks {
+                    lassign $fw f1 f2 f3 f4
+                    lassign $t  task func desc pro
+                    set func [file tail $func]
+                    set fw [list [expr max($f1,[string length $task])] \
+                                 [expr max($f2,[string length $func])] \
+                                 [expr max($f3,[string length $desc])] \
+                                 [expr max($f4,[string length $pro])]]
+                }
+                set table ""
+                lassign $fw f1 f2 f3 f4
+                foreach t $tasks {
+                    lassign $t  task func desc pro
+                    set func [file tail $func]
+                    lappend table [join [list [format "%-${f1}s" $task] \
+                                              [format "%-${f2}s" $func] \
+                                              [format "%-${f3}s" $desc] \
+                                              [format "%-${f4}s" $pro]] " | "]
+                }
+                set table [join $table "\n"]
+                set strmsg [format $fstring [llength $tasks] $table]
+            }
             501 {
                 set strmsg [format $fstring [join $args "\n === \n"]] 
             }
@@ -283,6 +321,9 @@ oo::define ngis::Protocol {
             set narguments [llength $arguments]
             puts "arguments: '$arguments' ($narguments)"
             switch [string toupper $cmd] {
+                REGTASKS {
+                    return [my compose 110 [::ngis::tasks list_registered_tasks]]
+                }
                 ENTITIES {
                     return [my compose 108 [::ngis::service::list_entities $arguments]]
                 }
@@ -353,7 +394,6 @@ oo::define ngis::Protocol {
                     } elseif {$narguments == 1} {
                         set fmt [lindex $arguments 0]
                         switch -nocase $fmt {
-                            RAW -
                             JSON -
                             HR {
                                 my set_format [string toupper $fmt]

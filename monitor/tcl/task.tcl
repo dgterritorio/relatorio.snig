@@ -11,7 +11,7 @@ namespace eval ::ngis::tasks {
     variable procedures [list data_congruence]
     variable functions  [list ""             ]
 
-    variable descriptions [list "Testing resource record data completeness and congruence"]
+    variable descriptions [list "Data congruence"]
                                 #"Analyze service HTTP/HTTPS response" \
                                 #"Test service by checking response to HTTP requests (using Tcl's http package)" \
                                 #"Curl based determination of capabilities"
@@ -83,6 +83,7 @@ namespace eval ::ngis::tasks {
         variable functions
         variable descriptions
 
+        set tasks_db [dict create]
         set tasks $base_tasks
         foreach bt $base_tasks btp $procedures btf $functions btd $descriptions {
             dict set tasks_db $bt [dict create  function    $btf \
@@ -116,6 +117,16 @@ namespace eval ::ngis::tasks {
                                                      procedure   run_bash]
             }
         }
+    }
+
+    proc list_registered_tasks {} {
+        variable tasks
+        variable tasks_db
+
+        set tasks_l [lmap t $tasks { list $t [dict get $tasks_db $t function] \
+                                             [dict get $tasks_db $t description] \
+                                             [dict get $tasks_db $t procedure] }]
+        return $tasks_l
     }
 
     namespace export   *

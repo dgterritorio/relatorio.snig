@@ -20,7 +20,6 @@ package require ngis::jobcontroller
 
 ::ngis::tasks build_tasks_database ./tasks
 
-
 set ::ngis_server [::ngis::Server create ::ngis_server]
 
 set jcontroller [::ngis_server create_job_controller 100]
@@ -43,6 +42,7 @@ set gid_rec [::ngis::service::load_by_gid 2]
 
 set thread_id [$tm get_available_thread]
 set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registered_tasks]]
+
 #$job_o initialize 
 
 #set q [$job_o task_queue]

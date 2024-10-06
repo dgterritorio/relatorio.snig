@@ -147,7 +147,7 @@ namespace eval ::ngis::procedures {
                 }
             }
         }
-        return [::ngis::tasks::make_ok_result ""]
+        return [::ngis::tasks::make_ok_result "Record data congruence tested"]
     }
 
 }

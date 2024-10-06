@@ -28,6 +28,7 @@ package require tclreadline
             C -
             F -
             SX -
+            LT -
             LE -
             T -
             S -
@@ -93,6 +94,9 @@ package require tclreadline
         }
         set parsed_cmd [my parse_cmd_line $line cmd_args]
         switch -nocase $parsed_cmd {
+            LT {
+                my send_to_server $con REGTASKS
+            }
             LE {
                 my send_to_server $con [concat ENTITIES $cmd_args]
             }
