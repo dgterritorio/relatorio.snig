@@ -54,4 +54,4 @@ function identify()
     fi
 }
 
-
+. utils/shell_defaults.sh

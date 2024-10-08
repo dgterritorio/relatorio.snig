@@ -76,6 +76,8 @@ namespace eval ::ngis {
         }
 
         method post_task_results {task_results} {
+            #::ngis::logger emit "posting task result '$task_results'"
+            
             $task_results_queue put $task_results
             if {([$task_results_queue size] >= 10) && \
                 ($task_results_chore == "")} {

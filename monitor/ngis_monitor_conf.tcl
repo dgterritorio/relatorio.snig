@@ -13,9 +13,6 @@ namespace eval ::ngis {
     variable data_root          [file join / tmp snig]
 
     variable max_workers_number 10
-
-    variable tpool_min_workers  10
-    variable tpool_max_workers  20
     variable unix_socket_name   /tmp/ngis.socket
     variable end_of_answer      "----"
     variable rescheduling_delay 100
@@ -23,7 +20,6 @@ namespace eval ::ngis {
 
     variable tcpaddr            127.0.0.1
     variable tcpport            4422
-
 }
 
 package provide ngis::conf 1.1

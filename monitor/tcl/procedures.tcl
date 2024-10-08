@@ -62,12 +62,35 @@ namespace eval ::ngis::procedures {
         return [::ngis::tasks::make_ok_result "[string length $http_returned_data] characters returned"]
     }
     
+    proc run_tcl {task_d} {
+
+        set script [::ngis::tasks script $task_d]
+        set tcl_proc [::ngis::tasks function $task_d]
+        if {[info command $tcl_proc] == ""} {
+            namespace eval ::ngis::tasks [list source $script]
+        }
+
+        set uri_type [::ngis::tasks type $task_d]
+        set uuid     [::ngis::tasks uuid $task_d]
+        set function [::ngis::tasks function $task_d]
+
+        set uuid_space      [file join $::ngis::data_root data $uri_type $uuid]
+        set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
+        if {[ catch {
+            set script_results [::ngis::tasks::${function} $task_d $tmpfile_root $uuid_space]
+        } e einfo] } {
+            ::ngis::logger emit "Tcl script error: $e $einfo"
+            return [::ngis::tasks::make_error_result $e $einfo ""]
+        }
+
+        return $script_results
+    }
+
     proc run_bash {task_d} {
         set url [::ngis::tasks url $task_d]
         array set uri_a [::uri::split $url]
         set script [::ngis::tasks function $task_d]
 
-        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
         set uuid [::ngis::tasks uuid $task_d]
         set script_args [list   [::ngis::tasks gid $task_d] \
                                 [::ngis::tasks url $task_d] \
@@ -76,7 +99,8 @@ namespace eval ::ngis::procedures {
                                 [::ngis::tasks version $task_d]]
 
         set uri_type [::ngis::tasks type $task_d]
-        set uuid_space [file join $::ngis::data_root data $uri_type $uuid]
+        set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
+        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
         set script_args [join $script_args |]
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
@@ -87,8 +111,6 @@ namespace eval ::ngis::procedures {
             ::ngis::logger emit "bash script error: $e $einfo"
             return [::ngis::tasks::make_error_result $e $einfo ""]
         }
-        #::ngis::logger emit "got [string length $script_results] characters"
-        #return [::ngis::tasks::make_ok_result [string length $script_results]]
         return $script_results
     }
 
@@ -124,30 +146,6 @@ namespace eval ::ngis::procedures {
         }
         $curl cleanup
         return $status
-    }
-
-    proc data_congruence {task_d} {
-
-        # TODO: this is not portable
-
-        set job_d [dict get $task_d job]
-
-        foreach p [list uri entity description] {
-            switch $p {
-                entity -
-                description {
-                    if {!([dict exists $job_d $p] && ([dict get $job_d $p] != ""))} {
-                        return [::ngis::tasks::make_warning_result "undefined_$p" "" "Undefined description"]
-                    }
-                }
-                uri {
-                    if {!([dict exists $job_d $p] && ([dict get $job_d $p] != ""))} {
-                        return [::ngis::tasks::make_error_result "missing_url" "" "Undefined url for gid [$job_d gid]"]
-                    }
-                }
-            }
-        }
-        return [::ngis::tasks::make_ok_result "Record data congruence tested"]
     }
 
 }

@@ -6,13 +6,11 @@ package require unix_sockets
 package require tclreadline
 
 ::oo::class create ::ngis::Client {
-    variable n
 	variable cmdcount
     variable pending_exit
 	variable scheduled_input
 
     constructor {} {
-        set n               0
         set cmdcount        0
         set pending_exit    false
         set scheduled_input ""
@@ -43,18 +41,11 @@ package require tclreadline
     }
 
     method process_server_message {con msg} {
-        #if {$msg == "----"} {
-        #    if {[string is false $pending_exit]} {
-        #    }
-        #} else {
-        #    puts "[incr n] --> $msg"
-        #}
-
         if {$scheduled_input != ""} {
             after cancel $scheduled_input
         }
         set scheduled_input [after 500 [namespace code [list my terminal_input $con]]]
-        puts "[incr n] --> $msg"
+        puts "$msg"
     }
 
     # actual asynchronous data reader.

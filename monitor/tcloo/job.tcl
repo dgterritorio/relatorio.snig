@@ -88,17 +88,6 @@ package require struct::queue
             }
 
             my post_task $thread_id
-
-            #set task_idx [lsearch $scheduled_tasks $task]
-            #if {$task_idx < 0} {
-            #    ::ngis::logger emit "\[ERROR\] task $task not found in job data."
-            #} else {
-            #    set scheduled_tasks [lreplace $scheduled_tasks $task_idx $task_idx]
-            #    if {[llength $scheduled_tasks] == 0} {
-            #        $sequence job_completed [self]
-            #    }
-            #}
-
         }
 
         #set job_controller [$::ngis_server get_job_controller]

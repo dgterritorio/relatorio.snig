@@ -7,12 +7,14 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wfs_capabilities" "WFS Capabilities" $2 $3
+identify $1 "wms_capabilities" "WMS Capabilities" $2 $3
 
-if [ $type != "WFS" ]; then
+if [ $type != "WMS" ]; then
     echo $(make_not_applicable_result)
     exit 0
 fi
+
+TIMEOUT=2
 
 XML=$(curl --max-time $TIMEOUT -X GET "$url")
 curl_rcode="$?"
@@ -20,16 +22,14 @@ curl_rcode="$?"
 if [ $curl_rcode -ne 0 ]; then
     XML=$(wget --timeout=$TIMEOUT --tries=1 "$url")
     wget_rcode="$?"
-    if [ $wget_rcode ne 0]; then
+    if [ $wget_rcode -ne 0 ]; then
 
         if [[ $curl_rcode -eq 28 && $wget_rcode -eq 4 ]]; then
-            echo $(make_error_result "timeout error" \
-                 "Capabilities version ${version} failed on a $TIMEOUT secs error" "")   
+            echo $(make_error_result "timeout error" "WMS Capabilities version ${version} failed on a $TIMEOUT secs error" "")
         else
             echo $(make_error_result "download_failure" \
-                "Capabilities version ${version} download failed (curl error: $curl_rcode, wget error: $wget_rcode)" "")
+                    "WMS Capabilities version ${version} download failed (curl error: $curl_rcode, wget error: $wget_rcode)" "")
         fi
-
         exit 0
     fi
 fi
@@ -45,7 +45,8 @@ echo $XML > $capabilities_fn
 xmlvalid=$(xmlstarlet validate $capabilities_fn | grep invalid)
 
 if [ -z "$xmlvalid" ]; then 
-    echo $(make_ok_result "valid WFS Capabilities XML document version $version")
+    echo $(make_ok_result "valid WMS Capabilities XML document version $version")
 else 
     echo $(make_error_result "invalidxml" "Invalid XML Capabilities Document $version")
 fi
+exit 0

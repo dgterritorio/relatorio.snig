@@ -57,7 +57,6 @@ namespace eval ::ngis::service {
         $query_res close
     }
 
-
     proc load_by_gid {service_gid} {
         variable connector
 
@@ -80,6 +79,34 @@ namespace eval ::ngis::service {
         $query_result close
         return -code $code -errorcode invalid_gid $result
     }
+
+    proc load_series_by_gids {gids} {
+        variable connector
+
+        set where_clause {}
+        foreach gid $gids {
+            lappend where_clause "gid=$gid"
+        }
+        set where_clause [join $where_clause " OR "]
+        set sql "SELECT DISTINCT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME WHERE $where_clause"
+        set query_result [exec_sql_query $sql]
+
+        set rowcount [$query_result rowcount]
+        if {$rowcount >= 1} {
+            set result [$query_result allrows -as dicts]
+            set code 0
+        } elseif {$rowcount == 0} {
+            set result "Invalid query: no records found for ani gids"
+            set code 1
+        } else {
+            set result "Inconsistent data for gid series '$gids'"
+            set code 1
+        }
+        $query_result close
+        return -code $code -errorcode invalid_gid $result
+
+    }
+
 
     proc load_by_entity {snig_entity args} {
         set as "-list"

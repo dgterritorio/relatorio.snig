@@ -58,6 +58,10 @@ catch { ::ngis::JobSequence destroy }
             return
         }
         set running_jobs [lreplace $running_jobs $j $j]
+
+        if {[llength $running_jobs] == 0} {
+            my MarkForTermination
+        }
     }
 
     method running_jobs_count {} {

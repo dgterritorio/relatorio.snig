@@ -152,8 +152,9 @@ oo::define ngis::Protocol {
                 set tasks [lindex $args 0]
                 $json_o string tasks array_open
                 foreach t $tasks {
-                    lassign $t  task func desc pro
+                    lassign $t  task func desc pro script
                     $json_o map_open string "task" string $task \
+                                     string "script" string $script \
                                      string "function" string $func \
                                      string "description" string $desc \
                                      string "procedure" string $pro map_close
@@ -273,25 +274,28 @@ oo::define ngis::Protocol {
             110 {
                 set tasks [lindex $args 0]
 
-                set fw {0 0 0 0}
+                set fw {0 0 0 0 0}
                 foreach t $tasks {
-                    lassign $fw f1 f2 f3 f4
-                    lassign $t  task func desc pro
+                    lassign $fw f1 f2 f3 f4 f5
+                    lassign $t  task func desc pro script
                     set func [file tail $func]
                     set fw [list [expr max($f1,[string length $task])] \
-                                 [expr max($f2,[string length $func])] \
-                                 [expr max($f3,[string length $desc])] \
-                                 [expr max($f4,[string length $pro])]]
+                                 [expr max($f2,[string length $script])] \
+                                 [expr max($f3,[string length $func])] \
+                                 [expr max($f4,[string length $desc])] \
+                                 [expr max($f5,[string length $pro])]]
                 }
+
                 set table ""
-                lassign $fw f1 f2 f3 f4
+                lassign $fw f1 f2 f3 f4 f5
                 foreach t $tasks {
-                    lassign $t  task func desc pro
+                    lassign $t  task func desc pro script
                     set func [file tail $func]
                     lappend table [join [list [format "%-${f1}s" $task] \
-                                              [format "%-${f2}s" $func] \
-                                              [format "%-${f3}s" $desc] \
-                                              [format "%-${f4}s" $pro]] " | "]
+                                              [format "%-${f2}s" $script] \
+                                              [format "%-${f3}s" $func] \
+                                              [format "%-${f4}s" $desc] \
+                                              [format "%-${f5}s" $pro]] " | "]
                 }
                 set table [join $table "\n"]
                 set strmsg [format $fstring [llength $tasks] $table]
@@ -299,7 +303,7 @@ oo::define ngis::Protocol {
             501 {
                 set strmsg [format $fstring [join $args "\n === \n"]] 
             }
-            default {
+            default {   
                 set strmsg [dict get $code_messages $code]
             }
         }
@@ -311,7 +315,6 @@ oo::define ngis::Protocol {
     }
 
     method parse_cmd {args} {
-
         set msg [string trim $args]
         puts "msg >$msg ([llength $msg])<"
         if {[regexp -nocase {^(\w+)\s*.*$} $msg m cmd] == 0} {
@@ -333,44 +336,61 @@ oo::define ngis::Protocol {
 						break
                     }
 
+                    # checking the specific case of a sequence of gids
+                    # (handy to handle forms submit build with checkboxes)
+
+                    set integer_set false
+                    if {$narguments > 1} {
+                        set integer_set true
+                        foreach a $arguments {
+                            if {![string is integer $a]} {
+                                set integer_set false
+                                break
+                            }
+                        }
+                    }
+
                     if {[catch {
-	                    set service_check [lindex $arguments 0]
                         set job_controller [$::ngis_server get_job_controller]
-						if {[string is integer $service_check]} {
-							set service_d [::ngis::service load_by_gid $service_check]
-							if {$service_d == ""} {
-								return [my compose 005 $service_check]
-							} else {
-                                if {[dict exists $service_d description]} {
-                                    set description [dict get $service_d description]
-                                } elseif {[dict exists $service_d entity]} {
-                                    set description [dict get $service_d entity]
+                        if {$integer_set} {
+                            set service_l [::ngis::service load_series_by_gids $arguments]
+                            if {[llength $service_l]} {
+                                #puts "posting a sequence of [llength $service_l] service checks"
+                                $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
+                                    [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] $service_l] "series of [llength $service_l] gids"]
+                            } else {
+                                return [my compose 005 $service_check]
+                            }
+                        } else {
+                            foreach service_check $arguments {
+                                if {[string is integer $service_check]} {
+                                    set service_d [::ngis::service load_by_gid $service_check]
+                                    if {$service_d == ""} {
+                                        return [my compose 005 $service_check]
+                                    } else {
+                                        if {[dict exists $service_d description]} {
+                                            set description [dict get $service_d description]
+                                        } elseif {[dict exists $service_d entity]} {
+                                            set description [dict get $service_d entity]
+                                        } else {
+                                            set description "Unnamed record (gid=$service_check)"
+                                        }
+
+                                        $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
+                                            [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
+
+                                        #set client_message [my compose 002]
+                                    }
                                 } else {
-                                    set description "Unnamed record (gid=$service_check)"
-                                }
+                                    set entity $service_check
+                                    set resultset [::ngis::service load_by_entity $entity -limit $limit -resultset]
 
-								$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-									[::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
-
-								set client_message [my compose 002]
-							}
-						} else {
-							set entity $service_check
-                            set limit 0
-							::ngis::logger emit "CHECK arguments $arguments"
-                            if {$narguments == 2} { 
-                                set limit [lindex $arguments 1] 
-                                if {!([string is integer $limit] && ($limit > 0))} {
-                                    return [my compose 011]
-                                    break
+                                    $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
+                                                                  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
                                 }
                             }
-							set resultset [::ngis::service load_by_entity $entity -limit $limit -resultset]
-
-							$job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-														  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
-							set client_message [my compose 002]
-						}
+                        }
+                        set client_message [my compose 002]
 					} e einfo]} {
 						return -code ok [my compose 007 $e $einfo]
 					}

@@ -7,9 +7,9 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wfs_ogr_info" "WFS OGRinfo Capabilities" $2 $3
+identify $1 "wms_gdal_info" "WMS GDAL info Capabilities" $2 $3
 
-if [ $type != "WFS" ]; then
+if [ $type != "WMS" ]; then
     echo $(make_not_applicable_result)
     exit 0
 fi
@@ -18,27 +18,27 @@ if [ ! -d $uuid_space ]; then
     mkdir -p $uuid_space
 fi
 
-ogrinfo_fn="${uuid_space}/ogrinfo-${version}.txt"
+gdalinfo_fn="${uuid_space}/gdalinfo-${version}.txt"
 
-ogrinfo -so wfs:"${url}" 1> $ogrinfo_fn 2>&1
+gdalinfo wms:"${url}" 1> $gdalinfo_fn 2>&1
 
 #cat $ogrinfo_fn
 #re_match=$(cat $ogrinfo_fn | grep -oiP "^INFO: Open of\s+.wfs:.*\s+using driver .WFS. successful.")
 
-re_match=$(cat $ogrinfo_fn | grep "using driver \`WFS' successful")
+re_match=$(cat $gdalinfo_fn | grep "Driver: WMS/OGC Web Map Service")
 #echo ">$re_match<"
 
 if [ "$re_match" != "" ]; then
-    ser_match=$(cat $ogrinfo_fn | grep -oiP "ServiceExceptionReport|error")
+    ser_match=$(cat $gdalinfo_fn | grep -oiP "ServiceExceptionReport|error")
     if [ "$ser_match" != "" ]; then
-        echo $(make_warning_result "valid WFS OGR info response (version $version) with warning or not fatal error")
+        echo $(make_warning_result "valid WMS GDAL info response (version $version) with warning or not fatal error")
     else
-        echo $(make_ok_result "valid WFS OGR info response (version $version)")
+        echo $(make_ok_result "valid WMS GDAL info response (version $version)")
     fi
-    ogrinfo_json="${uuid_space}/ogrinfo-${version}.json"
-    ogrinfo -nocount -noextent -json wfs:${url} > $ogrinfo_json 2>&1
+    gdalinfo_json="${uuid_space}/gdalinfo-${version}.json"
+    gdalinfo -json wms:${url} > $gdalinfo_json 2>&1
 else
-    echo $(make_error_result "invalid_ogrinfo" "Invalid OGR info response")
+    echo $(make_error_result "invalid_gdalinfo" "Invalid GDAL info response")
 fi
 
 #re_match=$(cat $ogrinfo_fn | grep -oiP "INFO: Open of\s+.wfs:.*\s+using driver .WFS. successful.")
