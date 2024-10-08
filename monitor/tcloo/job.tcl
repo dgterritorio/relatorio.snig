@@ -90,8 +90,7 @@ package require struct::queue
             my post_task $thread_id
         }
 
-        #set job_controller [$::ngis_server get_job_controller]
-        #$job_controller move_thread_to_idle $thread_id
+        $job_controller move_thread_to_idle $thread_id
 
         # this call is supposed to reschedule the job sequence round robin
 

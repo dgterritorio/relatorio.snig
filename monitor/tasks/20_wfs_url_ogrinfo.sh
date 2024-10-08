@@ -20,8 +20,13 @@ fi
 
 ogrinfo_fn="${uuid_space}/ogrinfo-${version}.txt"
 
-ogrinfo -so wfs:"${url}" 1> $ogrinfo_fn 2>&1
+ogrinfo -so wfs:"${url}" --config GDAL_HTTP_TIMEOUT $GDAL_HTTP_TIMEOUT 1> $ogrinfo_fn 2>&1
+ogrinfo_rcode="$?"
 
+if [ $ogrinfo_rcode -ne 0 ]; then
+    echo $(make_error_result "timeout_error" "WFS ogrinfo failed on a $GDAL_HTTP_TIMEOUT secs timeout" "")
+    exit 0
+fi
 #cat $ogrinfo_fn
 #re_match=$(cat $ogrinfo_fn | grep -oiP "^INFO: Open of\s+.wfs:.*\s+using driver .WFS. successful.")
 

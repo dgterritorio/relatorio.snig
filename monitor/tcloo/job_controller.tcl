@@ -43,6 +43,7 @@ namespace eval ::ngis {
 
         method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
+                ::ngis::logger emit "rescheduling round robin"
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
         }
@@ -71,6 +72,7 @@ namespace eval ::ngis {
         }
 
         method post_sequence {job_sequence} {
+            ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
             my RescheduleRoundRobin
         }
@@ -97,10 +99,12 @@ namespace eval ::ngis {
 
             # check whether the sequence is already on the pending sequences list
 
+            #::ngis::logger emit "searching $seq in >$pending_sequences< (pending seqs)"
             set idx [lsearch -exact $pending_sequences $seq]
             if {$idx >= 0} {
                 set pending_sequences [lreplace $pending_sequences $idx $idx]
             } else {
+                #::ngis::logger emit "searching $seq in >$sequence_list< (running seqs)"
                 set idx [lsearch -exact $sequence_list $seq]
                 if {$idx < 0} {
                     ::ngis::logger emit "error in [info object class]: invalid sequence"
@@ -113,8 +117,11 @@ namespace eval ::ngis {
             }
             $seq destroy
 
-            ::ngis::logger emit "[llength $sequence_list] sequences pending"
+            ::ngis::logger emit "[llength $sequence_list] sequences running, [llength $pending_sequences] pending"
             if {[llength $sequence_list] > 0} {
+                foreach s $sequence_list {
+                    ::ngis::logger emit "$s: '[$s get_description]' [$s running_jobs_count] jobs"
+                }
                 my RescheduleRoundRobin
             } else {
                 after 100 [list $::ngis_server sync_results $task_results_queue] 

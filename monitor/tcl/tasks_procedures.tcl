@@ -36,7 +36,6 @@ proc mockup_processing {task_d job_thread_id} {
 proc do_task {task_d job_thread_id} {
     variable wait_procedure
 
-
     set url [::ngis::tasks url $task_d]
     dict with task_d {
         ::ngis::logger emit "running procedure '$procedure' (function '$function') for url '$url'"

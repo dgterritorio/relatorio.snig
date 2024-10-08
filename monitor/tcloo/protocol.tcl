@@ -383,7 +383,7 @@ oo::define ngis::Protocol {
                                     }
                                 } else {
                                     set entity $service_check
-                                    set resultset [::ngis::service load_by_entity $entity -limit $limit -resultset]
+                                    set resultset [::ngis::service load_by_entity $entity -resultset]
 
                                     $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
                                                                   [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]

@@ -23,6 +23,7 @@ package require tclreadline
         set cmd_args [lrange $cmdline 1 end]
 
         switch -nocase $cmd {
+            P -
             C -
             F -
             SX -
@@ -85,6 +86,9 @@ package require tclreadline
         }
         set parsed_cmd [my parse_cmd_line $line cmd_args]
         switch -nocase $parsed_cmd {
+            P {
+                my send_to_server $con PENDING
+            }
             LT {
                 my send_to_server $con REGTASKS
             }

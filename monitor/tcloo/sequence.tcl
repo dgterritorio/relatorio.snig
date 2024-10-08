@@ -14,7 +14,6 @@ catch { ::ngis::JobSequence destroy }
     variable data_source
     variable description
     variable running_jobs
-    variable current_job
     variable stop_signal
     variable completed_jobs
     variable jobs_to_destroy
@@ -23,7 +22,6 @@ catch { ::ngis::JobSequence destroy }
         set data_source     $ds
         set description     $dscr
         set stop_signal     false
-        set running_jobs    {}
         set current_job     ""
         set completed_jobs  0
         set jobs_to_destroy {}

@@ -9,12 +9,12 @@ function make_ok_result ()
 
 function make_error_result ()
 {
-    echo "error {$1} {$2} {$3} {$(date +%s)}"
+    echo "error {$1} {$3} {$2} {$(date +%s)}"
 }
 
 function make_warning_result ()
 {
-    echo "warning {$1} {$2} {$3} {$(date +%s)}"
+    echo "warning {$1} {$3} {$2} {$(date +%s)}"
 }
 
 function make_not_applicable_result ()
