@@ -1,6 +1,10 @@
-#!/usr/bin/tclsh
+#!/usr/bin/tclsh8.6
 
-set current_dir [concat [file normalize "."]]
+package require syslog
+
+set current_dir [file dirname [info script]]
+
+cd $current_dir
 
 set curr_dir_pos [lsearch $auto_path $current_dir]
 if {$curr_dir_pos < 0} {
@@ -26,4 +30,8 @@ if {[file exists [file join $::ngis::data_root tmp]] == 0} {
 if {[file exists [file join $::ngis::data_root data]] == 0} {
     file mkdir [file join $::ngis::data_root data]
 }
+
+
+syslog -ident snig -facility user info "SNIG Monitor Start"
+
 $::ngis_server run $::ngis::max_workers_number

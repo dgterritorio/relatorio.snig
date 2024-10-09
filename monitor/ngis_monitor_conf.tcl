@@ -1,6 +1,6 @@
 namespace eval ::ngis {
 
-    variable HOST               "snig.naturalgis.pt"
+    variable HOST               "127.0.0.1"
     variable USERNAME           "dgt"
     variable PASSWORD           "W8a1kCUOx0mupUAF"
     variable DB_NAME            "snig"
