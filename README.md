@@ -16,6 +16,10 @@ A collection of scripts to harvest and (health) check the services published at 
 * Tcl
 * libapache2-mod-rivet (enable either mpm prefork or worker)
 * apache2
+* tcl-syslog
+* tcl-unix-sockets
+* tcl8.6-tdbcpostgres
+* tcl-thread
 
 ## System setup:
 
