@@ -23,6 +23,7 @@ A collection of scripts to harvest and (health) check the services published at 
 * tcl-unix-sockets
 * tcl8.6-tdbcpostgres
 * tcl-thread
+* tcl-tls
 
 ## System setup:
 
