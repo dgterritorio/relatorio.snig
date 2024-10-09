@@ -79,3 +79,6 @@ Replace the path to run_server with the actual path to the code. You may start i
 
 * Service Installation
 
+## CLI Usage:
+
+
