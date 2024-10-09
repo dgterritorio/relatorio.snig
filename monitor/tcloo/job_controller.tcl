@@ -43,7 +43,7 @@ namespace eval ::ngis {
 
         method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
-                ::ngis::logger emit "rescheduling round robin"
+                #::ngis::logger emit "rescheduling round robin"
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
         }
