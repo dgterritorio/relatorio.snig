@@ -31,9 +31,23 @@ A collection of scripts to harvest and (health) check the services published at 
 
 apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis
 
-* Cloning the repository
+* User creation.
 
-* The file <snig-monitor-root>/monitor/ngis_monitor_conf.tcl must be edited and the appropriate parameters values must be modified.
+If you want you may create a user to install the monitor code. Any non privileged user would work. In this documentation we assume the installation to be made by user snig having /home/snig as root 
+
+* Cloning the repository. (In order to clone the repository the 'git' utility must be installed)
+
+```
+# git https://github.com/dgterritorio/relatorio.snig.git 
+```
+
+this command will create a relatorio.snig directory with the monitor code. You can change the name of the directory by passing its path as final argument. The full path to this directory will be referenced as <snig-monitor-root> across this document
+
+```
+# git https://github.com/dgterritorio/relatorio.snig.git <snig-monitor-root>
+```
+
+* Create the snig monitor configuration. The file <snig-monitor-root>/monitor/ngis_monitor_conf.tcl must be created from <snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl and modified with the appropriate parameters values.
 ```
   namespace eval ::ngis {
 
@@ -73,8 +87,10 @@ Description=Snig Resources Monitor Server
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/tclsh8.6 /home/snig/relatorio.snig/monitor/run_server.tcl
 Type=simple
+User=snig
+Group=snig
+ExecStart=/usr/bin/tclsh8.6 <snig-monitor-root>/monitor/run_server.tcl
 ```
 Replace the path to run_server with the actual path to the code. You may start it by typing `systemctl start snig-monitor`. The service will start anyway at boot time
 
@@ -82,7 +98,16 @@ Replace the path to run_server with the actual path to the code. You may start i
 
 ## CLI Usage:
 
-
 ## Anatomy of a script implementing a control task
 
+## Create a crontab entry for the monitor
+From the shell of the user running the monitor type
 
+```
+crontab -e
+```
+and write the following line in it
+```
+0 6 * * * /usr/bin/tclsh8.6 <snit-monitor-root>/home/snig/relatorio.snig/monitor/utils/general_test.tcl
+```
+this line will run the tests on all the resources every day at 6 AM. To customize this schedule refer to the cron manual page
