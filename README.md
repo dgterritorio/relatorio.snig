@@ -83,3 +83,6 @@ Replace the path to run_server with the actual path to the code. You may start i
 ## CLI Usage:
 
 
+## Anatomy of a script implementing a control task
+
+
