@@ -1,4 +1,4 @@
-# SNIG: Services Quality Monitoring
+# SNIG: Services Quality Report
 
 A collection of scripts to harvest and (health) check the services published at https://snig.dgterritorio.gov.pt/
 
