@@ -16,7 +16,6 @@ namespace eval ::ngis {
     ::oo::define ::ngis::JobController {
         variable sequence_list
         variable sequence_idx
-        variable max_running_seqs
         variable thread_master
         variable pending_sequences
         variable round_robin_procedure
@@ -26,10 +25,9 @@ namespace eval ::ngis {
         variable shutdown_signal
 
         constructor {max_workers_num} {
-            set max_running_seqs        max_workers_num
             set sequence_list           {}
             set sequence_idx            0
-            set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master 10]
+            set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_worker_num]
             set pending_sequences       {}
             set round_robin_procedure   ""
             set task_results_chore      ""
