@@ -27,7 +27,7 @@ namespace eval ::ngis {
         constructor {max_workers_num} {
             set sequence_list           {}
             set sequence_idx            0
-            set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_worker_num]
+            set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_workers_num]
             set pending_sequences       {}
             set round_robin_procedure   ""
             set task_results_chore      ""
