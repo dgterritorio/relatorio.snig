@@ -153,7 +153,7 @@ namespace eval ::ngis {
             if {[llength $pending_sequences] > 0} {
                 set ps $pending_sequences
                 foreach seq $ps {
-                    if {[$seq active_jobs] == 0} {
+                    if {[$seq active_jobs_count] == 0} {
                         my sequence_terminates $seq
                     } 
                 }
@@ -184,7 +184,7 @@ namespace eval ::ngis {
 		method status {} {
             set njobs 0
             foreach s [concat $sequence_list $pending_sequences] {
-                set njobs [expr $njobs + [$s active_jobs]]
+                set njobs [expr $njobs + [$s active_jobs_count]]
             }
 			return [list $sequence_list $njobs $pending_sequences]
 		}
