@@ -33,7 +33,8 @@ catch { ::ngis::JobSequence destroy }
     }
 
 	method get_description {} { return $description }
-    method active_jobs {} { return [my running_jobs_count] }
+    method active_jobs_count {} { return [my running_jobs_count] }
+    method active_jobs {} { return $running_jobs }
     method completed_jobs {} { return $completed_jobs }
 
     method job_scheduling_completed {job_o} {

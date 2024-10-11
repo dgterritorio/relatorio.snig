@@ -131,7 +131,7 @@ oo::define ngis::Protocol {
                         foreach s [set $sclass] {
                             $json_o map_open string "object"         string   $s \
                                              string "description"    string  [$s description] \
-                                             string "active_jobs"    integer [$s active_jobs] \
+                                             string "active_jobs"    integer [$s active_jobs_count] \
                                              string "completed_jobs" integer [$s completed_jobs] \
                                     map_close     
                         }
@@ -251,7 +251,7 @@ oo::define ngis::Protocol {
                     set strmsg  "no running sequences ([llength $pending] pending sequences)"
                 } else {
                     set strmsg "[lindex $args 1] running jobs\n[llength $pending] pending sequences"
-                    set seqs_l [lmap s $seql { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs] }]
+                    set seqs_l [lmap s $seql { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
                     set strmsg [format $fstring [lindex $args 1] [join $seqs_l "\n"]]
                 }
 			}
