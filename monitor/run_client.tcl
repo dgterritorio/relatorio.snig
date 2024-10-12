@@ -2,7 +2,15 @@
 #
 #
 #
-lappend auto_path .
+set snig_monitor_dir [file dirname [info script]]
+
+set snig_monitor_dir_idx [lsearch $auto_path $snig_monitor_dir]
+if {$snig_monitor_dir_idx < 0} {
+    set auto_path [concat $snig_monitor_dir $auto_path]
+} elseif {$snig_monitor_dir_idx > 0} {
+    set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_idx $snig_monitor_dir_idx]]
+}
+
 package require ngis::client
 package require ngis::conf
 

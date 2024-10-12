@@ -2,12 +2,12 @@
 
 package require syslog
 
-set current_dir [file dirname [info script]]
+set current_dir [file normalize [file dirname [info script]]]
 
 cd $current_dir
 
-set curr_dir_pos [lsearch $auto_path $current_dir]
-if {$curr_dir_pos < 0} {
+set current_dir_pos [lsearch $auto_path $current_dir]
+if {$current_dir_pos < 0} {
     set auto_path [concat $current_dir $auto_path]
 } elseif {$current_dir_pos > 0} {
     set auto_path [concat $current_dir [lreplace $auto_path $current_dir_pos $current_dir_pos]]
