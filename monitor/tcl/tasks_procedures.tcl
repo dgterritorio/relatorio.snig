@@ -46,6 +46,5 @@ proc do_task {task_d job_thread_id} {
 
     set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
-
 }
 

@@ -90,10 +90,8 @@ package require struct::queue
             my post_task $thread_id
         }
 
+        # this call eventually reschedules the job sequence round robin
         $job_controller move_thread_to_idle $thread_id
-
-        # this call is supposed to reschedule the job sequence round robin
-
     }
 
     method serialize {} {
