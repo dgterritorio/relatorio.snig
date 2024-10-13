@@ -1,4 +1,5 @@
 package require syslog
+package require ngis::conf
 
 namespace eval ::ngis::logger {
     variable nmsg -1
@@ -12,6 +13,12 @@ namespace eval ::ngis::logger {
             syslog -perror -ident snig_monitor -facility user info $mesg
         } else {
             syslog -ident snig_monitor -facility user info $mesg
+        }
+    }
+
+    proc debug {mesg} {
+        if {$::ngis::debugging} {
+            emit $mesg
         }
     }
 
