@@ -27,7 +27,7 @@ namespace eval ::ngis::logger {
         set nmsg 0
     }
 
-    namespace export emit reset
+    namespace export emit reset debug
     namespace ensemble create
 }
 
