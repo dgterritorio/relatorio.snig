@@ -14,11 +14,16 @@ if [ $type != "WFS" ]; then
     exit 0
 fi
 
-XML=$(curl --max-time $TIMEOUT -X GET "$url")
+if [ ! -d $uuid_space ]; then
+    mkdir -p $uuid_space
+fi
+capabilities_fn="${uuid_space}/wfs-capabilities-${version}.xml"
+
+curl --max-time $TIMEOUT --output $capabilities_fn -X GET "$url"
 curl_rcode="$?"
 
 if [ $curl_rcode -ne 0 ]; then
-    XML=$(wget --timeout=$TIMEOUT --tries=1 "$url")
+    wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url")
     wget_rcode="$?"
     if [ $wget_rcode ne 0]; then
 
@@ -34,14 +39,6 @@ if [ $curl_rcode -ne 0 ]; then
     fi
 fi
 
-if [ ! -d $uuid_space ]; then
-    mkdir -p $uuid_space
-fi
-
-capabilities_fn="${uuid_space}/capabilities-${version}.xml"
-
-echo $XML > $capabilities_fn
-
 xmlvalid=$(xmlstarlet validate $capabilities_fn | grep invalid)
 
 if [ -z "$xmlvalid" ]; then 
@@ -49,3 +46,4 @@ if [ -z "$xmlvalid" ]; then
 else 
     echo $(make_error_result "invalidxml" "Invalid XML Capabilities Document $version")
 fi
+exit 0
