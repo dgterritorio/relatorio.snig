@@ -16,14 +16,18 @@ A collection of scripts to harvest and (health) check the services published at 
 * xmllint
 * parallel
 * postgresql
-* Tcl
-* libapache2-mod-rivet (enable either the prefork or worker mpm module)
-* apache2
+* tcl8.6
+* tcllib
 * tcl-syslog
 * tcl-unix-sockets
 * tcl8.6-tdbcpostgres
 * tcl-thread
 * tcl-tls
+
+## Web interface dependencies
+
+* apache2
+* libapache2-mod-rivet (enable either the prefork or worker mpm modules)
 
 ## System setup:
 
