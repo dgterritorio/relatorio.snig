@@ -2,7 +2,7 @@
 
 package require syslog
 
-set current_dir [file dirname [info script]]
+set current_dir [file normalize [file dirname [info script]]]
 
 cd $current_dir
 

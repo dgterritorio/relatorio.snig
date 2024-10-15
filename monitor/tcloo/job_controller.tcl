@@ -41,7 +41,7 @@ namespace eval ::ngis {
 
         method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
-                #::ngis::logger emit "rescheduling round robin"
+                ::ngis::logger debug "rescheduling job sequences round robin"
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
         }
@@ -168,7 +168,6 @@ namespace eval ::ngis {
 
                 set seq [lindex $sequence_list $sequence_idx]
                 ::ngis::logger emit "processing sequence $seq"
-
                 $seq post_job [$thread_master get_available_thread]
                 incr sequence_idx
 

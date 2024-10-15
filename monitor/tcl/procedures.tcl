@@ -122,7 +122,7 @@ namespace eval ::ngis::procedures {
 
         set script_args [join $script_args |]
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
-        #::ngis::logger emit "running command: $cmd"
+        ::ngis::logger debug "running command: $cmd"
         if {[catch {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
         } e einfo]} {

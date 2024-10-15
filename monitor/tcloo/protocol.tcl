@@ -121,9 +121,8 @@ oo::define ngis::Protocol {
                         string message string [format $fstring $current_format]
             }
             106 {
-				set running [lindex $args 0]
-                set pending [lindex $args 2]
-                $json_o string message string "[llength $running] running, [llength $pending] sequences"
+                lindex $args running njobs pending
+                $json_o string message string "[llength $running] job sequences ($njobs jobs), [llength $pending] sequences"
                 foreach sclass [list pending running] {
                     if {[llength [set $sclass]] > 0} {
                         $json_o map_open string $sclass integer [llength [set $sclass]]
@@ -245,12 +244,11 @@ oo::define ngis::Protocol {
                 set strmsg [format $fstring $current_format]
             }
             106 {
-				set seql [lindex $args 0]
-                set pending [lindex $args 2]
+                lassign $args seql njobs pending
                 if {[llength $seql] == 0} {
-                    set strmsg  "no running sequences ([llength $pending] pending sequences)"
+                    set strmsg  "no queued sequences ([llength $pending] pending sequences with $njobs jobs)"
                 } else {
-                    set strmsg "[lindex $args 1] running jobs\n[llength $pending] pending sequences"
+                    set strmsg "$njobs running jobs\n[llength $pending] pending sequences"
                     set seqs_l [lmap s $seql { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
                     set strmsg [format $fstring [lindex $args 1] [join $seqs_l "\n"]]
                 }
@@ -377,7 +375,7 @@ oo::define ngis::Protocol {
                                         }
 
                                         $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-                                            [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
+                                        [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
 
                                         #set client_message [my compose 002]
                                     }
