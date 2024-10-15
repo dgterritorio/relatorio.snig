@@ -7,7 +7,7 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wms_capabilities" "WMS Capabilities" $2 $3
+identify $1 "wms_capabilities" "WMS Capabilities" $2 $3 "WMS"
 
 if [ $type != "WMS" ]; then
     echo $(make_not_applicable_result)

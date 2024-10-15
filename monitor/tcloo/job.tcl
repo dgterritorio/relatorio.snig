@@ -46,7 +46,16 @@ package require struct::queue
             $tasks_q clear
         }
 
-        $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
+        $tasks_q put {*}[lmap t $tasks_l {             
+            set task_d [::ngis::tasks mktask $t [self]] 
+            set task_uri_type [::ngis::tasks type $task_d]
+            set job_uri_type  [my uri_type] 
+            if {($uri_type == "all") || ($task_uri_type == $job_uri_type)} {
+                set task_d
+            } else {
+                continue
+            }
+        }]
     }
 
     method start_job {thread_id} {
@@ -163,7 +172,7 @@ package require struct::queue
 
     method gid {} { return [my get_property gid] }
     method url {} { return [my get_property uri] }
-    method type {} { return [my get_property type] }
+    method uri_type {} { return [my get_property uri_type] }
     method version {} { return [my get_property version] }
     method uuid {} { return [my get_property uuid] }
     method jobname {} { return [my get_property jobname] }

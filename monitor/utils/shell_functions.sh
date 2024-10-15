@@ -34,7 +34,7 @@ function identify()
     #echo "$@"
     if [ "$1" == "identify" ]; then
 
-        echo "{$2} {$3}"
+        echo "{$2} {$3} {$6}"
         exit 0
 
     else

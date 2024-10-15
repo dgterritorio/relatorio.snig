@@ -100,28 +100,28 @@ namespace eval ::ngis::tasks {
                 if {[catch {
                     set ftype [file extension $script]
                     if {$ftype == ".sh"} {
+
                         set identity [exec /bin/bash $script identify]
-                        lassign $identity task description
-                        lappend tasks $task
-                        dict set tasks_db $task [dict create function    $script \
-                                                             script      $script \
-                                                             description $description \
-                                                             procedure   run_bash \
-                                                             language    "Bash"]
+                        set language "Bash"
+                        set procedure "run_bash"
+
                     } elseif {$ftype == ".tcl"} {
 
-                        #puts "ns: [namespace current]"
                         namespace eval [namespace current] [list source $script ]
                         set identity [eval [namespace current]::identify]
-                        lassign $identity task function description
-                        lappend tasks $task
-                        dict set tasks_db $task [dict create function    $function \
-                                                             script      $script \
-                                                             description $description \
-                                                             procedure   run_tcl \
-                                                             language    "Tcl"]
+                        set language "Bash"
+                        set procedure "run_tcl"
                         rename [namespace current]::${function} ""
+
                     }
+                    lassign $identity task function description uri_type
+                    lappend tasks $task
+                    dict set tasks_db $task [dict create function    $function  \
+                                                         script      $script    \
+                                                         description $description \
+                                                         uri_type    $uri_type  \
+                                                         procedure   $procedure \
+                                                         language    $language]
                 } e einfo]} {
                     ::ngis::logger emit "error analyzing shell script $script: $e $einfo"
                     continue
@@ -139,7 +139,7 @@ namespace eval ::ngis::tasks {
         set tasks_l [lmap t $tasks { 
             set td [dict get $tasks_db $t]
             dict with td {
-                set tlist [list $t $function $description $procedure $script $language] 
+                set tlist [list $t $uri_type $function $description $procedure $script $language] 
             }
             set tlist
         }]
