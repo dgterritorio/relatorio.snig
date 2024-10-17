@@ -33,12 +33,14 @@ package require struct::queue
 
     method set_sequence {its_sequence} { set sequence $its_sequence }
 
-    method notify_sequence {} {
+    method notify_sequence {thread_id} {
         ::ngis::logger emit "Job [self] terminates"
         
         if {$sequence != ""} { 
             $sequence job_completed [self]
         }
+        # this call eventually reschedules the job sequence round robin
+        [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
 
     method initialize {} {
@@ -65,21 +67,24 @@ package require struct::queue
 
     method post_task {thread_id} {
         if {[catch { set task_d [$tasks_q get] } e einfo]} {
-            my notify_sequence
+
+            my notify_sequence $thread_id
             return false
+
+        } else {
+
+            ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+            thread::send -async $thread_id [list do_task $task_d [thread::id]]
+            return true
+
         }
-
-        ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
-        thread::send -async $thread_id [list do_task $task_d [thread::id]]
-
-        return true
     }
 
     method task_completed {thread_id task_d} {
         set task_result ""
         set job_controller [$::ngis_server get_job_controller]
         dict with task_d {
-            ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status'"
+            ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
             set task_result $status
 
             lassign $task_result code
@@ -91,18 +96,13 @@ package require struct::queue
                 # on an error code we interrupt the job
 
                 if {$code == "error"} {
-                    my notify_sequence
+                    my notify_sequence $thread_id
                     return 
                 }
             }
 
             my post_task $thread_id
         }
-
-        $job_controller move_thread_to_idle $thread_id
-
-        # this call is supposed to reschedule the job sequence round robin
-
     }
 
     method serialize {} {

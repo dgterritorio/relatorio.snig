@@ -39,13 +39,10 @@ proc do_task {task_d job_thread_id} {
     set url [::ngis::tasks url $task_d]
     dict with task_d {
         ::ngis::logger emit "running procedure '$procedure' (function '$function') for url '$url'"
-        if {[catch { set status [::ngis::procedures::${procedure} $task_d] } e einfo]} {
-            set status [::ngis::tasks::make_error_result $e [dict get $einfo -errorcode] ""]
-        }
+        set status [::ngis::procedures::${procedure} $task_d]
     }
 
     set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
-
 }
 

@@ -14,13 +14,16 @@ if [ $type != "WMS" ]; then
     exit 0
 fi
 
-TIMEOUT=2
+if [ ! -d $uuid_space ]; then
+    mkdir -p $uuid_space
+fi
+capabilities_fn="${uuid_space}/wms-capabilities-${version}.xml"
 
-XML=$(curl --max-time $TIMEOUT -X GET "$url")
+curl --max-time $TIMEOUT --output $capabilities_fn -X GET "$url"
 curl_rcode="$?"
 
 if [ $curl_rcode -ne 0 ]; then
-    XML=$(wget --timeout=$TIMEOUT --tries=1 "$url")
+    $(wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url")
     wget_rcode="$?"
     if [ $wget_rcode -ne 0 ]; then
 
@@ -30,17 +33,10 @@ if [ $curl_rcode -ne 0 ]; then
             echo $(make_error_result "download_failure" \
                     "WMS Capabilities version ${version} download failed (curl error: $curl_rcode, wget error: $wget_rcode)" "")
         fi
+
         exit 0
     fi
 fi
-
-if [ ! -d $uuid_space ]; then
-    mkdir -p $uuid_space
-fi
-
-capabilities_fn="${uuid_space}/capabilities-${version}.xml"
-
-echo $XML > $capabilities_fn
 
 xmlvalid=$(xmlstarlet validate $capabilities_fn | grep invalid)
 

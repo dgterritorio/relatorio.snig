@@ -52,13 +52,13 @@ namespace eval ::ngis::service {
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
         append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info"
-        puts $sql
+        #puts $sql
         set query_res [exec_sql_query $sql]
         $query_res close
 
         set    sql "INSERT INTO $::ngis::SERVICE_LOG (gid,ts,task,exit_status,exit_info,uuid) "
         append sql "VALUES [join $values_l ","] "
-        puts $sql
+        #puts $sql
         set query_res [exec_sql_query $sql]
         $query_res close
     }
@@ -163,8 +163,7 @@ namespace eval ::ngis::service {
         }
         lappend sql "ORDER BY eid"
         set sql [join $sql " "]
-
-        puts $sql
+        #puts $sql
 
         set query_result [exec_sql_query $sql]
         set entities [$query_result allrows -as lists]

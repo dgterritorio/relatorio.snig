@@ -31,7 +31,7 @@ proc socket_readable {con} {
     }
 
     set server_msg [chan gets $con]
-    puts $server_msg
+    syslog -ident snig -facility user info $server_msg
     incr ::next_entity
 }
 
@@ -50,7 +50,7 @@ foreach ent $entities {
 
     if {[dict exists $ent entity]} {
         set ent_name [dict get $ent entity]
-        puts "sent request for $ent_name, waiting..."
+        syslog -ident snig -facility user info "sent request for $ent_name, waiting..."
         chan puts $con "CHECK \"$ent_name\""
         chan flush $con
     } else {

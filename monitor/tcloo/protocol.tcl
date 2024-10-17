@@ -30,7 +30,7 @@ oo::define ngis::Protocol {
                                       102     "Stopping operations"       \
                                       104     "current format %s"         \
                                       105     "Monitor Inconsistent Status" \
-                                      106     "%d running jobs\n%s"         \
+                                      106     "%s queued, %s pending sequences, %d jobs" \
                                       108     "%d matching entities\n%s"    \
                                       110     "%d registered tasks\n%s"     \
                                       501     "Server internal error: %s"   \
@@ -91,7 +91,7 @@ oo::define ngis::Protocol {
             }
             007 {
                 if {[llength $args] < 2} {
-                    return [my JSON 503 $code]
+                    return [my HR 503 $code]
                 }
                 lassign $args ecode einfo
                 $json_o string error_code string $ecode \
@@ -121,9 +121,8 @@ oo::define ngis::Protocol {
                         string message string [format $fstring $current_format]
             }
             106 {
-				set running [lindex $args 0]
-                set pending [lindex $args 2]
-                $json_o string message string "[llength $running] running, [llength $pending] sequences"
+                lindex $args running njobs pending
+                $json_o string message string "[llength $running] job sequences ($njobs jobs), [llength $pending] sequences"
                 foreach sclass [list pending running] {
                     if {[llength [set $sclass]] > 0} {
                         $json_o map_open string $sclass integer [llength [set $sclass]]
@@ -245,15 +244,30 @@ oo::define ngis::Protocol {
                 set strmsg [format $fstring $current_format]
             }
             106 {
-				set seql [lindex $args 0]
-                set pending [lindex $args 2]
-                if {[llength $seql] == 0} {
-                    set strmsg  "no running sequences ([llength $pending] pending sequences)"
-                } else {
-                    set strmsg "[lindex $args 1] running jobs\n[llength $pending] pending sequences"
-                    set seqs_l [lmap s $seql { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
-                    set strmsg [format $fstring [lindex $args 1] [join $seqs_l "\n"]]
+                lassign $args jc_status tm_status
+
+                lassign $jc_status queued njobs pending
+                lassign $tm_status nrthreads nithreads
+
+                set nqueued     [llength $queued]
+                set npending    [llength $pending]
+
+                set strmsg [list [format $fstring $nqueued $npending $njobs]]
+                if {$nqueued > 0} {
+                    lappend strmsg "\[$code\] ----- Queued job sequences -----"
+                    set seqs_l [lmap s $queued { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
+                    lappend strmsg {*}$seqs_l
                 }
+
+                if {$npending > 0} {
+                    lappend strmsg "\[$code\] ----- Pending job sequences -----"
+                    set seqs_l [lmap s $pending { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
+                    lappend strmsg {*}$seqs_l
+                }
+                lappend strmsg "\[$code\] ------------------------------------------"
+                lappend strmsg "\[$code\] $nrthreads running $nithreads idle threads"
+
+                set strmsg [join $strmsg "\n"]
 			}
             108 {
                 set entities [lindex $args 0]
@@ -355,7 +369,6 @@ oo::define ngis::Protocol {
                         if {$integer_set} {
                             set service_l [::ngis::service load_series_by_gids $arguments]
                             if {[llength $service_l]} {
-                                #puts "posting a sequence of [llength $service_l] service checks"
                                 $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
                                     [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] $service_l] "series of [llength $service_l] gids"]
                             } else {
@@ -377,7 +390,7 @@ oo::define ngis::Protocol {
                                         }
 
                                         $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-                                            [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
+                                        [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
 
                                         #set client_message [my compose 002]
                                     }
@@ -403,7 +416,8 @@ oo::define ngis::Protocol {
                 QUERY {
                     if {$narguments == 0} {
 						set jc_status [[$::ngis_server get_job_controller] status]
-                        return [my compose 106 {*}$jc_status]
+						set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
+                        return [my compose 106 $jc_status $tm_status]
                     } else {
 						return [my compose 009 "[string toupper $cmd] $arguments"]
 					}

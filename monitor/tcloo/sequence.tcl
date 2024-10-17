@@ -25,6 +25,7 @@ catch { ::ngis::JobSequence destroy }
         set current_job     ""
         set completed_jobs  0
         set jobs_to_destroy {}
+        set running_jobs    {}
     }
 
     destructor {
@@ -58,9 +59,9 @@ catch { ::ngis::JobSequence destroy }
         }
         set running_jobs [lreplace $running_jobs $j $j]
 
-        if {[llength $running_jobs] == 0} {
-            my MarkForTermination
-        }
+        #if {[llength $running_jobs] == 0} {
+        #    my MarkForTermination
+        #}
     }
 
     method running_jobs_count {} {
@@ -111,7 +112,6 @@ catch { ::ngis::JobSequence destroy }
 
 ::oo::class create ::ngis::DBJobSequence {
     variable result_set
-    variable last_job
 
     destructor {
         $result_set close
@@ -119,18 +119,11 @@ catch { ::ngis::JobSequence destroy }
 
     constructor {tdbc_resultset} {
         set result_set $tdbc_resultset   
-        set last_job ""
-        if {$last_job != ""} {
-            $last_job destroy
-        }
     }
 
     method get_next {} {
         if {[$result_set nextdict res_d]} {
-            if {$last_job != ""} {
-                $last_job destroy
-            }
-
+            ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
             set job_o [::ngis::Job create [self object]::job${gid} $res_d [::ngis::tasks get_registered_tasks]]
 
@@ -138,7 +131,6 @@ catch { ::ngis::JobSequence destroy }
         }
         return ""
     }
-
 }
 
 ::oo::class create ::ngis::PlainJobList {
