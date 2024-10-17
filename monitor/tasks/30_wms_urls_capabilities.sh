@@ -26,7 +26,6 @@ if [ $curl_rcode -ne 0 ]; then
     $(wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url")
     wget_rcode="$?"
     if [ $wget_rcode -ne 0 ]; then
-
         if [[ $curl_rcode -eq 28 && $wget_rcode -eq 4 ]]; then
             echo $(make_error_result "timeout_error" "WMS Capabilities version ${version} failed on a $TIMEOUT secs error" "")
         else
