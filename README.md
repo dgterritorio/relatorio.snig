@@ -95,7 +95,7 @@ ExecStart=/usr/bin/tclsh8.6 <snig-monitor-root>/monitor/run_server.tcl
 [Install]
 WantedBy=default.target
 ```
-Replace the path to run_server with the actual path to the code. You may start it by typing `systemctl start snig-monitor`. The service will start anyway at boot time
+Replace the path to run_server with the actual path to the code.
 
 * Service Installation
 
@@ -104,6 +104,13 @@ Replace the path to run_server with the actual path to the code. You may start i
 ```
 systemctl enable snig-monitor
 ```
+* Start the service
+
+```
+ systemctl start snig-monitor`
+```
+
+The service will start anyway at boot time
 
 ## CLI Usage:
 
