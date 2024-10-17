@@ -127,7 +127,8 @@ namespace eval ::ngis::procedures {
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
         } e einfo]} {
             ::ngis::logger emit "bash script error: $e $einfo"
-            return [::ngis::tasks::make_error_result $e $einfo ""]
+            return [::ngis::tasks::task_execution_error $e [dict get $einfo -errorcode] \
+                                                           [dict get $task_d task]]
         }
         return $script_results
     }
