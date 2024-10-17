@@ -23,7 +23,7 @@ curl --max-time $TIMEOUT --output $capabilities_fn -X GET "$url"
 curl_rcode="$?"
 
 if [ $curl_rcode -ne 0 ]; then
-    wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url")
+    wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url"
     wget_rcode="$?"
     if [ $wget_rcode ne 0]; then
 
