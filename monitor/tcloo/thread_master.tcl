@@ -27,6 +27,10 @@ catch {::ngis::ThreadMaster destroy }
         $idle_thread_queue destroy
     }
 
+    method status {} {
+        return [list [array size running_threads] [$idle_thread_queue size]]
+    }
+
     method start_worker_thread {} {
 
         set thread_id [thread::create {
@@ -54,6 +58,7 @@ catch {::ngis::ThreadMaster destroy }
             if {[array size running_threads] < $max_threads_number} {
                 set thread_id [my start_worker_thread]
                 my move_to_running $thread_id
+                ::ngis::logger debug "'$thread_id' started ========"
             } else {
                 ::ngis::logger emit \
                     "Internal server error: a thread was supposed to be available"
@@ -72,7 +77,8 @@ catch {::ngis::ThreadMaster destroy }
         if {[info exists running_threads($thread_id)]} {
             unset running_threads($thread_id)
         }
-        $idle_thread_queue put $thread_id 
+        $idle_thread_queue put $thread_id
+        #puts "the idle queue has [$idle_thread_queue size] elements: [$idle_thread_queue peek [$idle_thread_queue size]]"
     }
 
     method move_to_running {thread_id} {
@@ -102,8 +108,6 @@ catch {::ngis::ThreadMaster destroy }
             thread::release [$idle_thread_queue get]
         }
     }
-
-
 }
 package provide ngis::threads 1.0
 

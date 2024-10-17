@@ -41,7 +41,7 @@ namespace eval ::ngis {
 
         method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
-                #::ngis::logger emit "rescheduling round robin"
+                ::ngis::logger debug "rescheduling job sequences round robin"
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
         }
@@ -61,7 +61,6 @@ namespace eval ::ngis {
 
             after 1000 [list [self] wait_for_operations_shutdown]
         }
-
 
         method stop_operations {} {
             foreach seq $sequence_list { $seq stop_sequence }
@@ -153,7 +152,7 @@ namespace eval ::ngis {
             if {[llength $pending_sequences] > 0} {
                 set ps $pending_sequences
                 foreach seq $ps {
-                    if {[$seq active_jobs] == 0} {
+                    if {[$seq active_jobs_count] == 0} {
                         my sequence_terminates $seq
                     } 
                 }
@@ -167,9 +166,10 @@ namespace eval ::ngis {
                 }
 
                 set seq [lindex $sequence_list $sequence_idx]
-                ::ngis::logger emit "processing sequence $seq"
-
-                $seq post_job [$thread_master get_available_thread]
+                set thread_id [$thread_master get_available_thread] 
+                if {[string is false [$seq post_job $thread_id]]} {
+                    my move_thread_to_idle $thread_id
+                }
                 incr sequence_idx
 
                 my RescheduleRoundRobin
@@ -181,12 +181,16 @@ namespace eval ::ngis {
 		# returns the list of the current sequences and the number of
 		# running sequences
 		#
-		method status {} {
-            set njobs 0
-            foreach s [concat $sequence_list $pending_sequences] {
-                set njobs [expr $njobs + [$s active_jobs]]
+		method status {{argument "jobs"}} {
+            if {$argument == "jobs"} {
+                set njobs 0
+                foreach s [concat $sequence_list $pending_sequences] {
+                    set njobs [expr $njobs + [$s active_jobs_count]]
+                }
+                return [list $sequence_list $njobs $pending_sequences]
+            } elseif {$argument == "thread_master"} {
+                return [$thread_master status]
             }
-			return [list $sequence_list $njobs $pending_sequences]
 		}
 
     }

@@ -1,4 +1,5 @@
 package require syslog
+package require ngis::conf
 
 namespace eval ::ngis::logger {
     variable nmsg -1
@@ -15,12 +16,18 @@ namespace eval ::ngis::logger {
         }
     }
 
+    proc debug {mesg} {
+        if {$::ngis::debugging} {
+            emit $mesg
+        }
+    }
+
     proc reset {} {
         variable nmsg
         set nmsg 0
     }
 
-    namespace export emit reset
+    namespace export emit reset debug
     namespace ensemble create
 }
 
