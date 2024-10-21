@@ -94,11 +94,12 @@ oo::define ngis::Protocol {
                 lassign $args ecode einfo
                 set strmsg [format $fstring $ecode $einfo] 
             }
+            503 -
             009 -
             003 -
             001 {
                 if {[llength $args] < 1} {
-                    return [my JSON 503 $code]
+                    return [my HR 503 $code]
                 }
                 lassign $args command_arg
                 set strmsg [format $fstring $command_arg]
@@ -114,23 +115,6 @@ oo::define ngis::Protocol {
             002 {
                 return [$formatter c002]
             }
-            106 {
-                lassign $args jc_status tm_status
-
-                lassign $jc_status queued njobs pending
-                lassign $tm_status nrthreads nithreads
-
-                set jobs_l {}
-                if {[llength $queued] > 0} {
-                    set jobs_l [lmap s $queued { list $s [$s get_description] [$s active_jobs_count] "queued" }]
-                }
-                if {[llength $pending] > 0} {
-                    set pending_l [lmap s $pending { list $s [$s get_description] [$s active_jobs_count] "pending" }]
-                    set jobs_l [concat $jobs_l $pending_l]
-                }
-
-                return [$formatter c106 $jobs_l $tm_status]
-			}
             108 {
                 set entities [lindex $args 0]
 
@@ -161,8 +145,8 @@ oo::define ngis::Protocol {
         return [format "\[%s\] %s" $code $strmsg]
     }
 
-    method compose {code args} { 
-        return [eval $formatter $code {*}$args]
+    method compose {code args} {
+        return [eval $formatter c${code} {*}$args]
     }
 
     method parse_cmd {args} {

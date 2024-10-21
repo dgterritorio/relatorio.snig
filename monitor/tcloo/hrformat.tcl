@@ -29,8 +29,11 @@ oo::define ngis::HRFormat {
     variable report_bottom
     variable captions_a
     variable data_matrix
+    variable handler_map
 
     constructor {} {
+        array set handler_map [list 009 SingleArgument 003 SingleArgument 001 SingleArgument 503 SingleArgument]
+
         set data_matrix [::struct::matrix htformat_m]
         array set report_a {}
 
@@ -62,6 +65,12 @@ oo::define ngis::HRFormat {
         $report_a(110.data) pad 3 both " "
         $report_a(110.data) pad 4 both " "
 
+        set report_a(108.capts) [list {"Eid" "Description"}]
+        set report_a(108.data) [::report::report hr_108_data 2 style captionedtable]
+        $report_a(108.data) pad 0 both " "
+        $report_a(108.data) pad 1 both " "
+        #$report_a(108.data) pad 2 both " "
+
         set report_a(002.data) [::report::report hr_report 1 style captionedtable]
         $report_a(002.data) topcapsep disable
         $report_a(002.data) size      0 40
@@ -74,12 +83,47 @@ oo::define ngis::HRFormat {
 
     method format {} { return "HR" }
 
+    method unknown {target args} {
+        # extract the code from the target name
+        # 
+        if {[regexp {c(\d+)} $target -> code] == 0} {
+            return -code error -errorcode invalid_target -errorinfo "Error: unknown target '$target'"
+        }
+
+#       handler_map is the last resort for resolving the error handler
+#
+        if {[info exists handler_map($code)]} {
+
+            switch $handler_map($code) {
+                SingleArgument {
+                    if {[llength $args] > 0} {
+                        return [my SingleArgument $code [lindex $args 0]]
+                    }
+                }
+                default {
+                    return -code error -errorcode unhandler_error -errorinfo "Internal Server Error: unknown target '$target'"
+                }
+            }
+
+        } else {
+            return -code error -errorcode invalid_target -errorinfo "Error: unknown target '$target'"
+        }
+
+    }
+
     method SingleLine {code message_s} {
         set message_s "\[$code\] $message_s"
         $data_matrix deserialize [list 1 1 [list [list $message_s]]]
         $single_line size 0 [expr [string length 0 [string length $message_s]]]
         return [$single_line printmatrix $data_matrix]
     }
+
+    #
+
+    method SingleArgument {code args} {
+        return [my SingleLine $code $message_s]
+    }
+
 
     method c002 {args} {
         set m [::struct::matrix m]
@@ -90,8 +134,19 @@ oo::define ngis::HRFormat {
     }
 
     method c106 {args} {
-        lassign $args jobs_l tm_status
+        lassign $args jc_status tm_status
+
+        lassign $jc_status queued njobs pending
         lassign $tm_status nrthreads nithreads
+
+        set jobs_l {}
+        if {[llength $queued] > 0} {
+            set jobs_l [lmap s $queued { list $s [$s get_description] [$s active_jobs_count] "queued" }]
+        }
+        if {[llength $pending] > 0} {
+            set pending_l [lmap s $pending { list $s [$s get_description] [$s active_jobs_count] "pending" }]
+            set jobs_l [concat $jobs_l $pending_l]
+        }
 
         # assuming the job table had *4* columns (determined by ::ngis::Protocol)
 
@@ -121,6 +176,25 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt $bottom_txt]
     }
 
+    method c108 {entities_l} {
+        set entities_l [concat $report_a(108.capts) $entities_l]
+
+        if {[llength $entities_l] > 0} {
+            $data_matrix deserialize [list [llength $entities_l] 2 $entities_l]
+            set report_txt [$report_a(108.data) printmatrix $data_matrix]
+            set rep_width [string length [lindex $report_txt 0]]
+        } else {
+
+        }
+        set m [::struct::matrix m]
+        $m deserialize [list 1 1 [list {{[108] Entities}}]]
+        $report_top size 0 [expr $rep_width - 2]
+        set top_txt [$report_top printmatrix $m]
+        $m destroy
+
+        return [append top_txt $report_txt]
+    }
+
     method c110 {args} {
         set tasks_l [lindex $args 0]
 
@@ -134,9 +208,6 @@ oo::define ngis::HRFormat {
         }
     }
 
-    method c104 {} {
-    }
-    
 
 }
 

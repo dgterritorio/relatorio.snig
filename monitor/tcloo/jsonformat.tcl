@@ -22,9 +22,9 @@ oo::define ngis::JsonFormat {
 
     method unknown {target args} {
         # extract the code from the target name
-        scan $target "c%s" code
+        # 
         if {[regexp {c(\d+)} $target -> code] == 0} {
-            return -code error -errorcode invalid_target -errorinfo "Error target $target"
+            return -code error -errorcode invalid_target -errorinfo "Error: unknown target '$target'"
         }
 
         if {[info commands $json_o] != ""} { $json_o delete }
@@ -46,13 +46,11 @@ oo::define ngis::JsonFormat {
     }
 
     method JSON {code fstring args} {
-        puts "JSON >$code< >$fstring< >$args<"
+        #puts "JSON >$code< >$fstring< >$args<"
         switch $code {
-            000 {
-                $json_o string message string [format $fstring] 
-            }
+            000 -
             002 {
-                $json string message string $fstring
+                $json_o string message string $fstring
             }
             102 {
                 $json_o string format string [my format] \
@@ -120,7 +118,7 @@ oo::define ngis::JsonFormat {
                 set tasks [lindex $args 0]
                 $json_o string tasks array_open
                 foreach t $tasks {
-                    lassign $t  task func desc pro script
+                    lassign $t task func desc pro script
                     $json_o map_open string "task" string $task \
                                      string "script" string $script \
                                      string "function" string $func \
@@ -140,8 +138,11 @@ oo::define ngis::JsonFormat {
                     $json_o array_close
                 }
             }
+            503 {
+                $json_o string message string [format $fstring [lindex $args 0]]
+            }
             default {
-                $json_o string message string [dict get $code_messages $code]
+                $json_o string message string "Unmapped message"
             }
         }
     }
