@@ -82,7 +82,7 @@ package require tclreadline
 		set line ""
 		incr cmdcount
 		while {$line == ""} {
-			set line [::tclreadline::readline read "ngis\[$cmdcount\]> "]
+			set line [::tclreadline::readline read "snig \[$cmdcount\]> "]
         }
         set parsed_cmd [my parse_cmd_line $line cmd_args]
         switch -nocase $parsed_cmd {

@@ -7,6 +7,7 @@ package require TclOO
 package require tdbc::postgres
 package require ngis::job
 package require ngis::conf
+package require ngis::common
 
 catch { ::ngis::JobSequence destroy }
 
@@ -125,7 +126,7 @@ catch { ::ngis::JobSequence destroy }
         if {[$result_set nextdict res_d]} {
             ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
-            set job_o [::ngis::Job create [self object]::job${gid} $res_d [::ngis::tasks get_registered_tasks]]
+            set job_o [::ngis::Job create [::ngis::JobName new_cmd $gid] $res_d [::ngis::tasks get_registered_tasks]]
 
             return $job_o
         }
@@ -142,7 +143,7 @@ catch { ::ngis::JobSequence destroy }
 
         foreach service_d $sl {
             set gid [dict get $service_d gid]
-            set job_o [::ngis::Job create [self object]::job${gid} $service_d [::ngis::tasks get_registered_tasks]]
+            set job_o [::ngis::Job create [::ngis::JobName new_cmd $gid] $service_d [::ngis::tasks get_registered_tasks]]
             lappend service_l $job_o
         }
 
@@ -168,7 +169,7 @@ catch { ::ngis::JobSequence destroy }
 
     constructor {service_d task_code} {
         dict with service_d {
-            set job_o [::ngis::Job create [self object]::job${gid} $service_d $task_code]
+            set job_o [::ngis::Job create [::ngis::JobName new_cmd $gid] $service_d $task_code]
         }
     }
 
