@@ -10,7 +10,6 @@ namespace eval ::ngis {
 
     namespace eval protocol {
         variable CodeMessages [dict create  000     "Server is going to exit"   \
-                                            102     "Current data format: %s"   \
                                             001     "Unrecognized command: %s"  \
                                             002     "OK"                        \
                                             003     "Wrong arguments: %s"       \
@@ -24,7 +23,7 @@ namespace eval ::ngis {
                                             105     "Monitor Inconsistent Status" \
                                             106     "%s queued, %s pending sequences, %d jobs" \
                                             108     "%d matching entities\n%s"    \
-                                            110     "%d registered tasks\n%s"     \
+                                            110     "%d registered tasks"      \
                                             501     "Server internal error: %s"   \
                                             503     "Missing argument for code %d"]
 
@@ -35,9 +34,9 @@ namespace eval ::ngis {
         }
     }
 
-    namespace eval SequenceName {
+    namespace eval Sequences {
         variable seqn -1
-        variable seq_cmd_root ::ngis::seqs
+        variable seq_cmd_root [namespace current]
 
         proc new_cmd {} {
             variable seqn
@@ -49,9 +48,21 @@ namespace eval ::ngis {
         namespace ensemble create
     }
 
-    namespace eval JobName {
+    namespace eval DataSources {
+        variable dsnum -1
+        variable ds_cmd_root [namespace current]
+
+        proc new_cmd {} {
+            variable dsnum
+            variable ds_cmd_root [namespace current]
+
+            return "${seq_cmd_root}::ds[incr dsnum]"
+        }
+    }
+
+    namespace eval JobNames {
         variable jobn -1
-        variable job_cmd_root ::ngis::jobs
+        variable job_cmd_root [namespace current]
 
         proc new_cmd {{gid ""}} {
             variable jobn
@@ -64,9 +75,9 @@ namespace eval ::ngis {
         namespace ensemble create
     }
 
-    namespace eval Formatter {
+    namespace eval Formatters {
         variable fmtn -1
-        variable formatter_cmd_root ::ngis::formatters
+        variable formatter_cmd_root [namespace current]
 
         proc new_cmd {ftype} {
             variable fmtn 

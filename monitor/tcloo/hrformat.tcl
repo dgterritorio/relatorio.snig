@@ -3,6 +3,7 @@
 #
 package require struct::matrix
 package require report
+package require ngis::common
 
 ::report::defstyle simpletable {} {
     data set [split "[string repeat "| "   [columns]]|"]
@@ -27,12 +28,17 @@ oo::define ngis::HRFormat {
     variable report_a
     variable report_top
     variable report_bottom
+    variable single_line
     variable captions_a
     variable data_matrix
     variable handler_map
 
     constructor {} {
-        array set handler_map [list 009 SingleArgument 003 SingleArgument 001 SingleArgument 503 SingleArgument]
+        array set handler_map [list 009 SingleArgument 003 SingleArgument \
+                                    001 SingleArgument 503 SingleArgument \
+                                    005 SingleArgument 102 NoArguments    \
+                                    002 NoArguments    104 SingleArgument \
+                                    000 NoArguments    007 TwoArguments]
 
         set data_matrix [::struct::matrix htformat_m]
         array set report_a {}
@@ -41,10 +47,12 @@ oo::define ngis::HRFormat {
         $report_top bottom      disable
         $report_top topcapsep   disable
         $report_top justify     0 center
+        $report_top pad 0       both " "
         set report_bottom [::report::report hr_report_bottom 1 style captionedtable]
-        $report_bottom top         disable
-        $report_bottom topcapsep   disable
-        $report_bottom justify     0 left
+        $report_bottom top          disable
+        $report_bottom topcapsep    disable
+        $report_bottom justify  0   left
+        $report_bottom pad      0   both " "
 
         set single_line [::report::report hr_report_single_line 1 style captionedtable]
         $single_line topcapsep   disable
@@ -71,9 +79,9 @@ oo::define ngis::HRFormat {
         $report_a(108.data) pad 1 both " "
         #$report_a(108.data) pad 2 both " "
 
-        set report_a(002.data) [::report::report hr_report 1 style captionedtable]
-        $report_a(002.data) topcapsep disable
-        $report_a(002.data) size      0 40
+        #set report_a(002.data) [::report::report hr_report 1 style captionedtable]
+        #$report_a(002.data) topcapsep disable
+        #$report_a(002.data) size      0 80
         #$report_a(002.data) justify   0 center
     }
 
@@ -95,10 +103,19 @@ oo::define ngis::HRFormat {
         if {[info exists handler_map($code)]} {
 
             switch $handler_map($code) {
+                NoArguments {
+                    return [my SingleLine $code [::ngis::protocol::get_fmt_string $code]]
+                }
                 SingleArgument {
                     if {[llength $args] > 0} {
-                        return [my SingleArgument $code [lindex $args 0]]
+                        set message_s [format [::ngis::protocol::get_fmt_string $code] [lindex $args 0]]
+                        return [my SingleLine $code $message_s]
                     }
+                }
+                TwoArguments {
+                    lassign $args a1 a2 
+                    set message_s [format [::ngis::protocol::get_fmt_string $code] $a1 $a2]
+                    return [my SingleLine $code $message_s]
                 }
                 default {
                     return -code error -errorcode unhandler_error -errorinfo "Internal Server Error: unknown target '$target'"
@@ -114,24 +131,10 @@ oo::define ngis::HRFormat {
     method SingleLine {code message_s} {
         set message_s "\[$code\] $message_s"
         $data_matrix deserialize [list 1 1 [list [list $message_s]]]
-        $single_line size 0 [expr [string length 0 [string length $message_s]]]
+        $single_line size 0 [expr max(80,[string length $message_s])]
         return [$single_line printmatrix $data_matrix]
     }
 
-    #
-
-    method SingleArgument {code args} {
-        return [my SingleLine $code $message_s]
-    }
-
-
-    method c002 {args} {
-        set m [::struct::matrix m]
-        $m deserialize [list 1 1 [list {{[002] OK}}]]
-        set res002 [$report_a(002.data) printmatrix $m]
-        $m destroy
-        return $res002
-    }
 
     method c106 {args} {
         lassign $args jc_status tm_status
@@ -202,13 +205,26 @@ oo::define ngis::HRFormat {
         if {[llength $tasks_l] > 0} {
             $data_matrix deserialize [list [llength $tasks_l] 5 $tasks_l]
             set report_txt [$report_a(110.data) printmatrix $data_matrix]
-            return $report_txt
+            set rep_width [string length [lindex $report_txt 0]]
+
+            set fstring [::ngis::protocol::get_fmt_string 110]
+
+            $data_matrix deserialize [list 1 1 [list [list [format $fstring [llength $tasks_l]]]]]
+            $report_bottom size 0 [expr $rep_width - 2]
+            set bottom_txt [$report_bottom printmatrix $data_matrix]
+
+            $data_matrix deserialize [list 1 1 [list {{[110] Registered Tasks}}]]
+            $report_top size 0 [expr $rep_width - 2]
+            set top_txt [$report_top printmatrix $data_matrix]
+
+            return [append top_txt $report_txt $bottom_txt]
         } else {
-            return ""
+
+            # it never should get to here....
+
+            return [SingleLine "110" "No tasks registered"]
         }
     }
-
-
 }
 
 package provide ngis::hrformat 0.5
