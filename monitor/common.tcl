@@ -5,10 +5,28 @@
 # a reasonably easy way to declare common class variables.
 #
 #
+package require report
+
+::report::defstyle simpletable {} {
+    data set [split "[string repeat "| "   [columns]]|"]
+    top  set [split "[string repeat "+ - " [columns]]+"]
+    bottom  set [top get]
+    top  enable
+    bottom  enable
+}
+
+::report::defstyle captionedtable {{n 1}} {
+    simpletable
+    topdata   set [data get]
+    topcapsep set [top get]
+    topcapsep enable
+    tcaption $n
+    bottom  enable
+}
 
 namespace eval ::ngis {
 
-    namespace eval protocol {
+    namespace eval reports {
         variable CodeMessages [dict create  000     "Server is going to exit"   \
                                             001     "Unrecognized command: %s"  \
                                             002     "OK"                        \
@@ -26,6 +44,48 @@ namespace eval ::ngis {
                                             110     "%d registered tasks"      \
                                             501     "Server internal error: %s"   \
                                             503     "Missing argument for code %d"]
+
+        variable report_top
+
+        set report_top [::report::report hr_report_top 1 style captionedtable]
+        $report_top bottom      disable
+        $report_top topcapsep   disable
+        $report_top justify     0 center
+        $report_top pad 0       both " "
+
+        variable report_bottom
+        set report_bottom [::report::report hr_report_bottom 1 style captionedtable]
+        $report_bottom top          disable
+        $report_bottom topcapsep    disable
+        $report_bottom justify  0   left
+        $report_bottom pad      0   both " "
+
+        variable single_line
+        set single_line [::report::report hr_report_single_line 1 style captionedtable]
+        $single_line topcapsep   disable
+        $single_line justify     0 left
+
+        variable report_a
+        array set report_a {}
+        set report_a(106.capts) [list {"Seq id" "Description" "Jobs" "Status"}]
+        set report_a(106.report)  [::report::report hr_106_data 4 style captionedtable]
+        $report_a(106.report) pad 0 both " "
+        $report_a(106.report) pad 1 both " "
+        $report_a(106.report) pad 2 both " "
+        $report_a(106.report) pad 3 both " "
+
+        set report_a(110.capts) [list {"Task" "Procedure" "Description" "Script" "Language"}]
+        set report_a(110.report) [::report::report hr_110_data 5 style captionedtable]
+        $report_a(110.report) pad 0 both " "
+        $report_a(110.report) pad 1 both " "
+        $report_a(110.report) pad 2 both " "
+        $report_a(110.report) pad 3 both " "
+        $report_a(110.report) pad 4 both " "
+
+        set report_a(108.capts) [list {"Eid" "Description"}]
+        set report_a(108.report) [::report::report hr_108_data 2 style captionedtable]
+        $report_a(108.report) pad 0 both " "
+        $report_a(108.report) pad 1 both " "
 
         proc get_fmt_string {code} {
             variable CodeMessages

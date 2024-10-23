@@ -15,23 +15,19 @@ oo::class create ngis::Protocol
 oo::define ngis::Protocol {
     variable formatter
     variable CodeMessages
-    variable json_o
     variable ds_nseq
     variable nseq
     variable hr_formatter
 
     constructor {} {
-        set hr_formatter [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
-        set json_formatter [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
+        set hr_formatter    [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
+        set json_formatter  [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
 
         # setting the default
         set formatter $hr_formatter
     }
 
     destructor {
-        if {$json_o != ""} {
-            $json_o delete
-        }
     }
 
     method format {} { return $formatter }
@@ -68,6 +64,7 @@ oo::define ngis::Protocol {
                     return [my compose 110 [::ngis::tasks list_registered_tasks]]
                 }
                 ENTITIES {
+                    if {[llength $arguments] == 0} { set arguments "%" }
                     return [my compose 108 [::ngis::service::list_entities $arguments]]
                 }
                 CHECK {

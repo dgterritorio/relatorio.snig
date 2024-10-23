@@ -2,25 +2,7 @@
 #
 #
 package require struct::matrix
-package require report
 package require ngis::common
-
-::report::defstyle simpletable {} {
-    data set [split "[string repeat "| "   [columns]]|"]
-    top  set [split "[string repeat "+ - " [columns]]+"]
-    bottom  set [top get]
-    top  enable
-    bottom  enable
-}
-
-::report::defstyle captionedtable {{n 1}} {
-    simpletable
-    topdata   set [data get]
-    topcapsep set [top get]
-    topcapsep enable
-    tcaption $n
-    bottom  enable
-}
 
 oo::class create ngis::HRFormat
 
@@ -38,51 +20,15 @@ oo::define ngis::HRFormat {
                                     001 SingleArgument 503 SingleArgument \
                                     005 SingleArgument 102 NoArguments    \
                                     002 NoArguments    104 SingleArgument \
-                                    000 NoArguments    007 TwoArguments]
+                                    000 NoArguments    007 TwoArguments   \
+                                    501 SingleArgument]
 
         set data_matrix [::struct::matrix htformat_m]
-        array set report_a {}
+        array set report_a [array get ::ngis::reports::report_a]
 
-        set report_top [::report::report hr_report_top 1 style captionedtable]
-        $report_top bottom      disable
-        $report_top topcapsep   disable
-        $report_top justify     0 center
-        $report_top pad 0       both " "
-        set report_bottom [::report::report hr_report_bottom 1 style captionedtable]
-        $report_bottom top          disable
-        $report_bottom topcapsep    disable
-        $report_bottom justify  0   left
-        $report_bottom pad      0   both " "
-
-        set single_line [::report::report hr_report_single_line 1 style captionedtable]
-        $single_line topcapsep   disable
-        $single_line justify     0 left
- 
-        set report_a(106.capts) [list {"Seq id" "Description" "Jobs" "Status"}]
-        set report_a(106.data)  [::report::report hr_106_data 4 style captionedtable]
-        $report_a(106.data) pad 0 both " "
-        $report_a(106.data) pad 1 both " "
-        $report_a(106.data) pad 2 both " "
-        $report_a(106.data) pad 3 both " "
-
-        set report_a(110.capts) [list {"Task" "Procedure" "Description" "Script" "Language"}]
-        set report_a(110.data) [::report::report hr_110_data 5 style captionedtable]
-        $report_a(110.data) pad 0 both " "
-        $report_a(110.data) pad 1 both " "
-        $report_a(110.data) pad 2 both " "
-        $report_a(110.data) pad 3 both " "
-        $report_a(110.data) pad 4 both " "
-
-        set report_a(108.capts) [list {"Eid" "Description"}]
-        set report_a(108.data) [::report::report hr_108_data 2 style captionedtable]
-        $report_a(108.data) pad 0 both " "
-        $report_a(108.data) pad 1 both " "
-        #$report_a(108.data) pad 2 both " "
-
-        #set report_a(002.data) [::report::report hr_report 1 style captionedtable]
-        #$report_a(002.data) topcapsep disable
-        #$report_a(002.data) size      0 80
-        #$report_a(002.data) justify   0 center
+        set report_top      $::ngis::reports::report_top
+        set report_bottom   $::ngis::reports::report_bottom
+        set single_line     $::ngis::reports::single_line
     }
 
     destructor {
@@ -94,6 +40,7 @@ oo::define ngis::HRFormat {
     method unknown {target args} {
         # extract the code from the target name
         # 
+
         if {[regexp {c(\d+)} $target -> code] == 0} {
             return -code error -errorcode invalid_target -errorinfo "Error: unknown target '$target'"
         }
@@ -104,24 +51,24 @@ oo::define ngis::HRFormat {
 
             switch $handler_map($code) {
                 NoArguments {
-                    return [my SingleLine $code [::ngis::protocol::get_fmt_string $code]]
+                    set message_s [::ngis::reports::get_fmt_string $code]
+                    return [my SingleLine $code $message_s]
                 }
                 SingleArgument {
                     if {[llength $args] > 0} {
-                        set message_s [format [::ngis::protocol::get_fmt_string $code] [lindex $args 0]]
+                        set message_s [format [::ngis::reports::get_fmt_string $code] [lindex $args 0]]
                         return [my SingleLine $code $message_s]
                     }
                 }
                 TwoArguments {
                     lassign $args a1 a2 
-                    set message_s [format [::ngis::protocol::get_fmt_string $code] $a1 $a2]
+                    set message_s [format [::ngis::reports::get_fmt_string $code] $a1 $a2]
                     return [my SingleLine $code $message_s]
                 }
                 default {
                     return -code error -errorcode unhandler_error -errorinfo "Internal Server Error: unknown target '$target'"
                 }
             }
-
         } else {
             return -code error -errorcode invalid_target -errorinfo "Error: unknown target '$target'"
         }
@@ -134,7 +81,6 @@ oo::define ngis::HRFormat {
         $single_line size 0 [expr max(80,[string length $message_s])]
         return [$single_line printmatrix $data_matrix]
     }
-
 
     method c106 {args} {
         lassign $args jc_status tm_status
@@ -156,7 +102,7 @@ oo::define ngis::HRFormat {
         set jobs_l [concat $report_a(106.capts) $jobs_l]
         if {[llength $jobs_l] > 1} {
             $data_matrix deserialize [list [llength $jobs_l] 4 $jobs_l]
-            set report_txt [$report_a(106.data) printmatrix $data_matrix]
+            set report_txt [$report_a(106.report) printmatrix $data_matrix]
 
             # let's infer the report width from the first line 
 
@@ -179,12 +125,12 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt $bottom_txt]
     }
 
-    method c108 {entities_l} {
-        set entities_l [concat $report_a(108.capts) $entities_l]
+    method c108 {args} {
+        set entities_l [concat $report_a(108.capts) $args]
 
         if {[llength $entities_l] > 0} {
             $data_matrix deserialize [list [llength $entities_l] 2 $entities_l]
-            set report_txt [$report_a(108.data) printmatrix $data_matrix]
+            set report_txt [$report_a(108.report) printmatrix $data_matrix]
             set rep_width [string length [lindex $report_txt 0]]
         } else {
 
@@ -199,22 +145,22 @@ oo::define ngis::HRFormat {
     }
 
     method c110 {args} {
-        set tasks_l [lindex $args 0]
+        set tasks_l $args
 
         set tasks_l [concat $report_a(110.capts) $tasks_l]
         if {[llength $tasks_l] > 0} {
             $data_matrix deserialize [list [llength $tasks_l] 5 $tasks_l]
-            set report_txt [$report_a(110.data) printmatrix $data_matrix]
+            set report_txt [$report_a(110.report) printmatrix $data_matrix]
             set rep_width [string length [lindex $report_txt 0]]
 
-            set fstring [::ngis::protocol::get_fmt_string 110]
+            set fstring [::ngis::reports::get_fmt_string 110]
 
             $data_matrix deserialize [list 1 1 [list [list [format $fstring [llength $tasks_l]]]]]
-            $report_bottom size 0 [expr $rep_width - 2]
+            $report_bottom size 0 [expr $rep_width - 4]
             set bottom_txt [$report_bottom printmatrix $data_matrix]
 
             $data_matrix deserialize [list 1 1 [list {{[110] Registered Tasks}}]]
-            $report_top size 0 [expr $rep_width - 2]
+            $report_top size 0 [expr $rep_width - 4]
             set top_txt [$report_top printmatrix $data_matrix]
 
             return [append top_txt $report_txt $bottom_txt]

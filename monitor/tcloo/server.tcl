@@ -105,6 +105,8 @@ package require ngis::sequence
             set protocol [my get_protocol $con]
 
             if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
+                puts $e
+                puts $einfo
                 my send_to_client $con [$protocol compose 501 $e $einfo]
             } else {
                 my send_to_client $con $ret2client
