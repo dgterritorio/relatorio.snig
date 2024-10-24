@@ -157,13 +157,17 @@ namespace eval ::ngis::service {
     }
 
     proc list_entities {pattern} {
-        set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
+
+        set sql [list "SELECT e.eid eid,e.description description,count(ul.gid) count" \
+                      "from $::ngis::ENTITY_TABLE_NAME e" \
+                      "LEFT JOIN $::ngis::TABLE_NAME ul ON ul.eid=e.eid"]
+        #set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
         if {$pattern != ""} {
-            lappend sql "WHERE description LIKE '$pattern'"
+            lappend sql "WHERE e.description LIKE '$pattern'"
         }
-        lappend sql "ORDER BY eid"
+        lappend sql "GROUP BY e.eid ORDER BY count DESC"
         set sql [join $sql " "]
-        #puts $sql
+        puts $sql
 
         set query_result [exec_sql_query $sql]
         set entities [$query_result allrows -as lists]

@@ -32,7 +32,7 @@ oo::define ngis::JsonFormat {
         $json_o map_open string code string $code
         #puts [list $json_o map_open string code string $code]
 
-		if {[catch {set fstring [::ngis::protocol::get_fmt_string $code]} e einfo]} {
+		if {[catch {set fstring [::ngis::reports::get_fmt_string $code]} e einfo]} {
 			set json_txt [my JSON 501 "undefined code $code"]
 		} else {
             my JSON $code $fstring {*}$args
@@ -41,7 +41,7 @@ oo::define ngis::JsonFormat {
         $json_o map_close
         set json_txt [$json_o get]
         $json_o delete
-        set json_o ""
+
         return $json_txt
     }
 
@@ -52,23 +52,10 @@ oo::define ngis::JsonFormat {
             002 {
                 $json_o string message string $fstring
             }
-            102 {
-                $json_o string format string [my format] \
-                        string message string [format $fstring [my format]
-            }
-            007 {
-                if {[llength $args] < 2} {
-                    return [my HR 503 $code]
-                }
-                lassign $args ecode einfo
-                $json_o string error_code string $ecode \
-                        string error_info string $einfo \
-                        string message    string [format $fstring $ecode ""]
-            }
-            009 -
+            001 -
             003 -
             005 -
-            001 {
+            009 {
                 if {[llength $args] < 1} {
                     return [my JSON 503 $code]
                 }
@@ -78,28 +65,56 @@ oo::define ngis::JsonFormat {
                         string error_info string "" \
                         string message    string [format $fstring $command_arg]
             }
+            007 {
+                if {[llength $args] < 2} {
+                    return [my JSON 503 $code]
+                }
+                lassign $args ecode einfo
+                $json_o string status     string error  \
+                        string error_code string $ecode \
+                        string error_info string $einfo \
+                        string message    string [format $fstring $ecode ""]
+            }
+            013 {
+                $json_o string status     string error \
+                        string error_code string invalid_format \
+                        string message    string [format $fstring $ecode ""]
+            }
+            102 {
+                $json_o string status       string ok \
+                        string message      string $fstring
+            }
             104 {
                 if {[llength $args] > 0} {
                     lassign $args current_format
                 } else {
                     set current_format [my format]
                 }
-                $json_o string format  string $current_format \
-                        string message string [format $fstring $current_format]
+                $json_o string status   string ok \
+                        string format   string $current_format \
+                        string message  string [format $fstring $current_format]
             }
             106 {
-                lindex $args running njobs pending
-                $json_o string message string "[llength $running] job sequences ($njobs jobs), [llength $pending] sequences"
-                foreach sclass [list pending running] {
+                lassign $args jc_status tm_status
+                lassign $jc_status queued njobs pending
+                lassign $tm_status nrthreads nithreads
+                $json_o string status   string ok \
+                        string message  string "[llength $queued] queued job sequences ($njobs jobs), [llength $pending] pending sequences" \
+                        string threads  map_open string running integer $nrthreads string idle integer $nithreads map_close
+            
+                foreach sclass [list pending queued] {
                     if {[llength [set $sclass]] > 0} {
-                        $json_o map_open string $sclass integer [llength [set $sclass]]
-                        $json_o array_open
+                        $json_o string $sclass array_open
+
+                        puts "$sclass: [set $sclass]"
+
                         foreach s [set $sclass] {
-                            $json_o map_open string "object"         string   $s \
-                                             string "description"    string  [$s description] \
-                                             string "active_jobs"    integer [$s active_jobs_count] \
-                                             string "completed_jobs" integer [$s completed_jobs] \
-                                    map_close     
+                            $json_o map_open string "sequence"          string  $s \
+                                             string "description"       string  [$s get_description]   \
+                                             string "active_jobs"       integer [$s active_jobs_count] \
+                                             string "completed_jobs"    integer [$s completed_jobs]    \
+                                             string "total_jobs_number" integer [$s njobs] \
+                                    map_close
                         }
                         $json_o array_close
                     }
@@ -109,8 +124,9 @@ oo::define ngis::JsonFormat {
                 set entities [lindex $args 0]
                 $json_o string entities array_open
                 foreach e $entities {
-                    lassign $e eid description
-                    $json_o map_open string "eid" integer $eid string description string $description map_close
+                    lassign $e eid description nrecs
+                    $json_o map_open string "eid"     integer $eid   string description string $description \
+                                     string "records" integer $nrecs map_close
                 }
                 $json_o array_close
             }
@@ -119,18 +135,18 @@ oo::define ngis::JsonFormat {
                 $json_o string tasks array_open
                 foreach t $tasks {
                     lassign $t task func desc pro script
-                    $json_o map_open string "task" string $task \
-                                     string "script" string $script \
-                                     string "function" string $func \
-                                     string "description" string $desc \
-                                     string "procedure" string $pro map_close
+                    $json_o map_open string "task"          string $task \
+                                     string "script"        string $script \
+                                     string "function"      string $func \
+                                     string "description"   string $desc \
+                                     string "procedure"     string $pro map_close
                 }
                 $json_o array_close
             }
             501 {
                 $json_o string message string "Server internal error"
                 if {[llength $args] > 0} {
-                    $json_o array_open
+                    $json_o string breakdown array_open
                     set n 0
                     foreach a $args {
                         $json_o map_open string "argument [incr n]" string $a map_close

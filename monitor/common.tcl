@@ -30,19 +30,17 @@ namespace eval ::ngis {
         variable CodeMessages [dict create  000     "Server is going to exit"   \
                                             001     "Unrecognized command: %s"  \
                                             002     "OK"                        \
-                                            003     "Wrong arguments: %s"       \
+                                            003     "Wrong arguments: '%s'"     \
                                             005     "Invalid service gid: %d"   \
-                                            007     "Error in query: (%s) %s"   \
-                                            009     "Command %s disabled"       \
-                                            011     "Invalid limit on query"    \
-                                            100     "Starting server"           \
+                                            007     "Error: (%s) errorcode: %s" \
+                                            009     "Invalid arguments for '%s'" \
+                                            013     "Invalid format '%s'"       \
                                             102     "Stopping operations"       \
-                                            104     "current format %s"         \
-                                            105     "Monitor Inconsistent Status" \
+                                            104     "current format: %s"        \
                                             106     "%s queued, %s pending sequences, %d jobs" \
-                                            108     "%d matching entities\n%s"    \
-                                            110     "%d registered tasks"      \
-                                            501     "Server internal error: %s"   \
+                                            108     "%d matching entities\n%s"  \
+                                            110     "%d registered tasks"       \
+                                            501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 
         variable report_top
@@ -51,7 +49,7 @@ namespace eval ::ngis {
         $report_top bottom      disable
         $report_top topcapsep   disable
         $report_top justify     0 center
-        $report_top pad 0       both " "
+        $report_top pad         0 both " "
 
         variable report_bottom
         set report_bottom [::report::report hr_report_bottom 1 style captionedtable]
@@ -67,25 +65,26 @@ namespace eval ::ngis {
 
         variable report_a
         array set report_a {}
-        set report_a(106.capts) [list {"Seq id" "Description" "Jobs" "Status"}]
-        set report_a(106.report)  [::report::report hr_106_data 4 style captionedtable]
-        $report_a(106.report) pad 0 both " "
-        $report_a(106.report) pad 1 both " "
-        $report_a(106.report) pad 2 both " "
-        $report_a(106.report) pad 3 both " "
 
+        # setup report generators
+
+        # Job sequences status report
+        set ncolumns 6
+        set report_a(106.capts) [list {"Seq ID" "Description" "Running Jobs" "Completed Jobs" "Total Jobs" "Status"}]
+        set report_a(106.report)  [::report::report hr_106_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(106.report) pad $c both " " }
+
+        # Registered tasks list
+        set ncolumns 5
         set report_a(110.capts) [list {"Task" "Procedure" "Description" "Script" "Language"}]
-        set report_a(110.report) [::report::report hr_110_data 5 style captionedtable]
-        $report_a(110.report) pad 0 both " "
-        $report_a(110.report) pad 1 both " "
-        $report_a(110.report) pad 2 both " "
-        $report_a(110.report) pad 3 both " "
-        $report_a(110.report) pad 4 both " "
+        set report_a(110.report) [::report::report hr_110_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(110.report) pad $c both " " }
 
-        set report_a(108.capts) [list {"Eid" "Description"}]
-        set report_a(108.report) [::report::report hr_108_data 2 style captionedtable]
-        $report_a(108.report) pad 0 both " "
-        $report_a(108.report) pad 1 both " "
+        # Entities
+        set ncolumns 3
+        set report_a(108.capts) [list {"Eid" "Description" "Records"}]
+        set report_a(108.report) [::report::report hr_108_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(108.report) pad $c both " " }
 
         proc get_fmt_string {code} {
             variable CodeMessages
@@ -116,8 +115,10 @@ namespace eval ::ngis {
             variable dsnum
             variable ds_cmd_root [namespace current]
 
-            return "${seq_cmd_root}::ds[incr dsnum]"
+            return "${ds_cmd_root}::ds[incr dsnum]"
         }
+        namespace export *
+        namespace ensemble create
     }
 
     namespace eval JobNames {
@@ -129,7 +130,16 @@ namespace eval ::ngis {
             variable job_cmd_root
 
             if {$gid == ""} { }
-            return "${job_cmd_root}::job[incr jobn]"
+            set proposed "${job_cmd_root}::job${gid}"
+            set modifier 0
+            while {[info command $proposed] != ""} {
+                # set a limit to multiple jobs for the same resource
+                if {$modifier > 20} {
+                    return -code error -errorcode too_many_jobs "Too many jobs for the same gid $gid"
+                }
+                set proposed "${job_cmd_root}::job[incr jobn]-[incr modifier]"
+            }
+            return $proposed
         }
         namespace export *
         namespace ensemble create

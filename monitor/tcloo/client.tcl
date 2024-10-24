@@ -32,7 +32,8 @@ package require tclreadline
             T -
             S -
             Q - 
-            X {
+            X -
+            ZZ {
                 return $cmd
             }
             default {
@@ -126,6 +127,15 @@ package require tclreadline
             }
             X {
                 my stop_client
+            }
+            ZZ {
+                # this command is just for testing purposes
+
+                my send_to_server $con {*}$cmd_args
+            }
+            ? {
+                #
+                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
             default {
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]

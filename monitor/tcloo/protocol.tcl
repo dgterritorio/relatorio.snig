@@ -18,6 +18,7 @@ oo::define ngis::Protocol {
     variable ds_nseq
     variable nseq
     variable hr_formatter
+    variable json_formatter
 
     constructor {} {
         set hr_formatter    [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
@@ -29,8 +30,6 @@ oo::define ngis::Protocol {
 
     destructor {
     }
-
-    method format {} { return $formatter }
 
     method set_format {f} {
         switch -nocase $f {
@@ -47,7 +46,7 @@ oo::define ngis::Protocol {
     }
 
     method compose {code args} {
-        return [eval $formatter c${code} {*}$args]
+        return [eval $formatter c${code} $args]
     }
 
     method parse_cmd {args} {
@@ -58,7 +57,7 @@ oo::define ngis::Protocol {
         } else {
             set arguments  [lrange $msg 1 end]
             set narguments [llength $arguments]
-            puts "arguments: '$arguments' ($narguments)"
+            #puts "arguments: '$arguments' ($narguments)"
             switch [string toupper $cmd] {
                 REGTASKS {
                     return [my compose 110 [::ngis::tasks list_registered_tasks]]
@@ -99,18 +98,18 @@ oo::define ngis::Protocol {
                                 return [my compose 005 $service_check]
                             }
                         } else {
-                            foreach service_check $arguments {
-                                if {[string is integer $service_check]} {
-                                    set service_d [::ngis::service load_by_gid $service_check]
+                            foreach service2check $arguments {
+                                if {[string is integer $service2check]} {
+                                    set service_d [::ngis::service load_by_gid $service2check]
                                     if {$service_d == ""} {
-                                        return [my compose 005 $service_check]
+                                        return [my compose 005 $service2check]
                                     } else {
                                         if {[dict exists $service_d description]} {
                                             set description [dict get $service_d description]
                                         } elseif {[dict exists $service_d entity]} {
                                             set description [dict get $service_d entity]
                                         } else {
-                                            set description "Unnamed record (gid=$service_check)"
+                                            set description "Unnamed record (gid=$service2check)"
                                         }
 
                                         $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
@@ -118,17 +117,22 @@ oo::define ngis::Protocol {
 
                                     }
                                 } else {
-                                    set entity $service_check
+                                    set entity $service2check
                                     set resultset [::ngis::service load_by_entity $entity -resultset]
 
-                                    $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences get_cmd] \
-                                                [::ngis::DBJobSequence create [::ngis::DataSources get_cmd] $resultset] $entity]
+                                    $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
+                                                [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
                                 }
                             }
                         }
                         set client_message [my compose 002]
-					} e einfo]} {
-						return -code ok [my compose 007 $e $einfo]
+					} e1 einfo]} {
+                        set e2 ""
+                        if {[dict exists $einfo "-errorcode"]} {
+                            set e2 [dict get $einfo "-errorcode"]
+                        }
+
+						set client_message [my compose 007 $e1 $e2]
 					}
                     return $client_message
                 }
@@ -147,14 +151,14 @@ oo::define ngis::Protocol {
                 }
                 FORMAT {
                     if {$narguments == 0} {
-                        return [my compose 104 [my format]]
+                        return [my compose 104 [$formatter format]]
                     } elseif {$narguments == 1} {
                         set fmt [lindex $arguments 0]
                         switch -nocase $fmt {
-                            JSON { set formatter $hr_formatter }
-                            HR { set formatter $json_formatter }
+                            HR   { set formatter $hr_formatter }
+                            JSON { set formatter $json_formatter }
                             default {
-                                return [my compose 001 $msg]
+                                return [my compose 013 $fmt]
                             }
                         }
                         return [$formatter c104]

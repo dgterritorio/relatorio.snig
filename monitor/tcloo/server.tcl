@@ -30,9 +30,16 @@ package require ngis::sequence
         set ds_nseq -1
     }
 
-    method register_connection {con} {
+    method RegisterConnection {con ctype} {
         puts "registering connection $con"
         dict set connections_db $con protocol [ngis::Protocol::mkprotocol]
+        dict set connections_db $con login    [clock seconds]
+        dict set connections_db $con type     $ctype
+        dict set connections_db $con ncmds    0
+    }
+
+    method UpdateConnection {con} {
+        dict incr connections_db ncmds
     }
 
     method RemoveConnection {con} {
@@ -99,18 +106,19 @@ package require ngis::sequence
             my RemoveConnection $con
 
         } elseif {$e > 0}  {
+
             ::ngis::logger emit "Got $e chars in message \"$msg\" from $con"
             #eval my cmd_parser $con $msg
 
             set protocol [my get_protocol $con]
 
             if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
-                puts $e
-                puts $einfo
+                ::ngis::logger emit $e
                 my send_to_client $con [$protocol compose 501 $e $einfo]
             } else {
                 my send_to_client $con $ret2client
             }
+            my UpdateConnection $con
 
         } else {
 
@@ -130,14 +138,14 @@ package require ngis::sequence
     }
 
     method accept {con} {
-        my register_connection $con
+        my RegisterConnection $con "unix-socket"
         ::ngis::logger emit "Accepting connection on $con"
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
     method accept_tcp_connection {con clientaddr clientport} {
-        my register_connection $con
-        ::ngis::logger emit "Accepting tcp connection from $clientaddr ($clientport)"
+        my RegisterConnection $con "TCP/IP"
+        ::ngis::logger emit "Accepting TCP connection from $clientaddr ($clientport)"
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
