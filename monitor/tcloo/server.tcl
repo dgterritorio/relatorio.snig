@@ -39,7 +39,7 @@ package require ngis::sequence
     }
 
     method UpdateConnection {con} {
-        dict incr connections_db ncmds
+        dict with connections_db $con { incr ncmds }
     }
 
     method RemoveConnection {con} {
@@ -62,6 +62,18 @@ package require ngis::sequence
         chan puts $con $msg
         #chan puts $con $::ngis::end_of_answer
         chan flush $con
+    }
+
+    method whos {} {
+        set keys [lsort [dict keys $connections_db]]
+
+        set whos_l [list]
+        dict for {c con_d} $connections_db {
+            dict with con_d {
+                lappend whos_l [list [clock format $login] $type $ncmds [$protocol format]]
+            }
+        }
+        return $whos_l
     }
 
     method sync_results {result_queue} {
@@ -113,6 +125,9 @@ package require ngis::sequence
             set protocol [my get_protocol $con]
 
             if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
+                puts "e: $e"
+                puts "einfo: $einfo"
+
                 ::ngis::logger emit $e
                 my send_to_client $con [$protocol compose 501 $e $einfo]
             } else {

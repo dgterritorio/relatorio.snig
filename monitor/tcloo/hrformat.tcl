@@ -201,6 +201,23 @@ oo::define ngis::HRFormat {
             return [SingleLine "110" "No tasks registered"]
         }
     }
+
+    method c112 {args} {
+        set whos_l {*}$args
+        set whos_l [concat $report_a(112.capts) $whos_l]
+
+        $data_matrix deserialize [list [llength $whos_l] 4 $whos_l]
+        set report_txt [$report_a(112.report) printmatrix $data_matrix]
+        set rep_width [string length [lindex $report_txt 0]]
+
+        set fstring [::ngis::reports::get_fmt_string 110]
+
+        $data_matrix deserialize [list 1 1 [list [list [format $fstring [llength $whos_l]]]]] 
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+
+        return [append top_txt $report_txt]
+    }
 }
 
 package provide ngis::hrformat 0.5

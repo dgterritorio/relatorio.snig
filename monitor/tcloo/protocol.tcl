@@ -31,6 +31,10 @@ oo::define ngis::Protocol {
     destructor {
     }
 
+    method format {} {
+        return [$formatter format]
+    }
+
     method set_format {f} {
         switch -nocase $f {
             HR {
@@ -165,6 +169,9 @@ oo::define ngis::Protocol {
                     } else {
                         return [my compose 003 $arguments]
                     }
+                }
+                WHOS {
+                    return [my compose 112 [$::ngis_server whos]]
                 }
                 SET {
 

@@ -40,6 +40,7 @@ namespace eval ::ngis {
                                             106     "%s queued, %s pending sequences, %d jobs" \
                                             108     "%d matching entities\n%s"  \
                                             110     "%d registered tasks"       \
+                                            112     "%d connected sessions"     \
                                             501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 
@@ -79,6 +80,11 @@ namespace eval ::ngis {
         set report_a(110.capts) [list {"Task" "Procedure" "Description" "Script" "Language"}]
         set report_a(110.report) [::report::report hr_110_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(110.report) pad $c both " " }
+
+        set ncolumns 4
+        set report_a(112.capts) [list {"Login" "Type" "Num of Commands" "Format"}]
+        set report_a(112.report) [::report::report hr_112_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
         # Entities
         set ncolumns 3

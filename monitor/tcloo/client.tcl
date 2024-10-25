@@ -33,6 +33,7 @@ package require tclreadline
             S -
             Q - 
             X -
+            W -
             ZZ {
                 return $cmd
             }
@@ -127,6 +128,9 @@ package require tclreadline
             }
             X {
                 my stop_client
+            }
+            W {
+                my send_to_server $con WHOS
             }
             ZZ {
                 # this command is just for testing purposes
