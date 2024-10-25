@@ -111,6 +111,7 @@ package require ngis::sequence
 
         }
 
+        my UpdateConnection $con
         if {[catch {gets $con msg} e einfo]} {
 
             ::ngis::logger emit "error detected on 'gets <channel>': $e"
@@ -133,7 +134,6 @@ package require ngis::sequence
             } else {
                 my send_to_client $con $ret2client
             }
-            my UpdateConnection $con
 
         } else {
 

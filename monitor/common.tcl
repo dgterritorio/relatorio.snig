@@ -40,7 +40,7 @@ namespace eval ::ngis {
                                             106     "%s queued, %s pending sequences, %d jobs" \
                                             108     "%d matching entities\n%s"  \
                                             110     "%d registered tasks"       \
-                                            112     "%d connected sessions"     \
+                                            112     "%d Sessions Connected"     \
                                             501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 

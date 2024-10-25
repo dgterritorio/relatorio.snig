@@ -185,7 +185,7 @@ oo::define ngis::HRFormat {
 
             set fstring [::ngis::reports::get_fmt_string 110]
 
-            $data_matrix deserialize [list 1 1 [list [list [format $fstring [llength $tasks_l]]]]]
+            $data_matrix deserialize [list 1 1 [list [list "\[110\] [format $fstring [llength $tasks_l]]"]]]
             $report_bottom size 0 [expr $rep_width - 4]
             set bottom_txt [$report_bottom printmatrix $data_matrix]
 
@@ -210,9 +210,9 @@ oo::define ngis::HRFormat {
         set report_txt [$report_a(112.report) printmatrix $data_matrix]
         set rep_width [string length [lindex $report_txt 0]]
 
-        set fstring [::ngis::reports::get_fmt_string 110]
+        set fstring [::ngis::reports::get_fmt_string 112]
 
-        $data_matrix deserialize [list 1 1 [list [list [format $fstring [llength $whos_l]]]]] 
+        $data_matrix deserialize [list 1 1 [list [list "\[112\] [format $fstring [expr [llength $whos_l] -1]]"]]] 
         $report_top size 0 [expr $rep_width - 4]
         set top_txt [$report_top printmatrix $data_matrix]
 
