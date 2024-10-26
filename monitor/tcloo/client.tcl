@@ -1,48 +1,23 @@
-lappend auto_path .
+# client.tcl --
+#
+#
+#
 
 package require TclOO
 package require ngis::conf
+package require ngis::common
 package require unix_sockets
 package require tclreadline
 
 ::oo::class create ::ngis::Client {
 	variable cmdcount
-    variable pending_exit
 	variable scheduled_input
 
     constructor {} {
         set cmdcount        0
-        set pending_exit    false
         set scheduled_input ""
     }
     
-    method parse_cmd_line {cmdline cmd_args_v} {
-        upvar 1 $cmd_args_v cmd_args
-
-        set cmd [lindex $cmdline 0]
-        set cmd_args [lrange $cmdline 1 end]
-
-        switch -nocase $cmd {
-            P -
-            C -
-            F -
-            SX -
-            LT -
-            LE -
-            T -
-            S -
-            Q - 
-            X -
-            W -
-            ZZ {
-                return $cmd
-            }
-            default {
-                puts "Unknown Command '$cmd'"
-            }
-        }
-    }
-
     method process_server_message {con msg} {
         if {$scheduled_input != ""} {
             after cancel $scheduled_input
@@ -80,71 +55,82 @@ package require tclreadline
     }
 
     method terminal_input {con} {
+        set cli $::ngis::cli::cli
         set scheduled_input ""
 		set line ""
 		incr cmdcount
 		while {$line == ""} {
 			set line [::tclreadline::readline read "snig \[$cmdcount\]> "]
         }
-        set parsed_cmd [my parse_cmd_line $line cmd_args]
-        switch -nocase $parsed_cmd {
-            P {
-                my send_to_server $con PENDING
-            }
-            LT {
-                my send_to_server $con REGTASKS
-            }
-            LE {
-                my send_to_server $con [concat ENTITIES $cmd_args]
-            }
-            C {
-                if {[llength $cmd_args] > 0} {
-                    #set service_id [lindex $cmd_args 0]
-                    my send_to_server $con [list CHECK {*}$cmd_args]
-                } else {
-                    puts "missing command argument"
-                    after 10 [namespace code [list my terminal_input $con]]
-                }
-            }
-            F {
-                my send_to_server $con [concat FORMAT $cmd_args]
-            }
-            Q {
-                my send_to_server $con [concat QUERY $cmd_args]
-            }
-            S {
-                my send_to_server $con START
-            }
-            T {
-                my send_to_server $con STOP
-                if {([llength $cmd_args] > 0) && ([lindex $cmd_args 0] == "-wait")} {
-                    after 1000
-                    my send_to_server $con QUERY
-                }
-            }
-            SX {
-                set pending_exit true
-                my send_to_server $con EXIT
-            }
-            X {
-                my stop_client
-            }
-            W {
-                my send_to_server $con WHOS
-            }
-            ZZ {
-                # this command is just for testing purposes
+        #set parsed_cmd [my parse_cmd_line $line cmd_args]
+        set cli_result [eval $cli dispatch {*}[split $line]]
+        lassign $cli_result a1 a2 a3
 
-                my send_to_server $con {*}$cmd_args
+        #puts "a1: $a1, a2: $a2, a3: $a3"
+
+        switch $a1 {
+            OK {
+                eval my send_to_server $con $a2 $a3
             }
-            ? {
-                #
+            ERR {
+                puts "Error: $a1 ($a2)"
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
+            }
+            EXIT {
+                my stop_client
             }
             default {
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
         }
+#        switch -nocase $parsed_cmd {
+#            ? {
+#                my print_help_menu
+#            }
+#            LT {
+#                my send_to_server $con REGTASKS
+#            }
+#            LE {
+#                my send_to_server $con [concat ENTITIES $cmd_args]
+#            }
+#            C {
+#                #my send_to_server $con [list CHECK {*}$cmd_args]
+#                my send_to_server $con [concat CHECK $cmd_args]
+#            }
+#            F {
+#                my send_to_server $con [concat FORMAT $cmd_args]
+#            }
+#            Q {
+#                my send_to_server $con [concat QUERY $cmd_args]
+#            }
+#            S {
+#                my send_to_server $con START
+#            }
+#            T {
+#                my send_to_server $con STOP
+#            }
+#            SX {
+#                my send_to_server $con EXIT
+#            }
+#            X {
+#                my stop_client
+#            }
+#            W {
+#                my send_to_server $con WHOS
+#            }
+#            ZZ {
+#                # this command is just for testing purposes
+#
+#                my send_to_server $con {*}$cmd_args
+#            }
+#            ? {
+#                #
+#                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
+#            }
+#            default {
+#                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
+#            }
+#        }
     }
 
     method open_channel {} {

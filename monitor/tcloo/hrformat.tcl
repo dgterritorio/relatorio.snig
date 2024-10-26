@@ -206,7 +206,7 @@ oo::define ngis::HRFormat {
         set whos_l {*}$args
         set whos_l [concat $report_a(112.capts) $whos_l]
 
-        $data_matrix deserialize [list [llength $whos_l] 4 $whos_l]
+        $data_matrix deserialize [list [llength $whos_l] 5 $whos_l]
         set report_txt [$report_a(112.report) printmatrix $data_matrix]
         set rep_width [string length [lindex $report_txt 0]]
 

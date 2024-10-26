@@ -6,6 +6,7 @@
 #
 #
 package require report
+package require ngis::cli
 
 ::report::defstyle simpletable {} {
     data set [split "[string repeat "| "   [columns]]|"]
@@ -25,6 +26,10 @@ package require report
 }
 
 namespace eval ::ngis {
+
+    namespace eval cli {
+        variable cli [::ngis::CLI create ::cli]
+    }
 
     namespace eval reports {
         variable CodeMessages [dict create  000     "Server is going to exit"   \
@@ -81,8 +86,8 @@ namespace eval ::ngis {
         set report_a(110.report) [::report::report hr_110_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(110.report) pad $c both " " }
 
-        set ncolumns 4
-        set report_a(112.capts) [list {"Login" "Type" "Num of Commands" "Format"}]
+        set ncolumns 5
+        set report_a(112.capts) [list {"Login" "Type" "Num of Commands" "Format" "Idle"}]
         set report_a(112.report) [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 

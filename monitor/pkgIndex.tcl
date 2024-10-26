@@ -16,3 +16,5 @@ package ifneeded ngis::threads          1.0 [list source [file join $dir tcloo t
 package ifneeded ngis::hrformat         0.5 [list source [file join $dir tcloo hrformat.tcl]]
 package ifneeded ngis::jsonformat       0.1 [list source [file join $dir tcloo jsonformat.tcl]]
 package ifneeded ngis::common           1.0 [list source [file join $dir common.tcl]]
+package ifneeded ngis::cli              0.1 [list source [file join $dir tcloo cli.tcl]]
+package ifneeded ngis::utils            0.1 [list source [file join $dir utils snigutils.tcl]]
