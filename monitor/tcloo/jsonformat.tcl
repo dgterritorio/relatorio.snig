@@ -143,6 +143,19 @@ oo::define ngis::JsonFormat {
                 }
                 $json_o array_close
             }
+            112 {
+                set whos_l [lindex $args 0]
+                $json_o string connections array_open
+                foreach c $whos_l {
+                    lassign $c login type ncmds protocol idle_time_s
+                    $json_o map_open    string "login"      string $login   \
+                                        string "type"       string $type    \
+                                        string "ncmds"      string $ncmds   \
+                                        string "protocol"   string $protocol \
+                                        string "idle"       string $idle_time_s
+                }
+                $json_o array_close
+            }
             501 {
                 $json_o string message string "Server internal error"
                 if {[llength $args] > 0} {

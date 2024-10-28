@@ -45,8 +45,8 @@ package require tclreadline
 
     }
 
-    method send_to_server {chanid args} {
-        chan puts $chanid [join $args]
+    method send_to_server {chanid server_cmd} {
+        chan puts  $chanid $server_cmd
         chan flush $chanid
     }
 
@@ -62,18 +62,17 @@ package require tclreadline
 		while {$line == ""} {
 			set line [::tclreadline::readline read "snig \[$cmdcount\]> "]
         }
-        #set parsed_cmd [my parse_cmd_line $line cmd_args]
-        set cli_result [eval $cli dispatch {*}[split $line]]
-        lassign $cli_result a1 a2 a3
+        set cli_result [$cli dispatch $line]
+        lassign $cli_result cli_result cli_cmd cli_args
 
         #puts "a1: $a1, a2: $a2, a3: $a3"
 
-        switch $a1 {
+        switch $cli_result {
             OK {
-                eval my send_to_server $con $a2 $a3
+                my send_to_server $con [list $cli_cmd {*}$cli_args]
             }
             ERR {
-                puts "Error: $a1 ($a2)"
+                puts "Error: $cli_result ($cli_cmd $cli_args)"
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
             EXIT {
@@ -83,54 +82,6 @@ package require tclreadline
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
         }
-#        switch -nocase $parsed_cmd {
-#            ? {
-#                my print_help_menu
-#            }
-#            LT {
-#                my send_to_server $con REGTASKS
-#            }
-#            LE {
-#                my send_to_server $con [concat ENTITIES $cmd_args]
-#            }
-#            C {
-#                #my send_to_server $con [list CHECK {*}$cmd_args]
-#                my send_to_server $con [concat CHECK $cmd_args]
-#            }
-#            F {
-#                my send_to_server $con [concat FORMAT $cmd_args]
-#            }
-#            Q {
-#                my send_to_server $con [concat QUERY $cmd_args]
-#            }
-#            S {
-#                my send_to_server $con START
-#            }
-#            T {
-#                my send_to_server $con STOP
-#            }
-#            SX {
-#                my send_to_server $con EXIT
-#            }
-#            X {
-#                my stop_client
-#            }
-#            W {
-#                my send_to_server $con WHOS
-#            }
-#            ZZ {
-#                # this command is just for testing purposes
-#
-#                my send_to_server $con {*}$cmd_args
-#            }
-#            ? {
-#                #
-#                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
-#            }
-#            default {
-#                set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
-#            }
-#        }
     }
 
     method open_channel {} {

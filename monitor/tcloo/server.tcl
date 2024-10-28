@@ -148,8 +148,10 @@ package require ngis::utils
             #eval my cmd_parser $con $msg
 
             set protocol [my get_protocol $con]
+            
+            puts "read from socket: >$msg<"
 
-            if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
+            if {[catch { set ret2client [$protocol parse_cmd $msg] } e einfo]} {
                 puts "e: $e"
                 puts "einfo: $einfo"
 

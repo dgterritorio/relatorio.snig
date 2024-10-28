@@ -41,7 +41,7 @@ namespace eval ::ngis {
                                             009     "Invalid arguments for '%s'" \
                                             013     "Invalid format '%s'"       \
                                             102     "Stopping operations"       \
-                                            104     "current format: %s"        \
+                                            104     "Current format: %s"        \
                                             106     "%s queued, %s pending sequences, %d jobs" \
                                             108     "%d matching entities\n%s"  \
                                             110     "%d registered tasks"       \
@@ -76,25 +76,25 @@ namespace eval ::ngis {
 
         # Job sequences status report
         set ncolumns 6
-        set report_a(106.capts) [list {"Seq ID" "Description" "Running Jobs" "Completed Jobs" "Total Jobs" "Status"}]
-        set report_a(106.report)  [::report::report hr_106_data $ncolumns style captionedtable]
+        set report_a(106.capts)     [list {"Seq ID" "Description" "Running Jobs" "Completed Jobs" "Total Jobs" "Status"}]
+        set report_a(106.report)    [::report::report hr_106_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(106.report) pad $c both " " }
 
         # Registered tasks list
         set ncolumns 5
-        set report_a(110.capts) [list {"Task" "Procedure" "Description" "Script" "Language"}]
-        set report_a(110.report) [::report::report hr_110_data $ncolumns style captionedtable]
+        set report_a(110.capts)     [list {"Task" "Procedure" "Description" "Script" "Language"}]
+        set report_a(110.report)    [::report::report hr_110_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(110.report) pad $c both " " }
 
         set ncolumns 5
-        set report_a(112.capts) [list {"Login" "Type" "Num of Commands" "Format" "Idle"}]
-        set report_a(112.report) [::report::report hr_112_data $ncolumns style captionedtable]
+        set report_a(112.capts)     [list {"Login" "Socket" "Commands Exec." "Format" "Idle"}]
+        set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
         # Entities
         set ncolumns 3
-        set report_a(108.capts) [list {"Eid" "Description" "Records"}]
-        set report_a(108.report) [::report::report hr_108_data $ncolumns style captionedtable]
+        set report_a(108.capts)     [list {"Eid" "Description" "Records"}]
+        set report_a(108.report)    [::report::report hr_108_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(108.report) pad $c both " " }
 
         proc get_fmt_string {code} {

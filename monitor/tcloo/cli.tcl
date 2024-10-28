@@ -13,7 +13,7 @@ package require TclOO
         set cli_cmds [dict create  \
         LT [dict create cmd REGTASKS has_args no    description "List registered tasks" help lt.md ] \
         LE [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
-        C  [dict create cmd CHECK    has_args yes   description "Run Monitor Jobs" help check.md] \
+        C  [dict create cmd CHECK    has_args yes   description "Starts Monitoring Jobs" help check.md] \
         F  [dict create cmd FORMAT   has_args maybe description "Set/Query message format" help format.md] \
         Q  [dict create cmd QUERY    has_args no    description "Query Monitor Status" help q.md] \
         T  [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
@@ -34,11 +34,17 @@ package require TclOO
         }
     }
 
-    method dispatch {clicmd args} {
-        set parsed_cmd  [string toupper [lindex $clicmd 0]]
-        set cmd_args    $args
-        #puts $cmd_args
-
+    method dispatch {cli_line} {
+        set first_space [string first " " $cli_line]
+        if {$first_space < 0} {
+            set parsed_cmd $cli_line
+            set cmd_args   ""
+        } else {
+            set parsed_cmd  [string range $cli_line 0 $first_space-1]
+            #set parsed_cmd  [string toupper [lindex $clicmd 0]]
+            set cmd_args    [string range $cli_line $first_space+1 end]
+        }
+        set parsed_cmd [string toupper $parsed_cmd]
         if {[dict exists $cli_cmds $parsed_cmd]} {
             dict with cli_cmds $parsed_cmd {
                 set nargs [llength $cmd_args]
@@ -54,7 +60,7 @@ package require TclOO
                                 lassign $cmd_args help_cmd
                                 if {[dict exists $cli_cmds $help_cmd]} {
                                     set help_file [file join doc [dict get $cli_cmds $help_cmd help]]
-                                    exec cat $help_file | sed s/@CMD@/$parsed_cmd/g | pandoc - | w3m -T 'text/html' -dump
+                                    puts [exec cat $help_file | sed s/@CMD@/$help_cmd/g | pandoc -s -f markdown -t man - | man -l -]
                                 } else {
                                     puts "unrecognized command '$help_cmd'"
                                 }
@@ -69,7 +75,6 @@ package require TclOO
                         if {$has_args == "yes"} {
                             return [list ERR "Missing arguments"]
                         }
-                        return [list OK $cmd $cmd_args]
                     }
                     return [list OK $cmd $cmd_args]
                 }
