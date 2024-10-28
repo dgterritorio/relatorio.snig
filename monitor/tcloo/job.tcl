@@ -52,7 +52,7 @@ package require struct::queue
             set task_d [::ngis::tasks mktask $t [self]] 
             set task_uri_type [::ngis::tasks type $task_d]
             set job_uri_type  [my uri_type] 
-            if {($uri_type == "all") || ($task_uri_type == $job_uri_type)} {
+            if {($uri_type == "all") || [string equal -nocase $task_uri_type $job_uri_type]} {
                 set task_d
             } else {
                 continue
@@ -175,6 +175,7 @@ package require struct::queue
     method uri_type {} { return [my get_property uri_type] }
     method version {} { return [my get_property version] }
     method uuid {} { return [my get_property uuid] }
+    method description {} { return [my get_property description] }
     method jobname {} { return [my get_property jobname] }
 }
 
