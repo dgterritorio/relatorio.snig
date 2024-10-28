@@ -8,6 +8,7 @@ package require TclOO
 
 ::oo::class create ::ngis::CLI {
     variable cli_cmds 
+    variable docs_base
 
     constructor {} {
         set cli_cmds [dict create  \
@@ -24,6 +25,9 @@ package require TclOO
                                                     method send_custom_cmd help zz.md] \
         ?  [dict create cmd ""       has_args maybe description "List CLI Commands" \
                                                     method print_help_menu help help.md]]
+
+        set docs_base $::ngis::docs_base
+
     }
 
     method print_help_menu {} {
@@ -61,7 +65,7 @@ package require TclOO
                                 lassign $cmd_args help_cmd
                                 set help_cmd [string toupper $help_cmd]
                                 if {[dict exists $cli_cmds $help_cmd]} {
-                                    set help_file [file join doc [dict get $cli_cmds $help_cmd help]]
+                                    set help_file [file join $docs_base [dict get $cli_cmds $help_cmd help]]
                                     if {[file exists $help_file] && [file readable $help_file]} {
 
                                         #"sed -e s/@CMD@/$help_cmd/g -e s/@AUTHOR@/${::ngis::authorship}/g -e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"
