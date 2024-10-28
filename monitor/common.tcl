@@ -6,7 +6,6 @@
 #
 #
 package require report
-package require ngis::cli
 
 ::report::defstyle simpletable {} {
     data set [split "[string repeat "| "   [columns]]|"]
@@ -26,10 +25,6 @@ package require ngis::cli
 }
 
 namespace eval ::ngis {
-
-    namespace eval cli {
-        variable cli [::ngis::CLI create ::cli]
-    }
 
     namespace eval reports {
         variable CodeMessages [dict create  000     "Server is going to exit"   \

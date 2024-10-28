@@ -13,6 +13,11 @@ if {$snig_monitor_dir_idx < 0} {
 
 package require ngis::client
 package require ngis::conf
+package require ngis::cli
+
+namespace eval ::ngis::cli {
+    variable cli [::ngis::CLI create ::cli]
+}
 
 set ::the_client [::ngis::Client new]
 if {($argc > 0) && ([lindex $argv 0] == "--tcp")} {
