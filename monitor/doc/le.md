@@ -55,3 +55,13 @@ from the CLI client outputs
 | 14  | Instituto Português do Mar e da Atmosfera, I.P. (IPMA, I.P.) | 119     |
 +-----+--------------------------------------------------------------+---------+
 ```
+
+BUGS
+====
+
+Please report bugs at: @BUG_REPORTS@
+
+AUTHOR
+======
+
+@AUTHOR@

@@ -20,3 +20,15 @@ Display a table of registered tasks. The table columns show
  3. A description of the actual purposes of the task
  4. The name of the script implmenting the task
  5. The language of the script. Supported languages are: *bash*, *Tcl* and *Python3*
+
+BUGS
+====
+
+Please report bugs at: @BUG_REPORTS@
+
+AUTHOR
+======
+
+@AUTHOR@
+
+

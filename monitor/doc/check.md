@@ -1,77 +1,42 @@
-% HELLO(1) Version 1.0 | Frivolous "Hello World" Documentation
+% @CMD@(1) Version 1.0 | Launch Job Sequences
 
 NAME
 ====
 
-**C** — Starts a job sequence to check and validate a series of resources
+**@CMD@** — Launch Job Sequences
 
 SYNOPSIS
 ========
 
-| **hello** \[**-o**|**--out** _file_] \[_dedication_]
-| **hello** \[**-h**|**--help**|**-v**|**--version**]
+| **@CMD@** ?\[**entity pattern**\]? ?\[**gid**]? ?\[**gid='service record gid'**] ?\[**eid='entity id'**]?
 
 DESCRIPTION
 ===========
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Launch Job Sequences using different patterns of selection in the database. The command accepts multiple
+arguments among the accepted patterns. 
 
-Prints "Hello, _dedication_!" to the terminal. If no dedication is
-given, uses the default dedication. The default dedication is chosen by
-the following sequence:
+EXAMPLES
+========
 
- 1. Using the environment variable *DEFAULT_HELLO_DEDICATION*
- 2. Using the per-user configuration file, *~/.hellorc*
- 3. Using the system-wide configuration file, */etc/hello.conf*
- 4. Finally, using "world".
+the following command
 
-Options
--------
+**@CMD@** 100 101 102 "Direção Regional do Planeamento e Fundos Estruturais" eid=28
 
--h, --help
+Launches 3 job sequences
 
-:   Prints brief usage information.
-
--o, --output
-
-:   Outputs the greeting to the given filename.
-
-    The file must be an **open(2)**able and **write(2)**able file.
-
--v, --version
-
-:   Prints the current version number.
-
-FILES
-=====
-
-*~/.hellorc*
-
-:   Per-user default dedication file.
-
-*/etc/hello.conf*
-
-:   Global default dedication file.
-
-ENVIRONMENT
-===========
-
-**DEFAULT_HELLO_DEDICATION**
-
-:   The default dedication if none is given. Has the highest precedence
-    if a dedication is not supplied on the command line.
+ 1. The first sequence comprises 3 Jobs for the services having gids 100 101 102
+ 2. The second sequence comprises of the jobs for the records belonging to\
+    the entity 'Direção Regional do Planeamento e Fundos Estruturais'
+ 3. The third job is a sequence comprising the jobs for the 5 service records\
+    belonging to the entity "Direção-Geral da Agricultura e Desenvolvimento Rural"
 
 BUGS
 ====
 
-See GitHub Issues: <https://github.com/[owner]/[repo]/issues>
+Please report bugs at: @BUG_REPORTS@
 
 AUTHOR
 ======
 
-Foobar Goodprogrammer <foo@example.org>
-
-SEE ALSO
-========
-
-**hi(1)**, **hello(3)**, **hello.conf(4)**
+@AUTHOR@

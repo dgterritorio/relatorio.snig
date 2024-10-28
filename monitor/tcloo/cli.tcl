@@ -44,6 +44,7 @@ package require TclOO
             #set parsed_cmd  [string toupper [lindex $clicmd 0]]
             set cmd_args    [string range $cli_line $first_space+1 end]
         }
+
         set parsed_cmd [string toupper $parsed_cmd]
         if {[dict exists $cli_cmds $parsed_cmd]} {
             dict with cli_cmds $parsed_cmd {
@@ -58,10 +59,19 @@ package require TclOO
                                 my print_help_menu
                             } else {
                                 lassign $cmd_args help_cmd
+                                set help_cmd [string toupper $help_cmd]
                                 if {[dict exists $cli_cmds $help_cmd]} {
                                     set help_file [file join doc [dict get $cli_cmds $help_cmd help]]
                                     if {[file exists $help_file] && [file readable $help_file]} {
-                                        puts [exec -ignorestderr cat $help_file | sed s/@CMD@/$help_cmd/g | sed s/@AUTHOR@/$::ngis::authorship/g | pandoc -s -f markdown -t man - | man -l -]
+
+                                        #"sed -e s/@CMD@/$help_cmd/g -e s/@AUTHOR@/${::ngis::authorship}/g -e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"
+                                        set execcmd [list "cat $help_file" \
+                                                  "sed -e s/@CMD@/$help_cmd/g -e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g -e s%@BUG_REPORTS@%${::ngis::bug_reports}%g" \
+                                                  "pandoc -s -f markdown -t man -" \
+                                                  "man -l - 2> /dev/null"]
+
+                                        #puts $execcmd
+                                        puts [exec -ignorestderr {*}[join $execcmd " | "]]
                                     } else {
                                         puts "File '$help_file' not found"
                                     }

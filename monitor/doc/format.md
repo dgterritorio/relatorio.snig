@@ -18,3 +18,12 @@ Without arguments displays the current format used by server to respond to the c
 When passing an argument the protocol is changed accordingly. Possible arguments are *HR* (for simple
 text based human readable responses) and *JSON*
 
+BUGS
+====
+
+Please report bugs at: @BUG_REPORTS@
+
+AUTHOR
+======
+
+@AUTHOR@

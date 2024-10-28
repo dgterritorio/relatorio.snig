@@ -20,6 +20,9 @@ namespace eval ::ngis {
     variable rescheduling_delay 100
     variable curldir            "" 
 
+    variable authorship         {NATURAL GIS LDA - P.IVA 508912032 (PT)
+Sede: RUA DO SOL NASCENTE, 10 - 00000 EVORA (PT)}
+
     variable tcpaddr            ""
     variable tcpport            ""
 }

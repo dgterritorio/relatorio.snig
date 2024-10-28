@@ -8,9 +8,20 @@ NAME
 SYNOPSIS
 ========
 
-| **ZZ** \[arg1] \[arg2] \[arg3] .... \[argn]
+| **@CMD@** \[arg1] \[arg2] \[arg3] .... \[argn]
 
 DESCRIPTION
 ===========
 
-The command **ZZ** sends custom messages to the monitor server. It's meant only for debugging/development purposes
+The command **ZZ** sends custom messages to the monitor server. **This command it's meant for debugging/development purposes only**
+
+BUGS
+====
+
+Please report bugs at: @BUG_REPORTS@
+
+AUTHOR
+======
+
+@AUTHOR@
+

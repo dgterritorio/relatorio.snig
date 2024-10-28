@@ -51,7 +51,7 @@ A bottom row is printed showing the current status of the thread pool
 BUGS
 ====
 
-Please report bugs at: <https://github.com/dgterritorio/relatorio.snig/issues>
+Please report bugs at: @BUG_REPORTS@
 
 AUTHOR
 ======
