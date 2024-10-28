@@ -36,7 +36,7 @@ re_match=$(cat $ogrinfo_fn | grep "using driver \`WFS' successful")
 if [ "$re_match" != "" ]; then
     ser_match=$(cat $ogrinfo_fn | grep -oiP "ServiceExceptionReport|error")
     if [ "$ser_match" != "" ]; then
-        echo $(make_warning_result "valid WFS OGR info response (version $version) with warning or not fatal error")
+        echo $(make_warning_result "service_exception_or_error" "valid WFS OGR info response (version $version) with warning or not fatal error")
     else
         echo $(make_ok_result "valid WFS OGR info response (version $version)")
     fi
@@ -45,12 +45,5 @@ if [ "$re_match" != "" ]; then
 else
     echo $(make_error_result "invalid_ogrinfo" "Invalid OGR info response")
 fi
-
-#re_match=$(cat $ogrinfo_fn | grep -oiP "INFO: Open of\s+.wfs:.*\s+using driver .WFS. successful.")
-#echo ">$re_match<"
-#if [ "$re_match" != "" ]; then
-#    test_passed="y"
-#    echo $(make_warning_result "valid WFS OGR info response (version $version) with warning or not fatal error")
-#fi
 
 exit 0

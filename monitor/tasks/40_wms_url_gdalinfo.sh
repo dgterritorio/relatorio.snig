@@ -46,11 +46,4 @@ else
     echo $(make_error_result "invalid_gdalinfo" "Invalid GDAL info response")
 fi
 
-#re_match=$(cat $ogrinfo_fn | grep -oiP "INFO: Open of\s+.wfs:.*\s+using driver .WFS. successful.")
-#echo ">$re_match<"
-#if [ "$re_match" != "" ]; then
-#    test_passed="y"
-#    echo $(make_warning_result "valid WFS OGR info response (version $version) with warning or not fatal error")
-#fi
-
 exit 0
