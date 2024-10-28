@@ -13,15 +13,19 @@ namespace eval ::ngis {
     variable TIMEZONE           "Europe/Lisbon"
 
     variable data_root          [file join / tmp snig]
+    variable docs_base          [file normalize [file join [file dirname [info script]] doc]]
     variable debugging          false
 
-    variable max_workers_number 50
+    variable max_workers_number 5
     variable unix_socket_name   /tmp/snig.socket
     variable rescheduling_delay 100
     variable curldir            "" 
 
-    variable tcpaddr            ""
-    variable tcpport            ""
+    variable authorship         {NATURAL GIS LDA - P.IVA 508912032 (PT)}
+    variable bug_reports        "https://github.com/dgterritorio/relatorio.snig/issues"
+
+    variable tcpaddr            "127.0.0.1"
+    variable tcpport            "4422"
 }
 
 package provide ngis::conf 1.1

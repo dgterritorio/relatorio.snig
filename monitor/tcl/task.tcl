@@ -142,7 +142,8 @@ namespace eval ::ngis::tasks {
         set tasks_l [lmap t $tasks { 
             set td [dict get $tasks_db $t]
             dict with td {
-                set tlist [list $t $uri_type $function $description $procedure $script $language] 
+                set tlist [list $t $uri_type $procedure $description [file tail $script] $language] 
+                #set tlist [list $t $procedure $description [file tail $script] $language] 
             }
             set tlist
         }]

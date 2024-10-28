@@ -19,6 +19,8 @@ package require ngis::sequence
 package require ngis::jobcontroller
 package require ngis::procedures
 
+package require ngis::hrformat
+
 ::ngis::tasks build_tasks_database ./tasks
 
 set ::ngis_server [::ngis::Server create ::ngis_server]
@@ -57,3 +59,5 @@ set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registere
 #
 #    $the_sequence post_job $thread_id
 #}
+
+set hr_f [::ngis::HRFormat new]

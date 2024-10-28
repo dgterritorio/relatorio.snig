@@ -13,3 +13,8 @@ package ifneeded ngis::jobcontroller    1.0 [list source [file join $dir tcloo j
 package ifneeded ngis::server           1.0 [list source [file join $dir tcloo server.tcl]]
 package ifneeded ngis::client           1.0 [list source [file join $dir tcloo client.tcl]]
 package ifneeded ngis::threads          1.0 [list source [file join $dir tcloo thread_master.tcl]]
+package ifneeded ngis::hrformat         0.5 [list source [file join $dir tcloo hrformat.tcl]]
+package ifneeded ngis::jsonformat       0.1 [list source [file join $dir tcloo jsonformat.tcl]]
+package ifneeded ngis::common           1.0 [list source [file join $dir common.tcl]]
+package ifneeded ngis::cli              0.1 [list source [file join $dir tcloo cli.tcl]]
+package ifneeded ngis::utils            0.1 [list source [file join $dir utils snigutils.tcl]]
