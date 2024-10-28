@@ -7,7 +7,7 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wfs_capabilities" "WFS Capabilities" $2 $3 "WFS"
+identify $1 "WFS" "wfs_capabilities" "WFS Capabilities" $2 $3
 
 if [ $type != "WFS" ]; then
     echo $(make_not_applicable_result)

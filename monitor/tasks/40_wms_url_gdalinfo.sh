@@ -7,12 +7,12 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wms_gdal_info" "WMS GDAL info Capabilities" $2 $3 "WMS"
+identify $1 "WMS" "wms_gdal_info" "WMS GDAL info Capabilities" $2 $3
 
-if [ $type != "WMS" ]; then
-    echo $(make_not_applicable_result)
-    exit 0
-fi
+#if [ $type != "WMS" ]; then
+#    echo $(make_not_applicable_result)
+#    exit 0
+#fi
 
 if [ ! -d $uuid_space ]; then
     mkdir -p $uuid_space

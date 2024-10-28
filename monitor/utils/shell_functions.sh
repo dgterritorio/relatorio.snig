@@ -34,9 +34,12 @@ function identify()
     #echo "$@"
     if [ "$1" == "identify" ]; then
 
-        echo "{$2} {$3} {$6}"
-        exit 0
+        urltype="$2" 
+        task="$3"
+        description="$4"
 
+        echo "$task" "$urltype" "\"$description\""
+        exit 0
     else
 
         args["gid"]=$(echo "$1" | cut -f1 -d\|)
@@ -45,8 +48,8 @@ function identify()
         args["type"]=$(echo "$1" | cut -f4 -d\|)
         args["version"]=$(echo "$1" | cut -f5 -d\|)
 
-        tmp_space=$4
-        uuid_space=$5
+        tmp_space=$5
+        uuid_space=$6
         url=${args["url"]}
         type=${args["type"]}
         version=${args["version"]}

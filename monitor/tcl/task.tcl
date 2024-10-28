@@ -101,20 +101,23 @@ namespace eval ::ngis::tasks {
                     set ftype [file extension $script]
                     if {$ftype == ".sh"} {
 
-                        set identity [exec /bin/bash $script identify]
+                        set identify [exec /bin/bash $script identify]
                         set language "Bash"
                         set procedure "run_bash"
+                        set function $script
 
+                        lassign $identify task uri_type description
                     } elseif {$ftype == ".tcl"} {
 
                         namespace eval [namespace current] [list source $script ]
-                        set identity [eval [namespace current]::identify]
-                        set language "Bash"
+                        set identify [eval [namespace current]::identify]
+                        set language "Tcl"
                         set procedure "run_tcl"
-                        rename [namespace current]::${function} ""
+                        lassign $identify task uri_type function description
 
+                        rename [namespace current]::${function} ""
                     }
-                    lassign $identity task function description uri_type
+
                     lappend tasks $task
                     dict set tasks_db $task [dict create function    $function  \
                                                          script      $script    \

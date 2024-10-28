@@ -48,12 +48,18 @@ package require struct::queue
             $tasks_q clear
         }
 
-        $tasks_q put {*}[lmap t $tasks_l {             
-            set task_d [::ngis::tasks mktask $t [self]] 
+        $tasks_q put {*}[lmap t $tasks_l {
+            set task_d [::ngis::tasks mktask $t [self]]
             set task_uri_type [::ngis::tasks type $task_d]
             set job_uri_type  [my uri_type] 
             if {($uri_type == "all") || [string equal -nocase $task_uri_type $job_uri_type]} {
+
+                # this line returns the task descriptor
+                # dictionary to build up the list to be
+                # stored in the tasks queue
+
                 set task_d
+
             } else {
                 continue
             }

@@ -1,7 +1,7 @@
 # 
 
     proc identify {} {
-        return [list {congruence} {data_congruence} {Record Data Congruence Check} {all}]
+        return [list {congruence} {all} {data_congruence} {Record Data Congruence Check}]
     }
 
     proc data_congruence {task_d tmp_space uuid_space} {

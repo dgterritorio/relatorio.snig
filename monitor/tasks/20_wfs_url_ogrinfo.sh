@@ -7,12 +7,12 @@
 #  $3: uuid private disk space
 
 . utils/shell_functions.sh
-identify $1 "wfs_ogr_info" "WFS OGRinfo Capabilities" $2 $3 "WFS"
+identify $1 "WFS" "wfs_ogr_info" "WFS OGRinfo Capabilities" $2 $3
 
-if [ $type != "WFS" ]; then
-    echo $(make_not_applicable_result)
-    exit 0
-fi
+#if [ $type != "WFS" ]; then
+#    echo $(make_not_applicable_result)
+#    exit 0
+#fi
 
 if [ ! -d $uuid_space ]; then
     mkdir -p $uuid_space
