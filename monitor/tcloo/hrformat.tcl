@@ -123,15 +123,13 @@ oo::define ngis::HRFormat {
             set jobs_l [concat $jobs_l $pending_l]
         }
 
-        # assuming the job table had *4* columns (determined by ::ngis::Protocol)
-
         set jobs_l [concat $report_a(106.capts) $jobs_l]
+
         if {[llength $jobs_l] > 1} {
             $data_matrix deserialize [list [llength $jobs_l] 6 $jobs_l]
             set report_txt [$report_a(106.report) printmatrix $data_matrix]
 
-            # let's infer the report width from the first line 
-
+            # let's infer the report width from the first line
             set rep_width [string length [lindex $report_txt 0]]
         } else {
             set rep_width 40

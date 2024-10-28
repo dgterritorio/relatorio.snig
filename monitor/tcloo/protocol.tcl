@@ -83,7 +83,9 @@ oo::define ngis::Protocol {
                 }
 
             } else {
-                lappend entities_l [::ngis::service list_entities $a]
+                # ::ngis::service list_entities returns a list of 3-element descriptors
+                # (as a matter of fact a record in the entities table with columsn stripped of the keys)
+                lappend entities_l {*}[::ngis::service list_entities $a]
             }
         }
 
@@ -146,7 +148,6 @@ oo::define ngis::Protocol {
                         if {[llength $eids_l] > 0} {
                             foreach eid $eids_l {    
                                 set entity_d [::ngis::service load_entity_record $eid]
-                                puts "entity_d: $entity_d"
                                 if {[dict size $entity_d] > 0} {
                                     set entity [dict get $entity_d description]
                                     set resultset [::ngis::service load_by_entity $eid -resultset]
@@ -159,9 +160,10 @@ oo::define ngis::Protocol {
                         }
                         if {[llength $entities_l]} {
                             foreach entity $entities_l {
-                                set resultset [::ngis::service load_by_entity [lindex $entity 0] -resultset]
+                                set entity_description [lindex $entity 1]
+                                set resultset [::ngis::service load_by_entity $entity_description -resultset]
                                 $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
-                                        [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
+                                        [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity_description]
                             }
                         }
                         

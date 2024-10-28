@@ -60,7 +60,11 @@ package require TclOO
                                 lassign $cmd_args help_cmd
                                 if {[dict exists $cli_cmds $help_cmd]} {
                                     set help_file [file join doc [dict get $cli_cmds $help_cmd help]]
-                                    puts [exec cat $help_file | sed s/@CMD@/$help_cmd/g | pandoc -s -f markdown -t man - | man -l -]
+                                    if {[file exists $help_file] && [file readable $help_file]} {
+                                        puts [exec -ignorestderr cat $help_file | sed s/@CMD@/$help_cmd/g | sed s/@AUTHOR@/$::ngis::authorship/g | pandoc -s -f markdown -t man - | man -l -]
+                                    } else {
+                                        puts "File '$help_file' not found"
+                                    }
                                 } else {
                                     puts "unrecognized command '$help_cmd'"
                                 }
