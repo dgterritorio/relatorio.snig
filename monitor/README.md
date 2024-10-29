@@ -90,10 +90,12 @@ to the database. A `::ngis::Job` object asynchronously *sends* tasks
 one at a time to the assigned worker thread (the set of tasks depends on the type
 of the service). A worker thread in turn notifies the results of a task
 through the main thread's event loop to the job that had submitted the task. 
-Even though threads can handle queue of tasks a Job waits for a task
-completion before sending a new task to its thread, since
-a fatal error condition in one task interrupts the whole job.
+Even though threads have an internal queue of commands to execute a Job 
+waits for a task completion before assigning a new task to the thread it holds,
+since a fatal error condition in one task interrupts the whole job. After
+the last task in a Job has completed a Job notifies the sequence it belong to and
+tells the ThreadManager to move the thread into the idle thread queue.
 
-Once created threads don't exit and wait for new tasks to be executed. But a
+Once created threads don't exit and wait for new tasks to be executed, but a
 mechanism for forcing idle threads to exit after a pre-determined amount
 of time spent in the idle threads queue is easy to implement.
