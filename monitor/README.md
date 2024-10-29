@@ -76,16 +76,16 @@ reference of idle threads to the round-robin Job Sequences
 
 ### Job Execution and the Server Thread Pool
 
-A *Job* is a set of tasks to be carried out for a specific service. A
-service data are one of the rows that make the result of an SQL query
+A *Job* is a set of tasks to be carried out for a specific service. The
+service data are one of the rows that in the resultset of an SQL query
 to the database. A `::ngis::Job` object asynchronously *sends* tasks
 one at a time to the assigned worker thread (the set of tasks depends on the type
-of the service). A worker thread in turn notifies the task results
-through the main thread event loop to the job that had submitted the task. 
+of the service). A worker thread in turn notifies the results of a task
+through the main thread's event loop to the job that had submitted the task. 
 Even though threads can handle queue of tasks a Job waits for a task
 completion before sending a new task to its thread, since
 a fatal error condition in one task interrupts the whole job.
 
-One created threads don't exit and wait for new tasks to be executed. A
+Once created threads don't exit and wait for new tasks to be executed. But a
 mechanism for forcing idle threads to exit after a pre-determined amount
-of time in the idle threads queue is easy to implement.
+of time spent in the idle threads queue is easy to implement.
