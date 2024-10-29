@@ -19,8 +19,8 @@
                   .               .
     +-----------------------------------------+
     |                                         |       +----------------+
-    |     ::ngis::Server (Event Queue,        | <---- | Thread Manager |
-    | network, Threads and Jobs callbacks)    |       +----------------+
+    |     ::ngis::Server (Event Queue.        | <---- | Thread Manager |
+    | Network, Threads and Jobs callbacks)    |       +----------------+
     |                                         |
     +-----------------------------------------+
                         |
