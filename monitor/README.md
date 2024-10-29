@@ -4,9 +4,9 @@
 
 ```
 
-           | Web Server |
-                 .
-                 .
+            | Web Server |
+                  .
+                  .
            +-------------+
            |    TCP/IP   |
            |  connection |
