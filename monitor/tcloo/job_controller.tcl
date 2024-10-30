@@ -23,6 +23,7 @@ namespace eval ::ngis {
         variable task_results_queue
         variable shutdown_counter
         variable shutdown_signal
+        variable stop_operation
 
         constructor {max_workers_num} {
             set sequence_list           {}
@@ -33,6 +34,7 @@ namespace eval ::ngis {
             set task_results_chore      ""
             set task_results_queue      [::struct::queue ::ngis::task_results]
             set shutdown_signal         false
+            set stop_operation          false
         }
 
         destructor {
@@ -62,10 +64,12 @@ namespace eval ::ngis {
             after 1000 [list [self] wait_for_operations_shutdown]
         }
 
+        # stop_operations
+
         method stop_operations {} {
             foreach seq $sequence_list { $seq stop_sequence }
-
             $thread_master stop_threads
+            set stop_operation true
         }
 
         method post_sequence {job_sequence} {
@@ -176,9 +180,17 @@ namespace eval ::ngis {
                 }
 
                 set seq [lindex $sequence_list $sequence_idx]
-                set thread_id [$thread_master get_available_thread] 
+                set thread_id [$thread_master get_available_thread]
                 if {[string is false [$seq post_job $thread_id]]} {
+
+                    # let's return the thread to the idle thread pool
                     my move_thread_to_idle $thread_id
+
+                    if {[$seq running_jobs_count] > 0} {
+                        my move_to_pending $seq
+                    } else {
+                        my sequence_terminates $seq
+                    }
                 }
                 incr sequence_idx
 

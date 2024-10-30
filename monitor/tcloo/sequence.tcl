@@ -1,4 +1,4 @@
-# --
+# Sequence.tcl --
 #
 #
 
@@ -68,28 +68,26 @@ catch { ::ngis::JobSequence destroy }
         return [llength $running_jobs]
     }
 
-    method MarkForTermination {} {
-        if {[my running_jobs_count] > 0} {
-            ::the_job_controller move_to_pending [self]
-        } else {
-            ::the_job_controller sequence_terminates [self]
-        }
-    }
+#    method MarkForTermination {} {
+#        if {[my running_jobs_count] > 0} {
+#            ::the_job_controller move_to_pending [self]
+#        } else {
+#            ::the_job_controller sequence_terminates [self]
+#        }
+#    }
 
     method get_next_result {} { return [$data_source get_next] }
 
     method post_job {thread_id} {
         if {[string is true $stop_signal]} {
             ::ngis::logger emit "stop signal received: terminating [my running_jobs_count] running jobs"
-            MarkForTermination
+            #MarkForTermination
             return false
         }
 
         set new_job [my get_next_result]
         if {$new_job == ""} {
 
-            ::ngis::logger emit "no more jobs to send, [my running_jobs_count] still running"
-            my MarkForTermination
             return false
 
         } else {
