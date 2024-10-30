@@ -15,6 +15,7 @@ namespace eval ::ngis {
     variable data_root          [file join / tmp snig]
     variable debugging          false
 
+    variable task_results_queue_size 10
     variable max_workers_number 50
     variable unix_socket_name   /tmp/snig.socket
     variable rescheduling_delay 100
