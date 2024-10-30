@@ -57,6 +57,10 @@ catch { ::ngis::JobSequence destroy }
             ::ngis::logger emit "\[ERROR\] internal ::ngis::Job class error: $job_o not registered"
             return
         }
+
+        # this effectively removes entry j from
+        # the running_jobs list
+
         set running_jobs [lreplace $running_jobs $j $j]
 
         #if {[llength $running_jobs] == 0} {
