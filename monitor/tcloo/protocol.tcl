@@ -1,5 +1,12 @@
-package require TclOO
-package require yajltcl
+# protocol.tcl --
+#
+#
+#
+#
+
+package require ngis::common
+package require ngis::hrformat
+package require ngis::jsonformat
 
 catch { ::ngis::Protocol destroy }
 
@@ -8,53 +15,33 @@ oo::class create ngis::Protocol
 oo::define ngis::Protocol {
     variable formatter
     variable CodeMessages
-    variable json_o
     variable ds_nseq
     variable nseq
+    variable hr_formatter
+    variable json_formatter
 
     constructor {} {
+        set hr_formatter    [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
+        set json_formatter  [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
 
-        # output can take 2 values: HR (human readable), JSON
-
-        set output_format "HR"
-        set CodeMessages [dict create 000     "Server is going to exit"   \
-                                      102     "Current data format: %s"   \
-                                      001     "Unrecognized command: %s"  \
-                                      002     "OK"                        \
-                                      003     "Wrong arguments: %s"       \
-                                      005     "Invalid service gid: %d"   \
-                                      007     "Error in query: (%s) %s"   \
-                                      009     "Command %s disabled"       \
-                                      011     "Invalid limit on query"    \
-                                      100     "Starting server"           \
-                                      102     "Stopping operations"       \
-                                      104     "current format %s"         \
-                                      105     "Monitor Inconsistent Status" \
-                                      106     "%s queued, %s pending sequences, %d jobs" \
-                                      108     "%d matching entities\n%s"    \
-                                      110     "%d registered tasks\n%s"     \
-                                      501     "Server internal error: %s"   \
-                                      503     "Missing argument for code %d"]
-
-        set formatter HR
-        set json_o    ""
-        set nseq    -1
-        set ds_nseq -1
+        # setting the default
+        set formatter $hr_formatter
     }
 
     destructor {
-        if {$json_o != ""} {
-            $json_o delete
-        }
     }
 
-    method format {} { return $formatter }
+    method format {} {
+        return [$formatter format]
+    }
 
     method set_format {f} {
         switch -nocase $f {
-            HR -
+            HR {
+                set formatter $hr_formatter
+            }
             JSON {
-                set formatter [string toupper $f]
+                set formatter $json_formatter
             }
             default {
                 return -code 1 "Invalid formatter: must be either HR or JSON"
@@ -62,384 +49,158 @@ oo::define ngis::Protocol {
         }
     }
 
-    method catalog {} {
-        set msg {}
-        dict for {code message} $CodeMessages {
-            lappend msg "$code: $message"
-        }
-        return [join $msg "\n"]
-    }
+    # resource_check
+    #
+    # parses the arguments of command CHECK and builds job sequences
+    # to be thrown to the job_controller
+    #
+    # forms to be detected are:
+    #
+    #   1. pure integer: gid of a resource rec in uris_long
+    #   2. gid=<int>: synonimous of the former
+    #   3. eid=<int>: integer primary key to an entity.
+    #   4. pure text: entity definition. Does the same
 
-    method JSON {code args} {
-        set code_messages $CodeMessages
-		if {[catch {set fstring [dict get $code_messages $code]}]} {
-			return [my JSON 501 "undefined code $code"]
-		}
+    method resource_check_parser {arguments} {
+        set gids_l {}
+        set eids_l {}
+        set entities_l {}
+        set retstatus OK
+        foreach a $arguments {
+            #set a [string tolower $a]
 
-        if {$json_o == ""} { set json_o [yajl create [namespace current]::json -beautify 1] }
-        $json_o map_open string code string $code
-        switch $code {
-            000 {
-                $json_o string message string [format $fstring] 
-            }
-            002 {
-                $json string message string $fstring
-            }
-            102 {
-                $json_o string format string [my format] \
-                        string message string [format $fstring [my format]
-            }
-            007 {
-                if {[llength $args] < 2} {
-                    return [my HR 503 $code]
-                }
-                lassign $args ecode einfo
-                $json_o string error_code string $ecode \
-                        string error_info string $einfo \
-                        string message    string [format $fstring $ecode ""]
-            }
-            009 -
-            003 -
-            005 -
-            001 {
-                if {[llength $args] < 1} {
-                    return [my JSON 503 $code]
-                }
-                lassign $args command_arg
-                set strmsg [format $fstring $command_arg]
-                $json_o string error_code string missing_argument \
-                        string error_info string "" \
-                        string message    string [format $fstring $command_arg]
-            }
-            104 {
-                if {[llength $args] > 0} {
-                    lassign $args current_format
+            if {[string is integer $a] && ($a > 0)} {
+                lappend gids_l $a
+            } elseif {[regexp {(eid|gid)=(\d+)} $a m type primary_id] && \
+                      [string is integer $primary_id] && ($primary_id > 0)} {
+
+                if {$type == "eid"} {
+                    lappend eids_l $primary_id
+                } elseif {$type == "gid"} {
+                    lappend gids_l $primary_id
                 } else {
-                    set current_format [my format]
+                    return [list ERR "009" $a]
                 }
-                $json_o string format  string $current_format \
-                        string message string [format $fstring $current_format]
-            }
-            106 {
-                lindex $args running njobs pending
-                $json_o string message string "[llength $running] job sequences ($njobs jobs), [llength $pending] sequences"
-                foreach sclass [list pending running] {
-                    if {[llength [set $sclass]] > 0} {
-                        $json_o map_open string $sclass integer [llength [set $sclass]]
-                        $json_o array_open
-                        foreach s [set $sclass] {
-                            $json_o map_open string "object"         string   $s \
-                                             string "description"    string  [$s description] \
-                                             string "active_jobs"    integer [$s active_jobs_count] \
-                                             string "completed_jobs" integer [$s completed_jobs] \
-                                    map_close     
-                        }
-                        $json_o array_close
-                    }
-                }
-            }
-            108 {
-                set entities [lindex $args 0]
-                $json_o string entities array_open
-                foreach e $entities {
-                    lassign $e eid description
-                    $json_o map_open string "eid" integer $eid string description string $description map_close
-                }
-                $json_o array_close
-            }
-            110 {
-                set tasks [lindex $args 0]
-                $json_o string tasks array_open
-                foreach t $tasks {
-                    lassign $t  task func desc pro script
-                    $json_o map_open string "task" string $task \
-                                     string "script" string $script \
-                                     string "function" string $func \
-                                     string "description" string $desc \
-                                     string "procedure" string $pro map_close
-                }
-                $json_o array_close
-            }
-            501 {
-                $json_o string message string "Server internal error"
-                $json_o array_open
-                set n 0
-                foreach a $args {
-                    $json_o map_open string "argument [incr n]" string $a map_close
-                }
-                $json_o array_close
-                #set strmsg [format $fstring [join $args "\n === \n"]] 
-            }
-            default {
-                $json_o string message string [dict get $code_messages $code]
+
+            } else {
+                # ::ngis::service list_entities returns a list of 3-element descriptors
+                # (as a matter of fact a record in the entities table with columsn stripped of the keys)
+                lappend entities_l {*}[::ngis::service list_entities $a]
             }
         }
-        $json_o map_close
-        set json_txt [$json_o get]
-        $json_o reset
-        return $json_txt
-    }
 
-
-    method RAW {code args} {
-        set code_messages $CodeMessages
-
-        switch $code {
-            007 {
-                lassign $args ecode einfo
-                return "($ecode) $einfo"
-            }
-            009 -
-            003 -
-            001 {
-                return 0
-            }
-            106 {
-				set seql [lindex $args 0]
-                set pending [lindex $args 2]
-                return [list $seql [llength $pending]]
-            }
-            501 {
-                lassign $args ecode einfo
-                return [join [list 501 $ecode $einfo] "\n"]
-            }
-            101 -
-            102 -
-            002 {
-                return 1
-            }
-            default {
-                return $code
-            }
+        if {([llength $gids_l] == 0) && ([llength $eids_l] == 0) && \
+            ([llength $entities_l] == 0)} {
+            return [list ERR "009" "No valid records found"]
         }
+        return [list $retstatus $gids_l $eids_l $entities_l]
     }
 
-
-    method HR {code args} {
-        set code_messages $CodeMessages
-		if {[catch {set fstring [dict get $code_messages $code]}]} {
-			return [my HR 501 "undefined code $code"]
-		}
-			
-        switch $code {
-            007 {
-                lassign $args ecode einfo
-                set strmsg [format $fstring $ecode $einfo] 
-            }
-            009 -
-            003 -
-            001 {
-                if {[llength $args] < 1} {
-                    return [my JSON 503 $code]
-                }
-                lassign $args command_arg
-                set strmsg [format $fstring $command_arg]
-            }
-            104 {
-                if {[llength $args] > 0} {
-                    lassign $args current_format
-                } else {
-                    set current_format [my format]
-                }
-                set strmsg [format $fstring $current_format]
-            }
-            106 {
-                lassign $args jc_status tm_status
-
-                lassign $jc_status queued njobs pending
-                lassign $tm_status nrthreads nithreads
-
-                set nqueued     [llength $queued]
-                set npending    [llength $pending]
-
-                set strmsg [list [format $fstring $nqueued $npending $njobs]]
-                if {$nqueued > 0} {
-                    lappend strmsg "\[$code\] ----- Queued job sequences -----"
-                    set seqs_l [lmap s $queued { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
-                    lappend strmsg {*}$seqs_l
-                }
-
-                if {$npending > 0} {
-                    lappend strmsg "\[$code\] ----- Pending job sequences -----"
-                    set seqs_l [lmap s $pending { format "\[106\] %s (%s active jobs)" [$s get_description] [$s active_jobs_count] }]
-                    lappend strmsg {*}$seqs_l
-                }
-                lappend strmsg "\[$code\] ------------------------------------------"
-                lappend strmsg "\[$code\] $nrthreads running $nithreads idle threads"
-
-                set strmsg [join $strmsg "\n"]
-			}
-            108 {
-                set entities [lindex $args 0]
-
-                set gid_l 1
-                foreach e $entities {
-                    lassign $e gid definition
-                    set gid_l [expr max([string length $gid]+1,$gid_l)]
-                }
-                set table ""
-                foreach e $entities {
-                    lassign $e gid definition
-                    lappend table [format "%-${gid_l}d %s" $gid $definition]
-                }
-                set table [join $table "\n"]
-                set strmsg [format $fstring [llength $entities] $table]
-            }
-            110 {
-                set tasks [lindex $args 0]
-
-                set fw {0 0 0 0 0}
-                foreach t $tasks {
-                    lassign $fw f1 f2 f3 f4 f5
-                    lassign $t  task func desc pro script
-                    set func [file tail $func]
-                    set fw [list [expr max($f1,[string length $task])] \
-                                 [expr max($f2,[string length $script])] \
-                                 [expr max($f3,[string length $func])] \
-                                 [expr max($f4,[string length $desc])] \
-                                 [expr max($f5,[string length $pro])]]
-                }
-
-                set table ""
-                lassign $fw f1 f2 f3 f4 f5
-                foreach t $tasks {
-                    lassign $t  task func desc pro script
-                    set func [file tail $func]
-                    lappend table [join [list [format "%-${f1}s" $task] \
-                                              [format "%-${f2}s" $script] \
-                                              [format "%-${f3}s" $func] \
-                                              [format "%-${f4}s" $desc] \
-                                              [format "%-${f5}s" $pro]] " | "]
-                }
-                set table [join $table "\n"]
-                set strmsg [format $fstring [llength $tasks] $table]
-            }
-            501 {
-                set strmsg [format $fstring [join $args "\n === \n"]] 
-            }
-            default {   
-                set strmsg [dict get $code_messages $code]
-            }
-        }
-        return [format "\[%s\] %s" $code $strmsg]
+    method compose {code args} {
+        return [eval $formatter c${code} $args]
     }
 
-    method compose {code args} { 
-        return [eval my $formatter $code $args]
-    }
-
-    method parse_cmd {args} {
-        set msg [string trim $args]
-        puts "msg >$msg ([llength $msg])<"
-        if {[regexp -nocase {^(\w+)\s*.*$} $msg m cmd] == 0} {
-            return "001: unrecognized command '$msg'"
+    method parse_cmd {cmd_line} {
+        set cmd_line [string trim $cmd_line]
+        puts "msg >$cmd_line< ([string length $cmd_line])"
+        if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
+            return "001: unrecognized command '$cmd_line'"
         } else {
-            set arguments  [lrange $msg 1 end]
-            set narguments [llength $arguments]
-            puts "arguments: '$arguments' ($narguments)"
-            switch [string toupper $cmd] {
+            
+            if {[regexp {^([A-Z]+)\s+(.*)$} $cmd_line m cmd arguments] == 0} {
+                set arguments ""
+            }
+
+            puts "arguments: '$arguments' (nargs: [llength $arguments])"
+            switch $cmd {
                 REGTASKS {
                     return [my compose 110 [::ngis::tasks list_registered_tasks]]
                 }
                 ENTITIES {
-                    return [my compose 108 [::ngis::service::list_entities $arguments]]
-                }
-                CHECK {
-                    if {$narguments < 1} {
-                        return [my compose 003 $arguments]
-						break
-                    }
-
-                    # checking the specific case of a sequence of gids
-                    # (handy to handle forms submit build with checkboxes)
-
-                    set integer_set false
-                    if {$narguments > 1} {
-                        set integer_set true
+                    set order "-nrecs"
+                    set pattern "%"
+                    if {[llength $arguments] > 0} {
                         foreach a $arguments {
-                            if {![string is integer $a]} {
-                                set integer_set false
-                                break
+                            if {$a == "-alpha"} {
+                                set order $a
+                            } else {
+                                set pattern $a
                             }
                         }
                     }
-
-                    if {[catch {
+                    return [my compose 108 [::ngis::service::list_entities $pattern $order]]
+                }
+                CHECK {
+                    set parsed_results [lassign [my resource_check_parser $arguments] res_status]
+                    if {$res_status == "OK"} {
+                        lassign $parsed_results gids_l eids_l entities_l
                         set job_controller [$::ngis_server get_job_controller]
-                        if {$integer_set} {
-                            set service_l [::ngis::service load_series_by_gids $arguments]
+                        if {[llength $gids_l] > 0} {
+                            set service_l [::ngis::service load_series_by_gids $gids_l]
                             if {[llength $service_l]} {
-                                $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-                                    [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] $service_l] "series of [llength $service_l] gids"]
+                                $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd]   \
+                                                [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $service_l]  \
+                                                "Series of [llength $service_l] records"]
                             } else {
-                                return [my compose 005 $service_check]
+                                return [my compose 005 $gids_l]
                             }
-                        } else {
-                            foreach service_check $arguments {
-                                if {[string is integer $service_check]} {
-                                    set service_d [::ngis::service load_by_gid $service_check]
-                                    if {$service_d == ""} {
-                                        return [my compose 005 $service_check]
-                                    } else {
-                                        if {[dict exists $service_d description]} {
-                                            set description [dict get $service_d description]
-                                        } elseif {[dict exists $service_d entity]} {
-                                            set description [dict get $service_d entity]
-                                        } else {
-                                            set description "Unnamed record (gid=$service_check)"
-                                        }
-
-                                        $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-                                        [::ngis::PlainJobList create ::ngis::ds[incr ds_nseq] [list $service_d]] $description]
-
-                                        #set client_message [my compose 002]
-                                    }
+                        }
+                        if {[llength $eids_l] > 0} {
+                            foreach eid $eids_l {    
+                                set entity_d [::ngis::service load_entity_record $eid]
+                                if {[dict size $entity_d] > 0} {
+                                    set entity [dict get $entity_d description]
+                                    set resultset [::ngis::service load_by_entity $eid -resultset]
+                                    $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
+                                                    [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
                                 } else {
-                                    set entity $service_check
-                                    set resultset [::ngis::service load_by_entity $entity -resultset]
-
-                                    $job_controller post_sequence [::ngis::JobSequence create ::ngis::seq[incr nseq] \
-                                                                  [::ngis::DBJobSequence create ::ngis::ds[incr ds_nseq] $resultset] $entity]
+                                    ::ngis::logger emit "No entity record found for eid $eid"
                                 }
                             }
                         }
-                        set client_message [my compose 002]
-					} e einfo]} {
-						return -code ok [my compose 007 $e $einfo]
-					}
-                    return $client_message
+                        if {[llength $entities_l]} {
+                            foreach entity $entities_l {
+                                set entity_description [lindex $entity 1]
+                                set resultset [::ngis::service load_by_entity $entity_description -resultset]
+                                $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
+                                        [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity_description]
+                            }
+                        }
+                        
+                        return [my compose 002]
+                    } else {
+                        lassign $parsed_results code a
+                        return [my compose $code $a]
+                    }
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
                     return [my compose 102]
                 }
                 QUERY {
-                    if {$narguments == 0} {
-						set jc_status [[$::ngis_server get_job_controller] status]
-						set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
-                        return [my compose 106 $jc_status $tm_status]
-                    } else {
-						return [my compose 009 "[string toupper $cmd] $arguments"]
-					}
+                    set jc_status [[$::ngis_server get_job_controller] status]
+                    set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
+                    return [my compose 106 $jc_status $tm_status]
                 }
                 FORMAT {
-                    if {$narguments == 0} {
-                        return [my compose 104 [my format]]
-                    } elseif {$narguments == 1} {
-                        set fmt [lindex $arguments 0]
+                    if {[string length $arguments] == 0} {
+                        return [my compose 104 [$formatter format]]
+                    } else {
+                        set fmt $arguments
                         switch -nocase $fmt {
-                            JSON -
-                            HR {
-                                my set_format [string toupper $fmt]
-                                return [my compose 104 [my format]]
-                            }
+                            HR   { set formatter $hr_formatter }
+                            JSON { set formatter $json_formatter }
                             default {
-                                return [my compose 001 $msg]
+                                return [my compose 013 $fmt]
                             }
                         }
+                        return [$formatter c104]
                     } else {
                         return [my compose 003 $arguments]
                     }
+                }
+                WHOS {
+                    return [my compose 112 [$::ngis_server whos]]
                 }
                 SET {
 

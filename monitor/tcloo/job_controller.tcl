@@ -82,7 +82,7 @@ namespace eval ::ngis {
             #::ngis::logger emit "posting task result '$task_results'"
             
             $task_results_queue put $task_results
-            if {([$task_results_queue size] >= 10) && \
+            if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
                 ($task_results_chore == "")} {
                 after 100 [list $::ngis_server sync_results $task_results_queue] 
             }

@@ -16,6 +16,7 @@ package require ngis::conf
 package require ngis::jobcontroller
 package require ngis::servicedb
 package require ngis::sequence
+package require ngis::utils
 
 ::oo::class create ::ngis::Server 
 
@@ -24,21 +25,38 @@ package require ngis::sequence
     variable job_controller
     variable nseq
     variable ds_nseq
+    variable start_time
 
     constructor {} {
         set nseq    -1
         set ds_nseq -1
+        set start_time [clock seconds]
     }
 
-    method register_connection {con} {
+    method RegisterConnection {con ctype} {
         puts "registering connection $con"
         dict set connections_db $con protocol [ngis::Protocol::mkprotocol]
+        dict set connections_db $con login    [clock seconds]
+        dict set connections_db $con type     $ctype
+        dict set connections_db $con ncmds    0
+        dict set connections_db $con last_cmd [clock seconds]
+    }
+
+    method UpdateConnection {con} {
+        dict with connections_db $con { 
+            incr ncmds 
+        }
+    }
+
+    method UpdateConnectionTimestamp {con} {
+        dict with connections_db $con { 
+            set last_cmd [clock seconds]
+        }
     }
 
     method RemoveConnection {con} {
         if {[dict exists $connections_db $con]} {
-            set retcodes [dict get $connections_db $con protocol]
-            $retcodes destroy
+            [dict get $connections_db $con protocol] destroy
             dict unset connections_db $con
         }
     }
@@ -55,6 +73,29 @@ package require ngis::sequence
         chan puts $con $msg
         #chan puts $con $::ngis::end_of_answer
         chan flush $con
+    }
+
+    method whos {} {
+        set keys [lsort [dict keys $connections_db]]
+
+        set whos_l [list]
+        dict for {c con_d} $connections_db {
+            dict with con_d {
+
+                # returning a list with the following data
+                #  + login datetime
+                #  + connection tyle (either unix socket or tcp/ip
+                #  + number of processed commands
+                #  + connection of protocol messages
+                #  + idle time
+
+                set idle_time_s [::ngis::utils::delta_time_s [expr [clock seconds] - $last_cmd]]
+
+                lappend whos_l [list [clock format $login -format "%d-%m-%Y %H:%M:%S"] \
+                                     $type $ncmds [$protocol format] $idle_time_s]
+            }
+        }
+        return $whos_l
     }
 
     method sync_results {result_queue} {
@@ -99,12 +140,22 @@ package require ngis::sequence
             my RemoveConnection $con
 
         } elseif {$e > 0}  {
+
+            my UpdateConnection $con
+            my UpdateConnectionTimestamp $con
+
             ::ngis::logger emit "Got $e chars in message \"$msg\" from $con"
             #eval my cmd_parser $con $msg
 
             set protocol [my get_protocol $con]
+            
+            puts "read from socket: >$msg<"
 
-            if {[catch { set ret2client [$protocol parse_cmd {*}$msg] } e einfo]} {
+            if {[catch { set ret2client [$protocol parse_cmd $msg] } e einfo]} {
+                puts "e: $e"
+                puts "einfo: $einfo"
+
+                ::ngis::logger emit $e
                 my send_to_client $con [$protocol compose 501 $e $einfo]
             } else {
                 my send_to_client $con $ret2client
@@ -128,14 +179,14 @@ package require ngis::sequence
     }
 
     method accept {con} {
-        my register_connection $con
+        my RegisterConnection $con "unix-socket"
         ::ngis::logger emit "Accepting connection on $con"
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
     method accept_tcp_connection {con clientaddr clientport} {
-        my register_connection $con
-        ::ngis::logger emit "Accepting tcp connection from $clientaddr ($clientport)"
+        my RegisterConnection $con "TCP/IP"
+        ::ngis::logger emit "Accepting TCP connection from $clientaddr ($clientport)"
         chan event $con readable [namespace code [list my chan_is_readable $con]]
     }
 
@@ -144,11 +195,17 @@ package require ngis::sequence
     }
 
     method run {max_workers} {
+        set socket_dir [file dirname $::ngis::unix_socket_name]
+        if {[file exists $socket_dir] == 0} {
+            file mkdir $socket_dir
+        }
+
         set listen [unix_sockets::listen $::ngis::unix_socket_name [namespace code [list my accept]]]
         ::ngis::logger emit "server listening on socket '$listen'"
 
         if {$::ngis::tcpaddr != ""} {
-            set tcp_channel [socket -myaddr $::ngis::tcpaddr -server [namespace code [list my accept_tcp_connection]] 4422]
+            set tcp_channel [socket -myaddr $::ngis::tcpaddr \
+                                    -server [namespace code [list my accept_tcp_connection]] $::ngis::tcpport]
             ::ngis::logger emit "server listening on tcp socket '$tcp_channel'"
         }
         # the job_controller_object has a global accessible and defined name
