@@ -162,6 +162,11 @@ namespace eval ::ngis {
             if {[string is true $shutdown_signal]} { return }
 
             if {[llength $pending_sequences] > 0} {
+
+                # we copy 'pending_sequences' into the dumb variable
+                # 'ps' because by calling 'sequence_terminates' we
+                # modify the list
+
                 set ps $pending_sequences
                 foreach seq $ps {
                     if {[$seq active_jobs_count] == 0} {
