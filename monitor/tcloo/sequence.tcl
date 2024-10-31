@@ -41,7 +41,6 @@ catch { ::ngis::JobSequence destroy }
 
     method job_scheduling_completed {job_o} {
         ::ngis::logger emit "$job_o scheduling has completed"
-        #if {[info exists running_jobs($thread_id)]} { unset running_jobs($thread_id) }
     }
 
     method delete_jobs {} {
@@ -63,23 +62,12 @@ catch { ::ngis::JobSequence destroy }
         # the running_jobs list
 
         set running_jobs [lreplace $running_jobs $j $j]
-
-        #if {[llength $running_jobs] == 0} {
-        #    my MarkForTermination
-        #}
     }
 
     method running_jobs_count {} {
         return [llength $running_jobs]
     }
 
-#    method MarkForTermination {} {
-#        if {[my running_jobs_count] > 0} {
-#            ::the_job_controller move_to_pending [self]
-#        } else {
-#            ::the_job_controller sequence_terminates [self]
-#        }
-#    }
     method njobs {} { return [$data_source njobs] }
 
     method get_next_result {} { return [$data_source get_next] }
@@ -87,7 +75,6 @@ catch { ::ngis::JobSequence destroy }
     method post_job {thread_id} {
         if {[string is true $stop_signal]} {
             ::ngis::logger emit "stop signal received: terminating [my running_jobs_count] running jobs"
-            #MarkForTermination
             return false
         }
 
@@ -111,6 +98,7 @@ catch { ::ngis::JobSequence destroy }
 
     method stop_sequence {} {
         set stop_signal true
+        foreach j $running_jobs { $j stop_job }
     }
 }
 

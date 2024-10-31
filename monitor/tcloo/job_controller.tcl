@@ -23,7 +23,6 @@ namespace eval ::ngis {
         variable task_results_queue
         variable shutdown_counter
         variable shutdown_signal
-        variable stop_operation
 
         constructor {max_workers_num} {
             set sequence_list           {}
@@ -34,7 +33,7 @@ namespace eval ::ngis {
             set task_results_chore      ""
             set task_results_queue      [::struct::queue ::ngis::task_results]
             set shutdown_signal         false
-            set stop_operation          false
+            set stop_operations         false
         }
 
         destructor {
@@ -52,7 +51,7 @@ namespace eval ::ngis {
             if {([incr shutdown_counter -1] == 0) || ([llength $sequence_list] == 0)} {
                 return
             }
-            ::ngis::logger emit "$shutdown_counter: still [llength $sequence_list] sequences running"
+            ::ngis::logger emit "\[$shutdown_counter\]: still [llength $sequence_list] sequences running"
 
             after 1000 [list [self] wait_for_operations_shutdown]
         }
@@ -69,7 +68,6 @@ namespace eval ::ngis {
         method stop_operations {} {
             foreach seq $sequence_list { $seq stop_sequence }
             $thread_master stop_threads
-            set stop_operation true
         }
 
         method post_sequence {job_sequence} {

@@ -16,8 +16,8 @@ package require struct::queue
     variable service_d
     variable tasks_q
     variable tasks_l
-    #variable scheduled_tasks
     variable jobname
+    variable stop_signal
 
     constructor {service_d_ tasks} {
         set sequence    ""
@@ -25,6 +25,7 @@ package require struct::queue
         set tasks_q     [::struct::queue] 
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {[dict exists $service_d jobname] == 0} { set jobname [self] }
+        set stop_signal false
     }
 
     destructor { }
@@ -56,8 +57,12 @@ package require struct::queue
         return [my post_task $thread_id]
     }
 
+    method stop_job {} {
+        set stop_signal true
+    }
+
     method post_task {thread_id} {
-        if {[catch { set task_d [$tasks_q get] } e einfo]} {
+        if {[catch { set task_d [$tasks_q get] } e einfo] || $stop_signal} {
 
             # the queue is empty, tasks are completed and
             # the job sequence this job belongs to is notified
