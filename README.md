@@ -23,6 +23,7 @@ A collection of scripts to harvest and (health) check the services published at 
 * tcl8.6-tdbcpostgres
 * tcl-thread
 * tcl-tls
+* pandoc
 
 ## Web interface dependencies
 

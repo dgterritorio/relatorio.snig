@@ -86,6 +86,28 @@ namespace eval ::ngis::service {
         return -code $code -errorcode invalid_gid $result
     }
 
+    # load_entity_record
+
+    proc load_entity_record {eid} {
+        variable connector
+
+        set query_result [exec_sql_query "SELECT * from $::ngis::ENTITY_TABLE_NAME WHERE eid=$eid"]
+        if {[$query_result rowcount] > 0} {
+            set result [$query_result nextdict entity_d]
+            $query_result close
+            return $entity_d
+        }
+        $query_result close
+        return ""
+    }
+
+    # load_series_by_gids --
+    #
+    # From a list of integers, meaning a set of gids of uris_long records
+    # returns the list of the whole records. Gids that dond't correspond
+    # to any record are dropped silently
+    #
+
     proc load_series_by_gids {gids} {
         variable connector
 
@@ -100,19 +122,17 @@ namespace eval ::ngis::service {
         set rowcount [$query_result rowcount]
         if {$rowcount >= 1} {
             set result [$query_result allrows -as dicts]
-            set code 0
+            $query_result close
+            return $result
         } elseif {$rowcount == 0} {
-            set result "Invalid query: no records found for ani gids"
-            set code 1
+            set result "Invalid query: no records found for any gids"
         } else {
             set result "Inconsistent data for gid series '$gids'"
-            set code 1
         }
         $query_result close
-        return -code $code -errorcode invalid_gid $result
+        return -code error -errorcode invalid_gid $result
 
     }
-
 
     proc load_by_entity {snig_entity args} {
         set as "-list"
@@ -138,8 +158,15 @@ namespace eval ::ngis::service {
             }
         }
 
-        set sql \
-        "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME WHERE entity LIKE '$snig_entity' ORDER BY gid"
+        if {[string is integer $snig_entity]} {
+            set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME" \
+                          "WHERE eid=$snig_entity ORDER BY gid"]
+            set sql [join $sql " "]
+        } else {
+            set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME as ul" \
+                          "WHERE entity LIKE '$snig_entity' ORDER BY gid"]
+            set sql [join $sql " "]
+        }
 
         if {$limit > 0} {
             append sql " LIMIT $limit"
@@ -156,19 +183,31 @@ namespace eval ::ngis::service {
         return $snig_entities
     }
 
-    proc list_entities {pattern} {
-        set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
-        if {$pattern != ""} {
-            lappend sql "WHERE description LIKE '$pattern'"
+    proc list_entities {pattern {order "-nrecs"} {field "-description"}} {
+
+        set sql [list "SELECT e.eid eid,e.description description,count(ul.gid) count" \
+                      "from $::ngis::ENTITY_TABLE_NAME e" \
+                      "LEFT JOIN $::ngis::TABLE_NAME ul ON ul.eid=e.eid"]
+        #set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
+        if {$field == "-description"} {
+            lappend sql "WHERE e.description LIKE '$pattern'"
+        } else {
+            set field [string range $field 1 end]
+            lappend sql "WHERE e.${field} = '$pattern'"
         }
-        lappend sql "ORDER BY eid"
+        if {$order == "-nrecs"} {
+            lappend sql "GROUP BY e.eid ORDER BY count DESC"
+        } elseif {$order == "-alpha"} {
+            lappend sql "GROUP BY e.eid ORDER BY e.description"
+        }
         set sql [join $sql " "]
-        #puts $sql
+        puts $sql
 
         set query_result [exec_sql_query $sql]
         set entities [$query_result allrows -as lists]
         $query_result close
         return $entities
+
     }
 
     namespace export *

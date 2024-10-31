@@ -7,6 +7,7 @@ package require TclOO
 package require tdbc::postgres
 package require ngis::job
 package require ngis::conf
+package require ngis::common
 
 catch { ::ngis::JobSequence destroy }
 
@@ -68,6 +69,8 @@ catch { ::ngis::JobSequence destroy }
         return [llength $running_jobs]
     }
 
+    method njobs {} { return [$data_source njobs] }
+
     method MarkForTermination {} {
         if {[my running_jobs_count] > 0} {
             ::the_job_controller move_to_pending [self]
@@ -110,8 +113,29 @@ catch { ::ngis::JobSequence destroy }
     }
 }
 
+# Datasources --
+#
+# must implement two methods
+#
+#   + get_next: returns the next job in a sequence
+#   + njobs: return the total number of jobs
+#
+# The JobSequence object is responsible to account
+# for running and completed jobs
+
+::oo::class create ::ngis::DataSource {
+
+    method njobs {} { return 0 }
+    method get_next {} { return "" }
+
+}
+
+
 ::oo::class create ::ngis::DBJobSequence {
+    superclass ::ngis::DataSource
+
     variable result_set
+    variable number_of_jobs
 
     destructor {
         $result_set close
@@ -119,21 +143,26 @@ catch { ::ngis::JobSequence destroy }
 
     constructor {tdbc_resultset} {
         set result_set $tdbc_resultset   
+        set number_of_jobs [$tdbc_resultset rowcount]
     }
+
+    method njobs {} { return $number_of_jobs }
 
     method get_next {} {
         if {[$result_set nextdict res_d]} {
             ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
-            set job_o [::ngis::Job create [self object]::job${gid} $res_d [::ngis::tasks get_registered_tasks]]
+            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $res_d [::ngis::tasks get_registered_tasks]]
 
             return $job_o
         }
         return ""
     }
+
 }
 
 ::oo::class create ::ngis::PlainJobList {
+    superclass ::ngis::DataSource
 
     variable service_l
     variable service_idx
@@ -142,7 +171,7 @@ catch { ::ngis::JobSequence destroy }
 
         foreach service_d $sl {
             set gid [dict get $service_d gid]
-            set job_o [::ngis::Job create [self object]::job${gid} $service_d [::ngis::tasks get_registered_tasks]]
+            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_d [::ngis::tasks get_registered_tasks]]
             lappend service_l $job_o
         }
 
@@ -152,6 +181,8 @@ catch { ::ngis::JobSequence destroy }
     destructor {
         #foreach j $service_l { $j destroy }
     }
+
+    method njobs {} { return [llength $service_l] }
 
     method get_next {} {
         if {$service_idx < [llength $service_l]} {
@@ -164,17 +195,21 @@ catch { ::ngis::JobSequence destroy }
 }
 
 ::oo::class create ::ngis::SingleTaskJob {
+    superclass ::ngis::DataSource
+
     variable job_o
 
     constructor {service_d task_code} {
         dict with service_d {
-            set job_o [::ngis::Job create [self object]::job${gid} $service_d $task_code]
+            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_d $task_code]
         }
     }
 
     destructor {
         #$job_o destroy
     }
+
+    method njobs {} { return 1 }
 
     method get_next {} {
         return ""

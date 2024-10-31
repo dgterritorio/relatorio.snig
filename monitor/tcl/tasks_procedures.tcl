@@ -29,7 +29,7 @@ proc mockup_processing {task_d job_thread_id} {
         after 5000
         set status [::ngis::tasks::make_ok_result]
     }
-    thread::send -async $job_thread_id [list $job_o task_completed $task_d]
+    thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed $task_d]
 
 }
 
@@ -42,7 +42,6 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
-    set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }
 
