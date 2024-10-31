@@ -78,7 +78,7 @@ namespace eval ::ngis {
             #::ngis::logger emit "posting task result '$task_results'"
             
             $task_results_queue put $task_results
-            if {([$task_results_queue size] >= 10) && \
+            if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
                 ($task_results_chore == "")} {
                 after 100 [list $::ngis_server sync_results $task_results_queue] 
             }
@@ -104,12 +104,19 @@ namespace eval ::ngis {
                 #::ngis::logger emit "searching $seq in >$sequence_list< (running seqs)"
                 set idx [lsearch -exact $sequence_list $seq]
                 if {$idx < 0} {
-                    ::ngis::logger emit "error in [info object class]: invalid sequence"
+                    # it's should never get here
+                    ::ngis::logger emit "server internal error [info object class]: invalid sequence"
                 } else {
                     set sequence_list [lreplace $sequence_list $idx $idx]
+
+                    # if the sequence just removed has an index < sequence_ids (the round_robin
+                    # index) we must decrement it otherwise the round_robin would point to a position
+                    # ahead
+
                     if {$idx < $sequence_idx} {
                         incr sequence_idx -1
                     }
+
                 }
             }
             $seq destroy
@@ -121,6 +128,9 @@ namespace eval ::ngis {
                 }
                 my RescheduleRoundRobin
             } else {
+
+                # any pending task result in the results buffer is stored in the database
+
                 after 100 [list $::ngis_server sync_results $task_results_queue] 
             }
         }

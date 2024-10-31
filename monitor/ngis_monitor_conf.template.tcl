@@ -16,6 +16,7 @@ namespace eval ::ngis {
     variable docs_base          [file normalize [file join [file dirname [info script]] doc]]
     variable debugging          false
 
+    variable task_results_queue_size 10
     variable max_workers_number 5
     variable unix_socket_name   /tmp/snig.socket
     variable rescheduling_delay 100

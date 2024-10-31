@@ -74,12 +74,21 @@ package require struct::queue
     method post_task {thread_id} {
         if {[catch { set task_d [$tasks_q get] } e einfo]} {
 
+            # the queue is empty, tasks are completed and
+            # the job sequence this job belongs to is notified
+            # that we are done with our tasks
+
             my notify_sequence $thread_id
             return false
 
         } else {
 
             ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+
+            # Communications among threads need to know which thread is recipient
+            # of a command sent calling ::thread::send. That's why the last
+            # argument passed to do_task is the thread id of the caller (returned by ::thread::id)
+
             thread::send -async $thread_id [list do_task $task_d [thread::id]]
             return true
 
