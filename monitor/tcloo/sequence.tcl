@@ -48,6 +48,10 @@ catch { ::ngis::JobSequence destroy }
         foreach j $jobs_to_destroy { $j destroy }
     }
 
+    # --job_completed
+    #
+    # callback from ::ngis::Job to signal that tasks are completed
+
     method job_completed {job_o} {
         incr completed_jobs
         lappend jobs_to_destroy $job_o
@@ -57,9 +61,6 @@ catch { ::ngis::JobSequence destroy }
             ::ngis::logger emit "\[ERROR\] internal ::ngis::Job class error: $job_o not registered"
             return
         }
-
-        # this effectively removes entry j from
-        # the running_jobs list
 
         set running_jobs [lreplace $running_jobs $j $j]
     }

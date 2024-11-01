@@ -175,6 +175,7 @@ oo::define ngis::Protocol {
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
+                    ::ngis::logger emit "got a 'stop_operations' signal"
                     return [my compose 102]
                 }
                 QUERY {

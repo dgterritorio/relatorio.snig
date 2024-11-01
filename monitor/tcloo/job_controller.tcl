@@ -67,7 +67,10 @@ namespace eval ::ngis {
 
         method stop_operations {} {
             foreach seq $sequence_list { $seq stop_sequence }
-            $thread_master stop_threads
+            # stopping the threads is actually not needed
+            # as threads may be busy and we have just stopped
+            # the jobs, as a matter of fact 
+            #$thread_master stop_threads
         }
 
         method post_sequence {job_sequence} {

@@ -17,7 +17,7 @@ package require TclOO
         C  [dict create cmd CHECK    has_args yes   description "Starts Monitoring Jobs" help check.md] \
         F  [dict create cmd FORMAT   has_args maybe description "Set/Query message format" help format.md] \
         Q  [dict create cmd QUERY    has_args no    description "Query Monitor Status" help q.md] \
-        T  [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
+        ST [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
         SX [dict create cmd EXIT     has_args no    description "Terminate Monitor and Server" help sx.md] \
         X  [dict create cmd ""       has_args no    description "Exit client" help x.md method stop_client] \
         W  [dict create cmd WHOS     has_args no    description "List Active Connections" help w.md] \

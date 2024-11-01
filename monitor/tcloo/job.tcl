@@ -62,7 +62,7 @@ package require struct::queue
     }
 
     method post_task {thread_id} {
-        if {[catch { set task_d [$tasks_q get] } e einfo] || $stop_signal} {
+        if {$stop_signal || [catch { set task_d [$tasks_q get] } e einfo]} {
 
             # the queue is empty, tasks are completed and
             # the job sequence this job belongs to is notified
