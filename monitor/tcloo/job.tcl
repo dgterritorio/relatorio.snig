@@ -75,9 +75,9 @@ package require struct::queue
 
             ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
 
-            # Communications among threads need to know which thread is recipient
-            # of a command sent calling ::thread::send. That's why the last
-            # argument passed to do_task is the thread id of the caller (returned by ::thread::id)
+			# The last argument is the thread id of the caller (returned by ::thread::id)
+			# as the worker thread needs to know the thread id of the sender in order
+			# to send back the task results
 
             thread::send -async $thread_id [list do_task $task_d [thread::id]]
             return true

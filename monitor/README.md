@@ -77,36 +77,51 @@ manages 2 lists of `::ngis::JobSequences` instances
      of Jobs to be processed but still have other jobs running
 
 ```
-    method sequence_roundrobin {} {
-        set round_robin_procedure ""
+method sequence_roundrobin {} {
+	set round_robin_procedure ""
 
-        if {[string is true $shutdown_signal]} { return }
+	if {[string is true $shutdown_signal]} { return }
 
-        if {[llength $pending_sequences] > 0} {
-            set ps $pending_sequences
-            foreach seq $ps {
-                if {[$seq active_jobs_count] == 0} {
-                    my sequence_terminates $seq
-                } 
-            }
-        }
+	if {[llength $pending_sequences] > 0} {
 
-        if {[llength $sequence_list] == 0} { return }
+		# we copy 'pending_sequences' into the dumb variable
+		# 'ps' because by calling 'sequence_terminates' we
+		# modify the list
 
-        if {[$thread_master thread_is_available]} {
-            if {$sequence_idx >= [llength $sequence_list]} {
-                set sequence_idx 0
-            }
+		set ps $pending_sequences
+		foreach seq $ps {
+			if {[$seq active_jobs_count] == 0} {
+				my sequence_terminates $seq
+			} 
+		}
+	}
 
-            set seq [lindex $sequence_list $sequence_idx]
-            set thread_id [$thread_master get_available_thread] 
-            if {[string is false [$seq post_job $thread_id]]} {
-                my move_thread_to_idle $thread_id
-            }
-            incr sequence_idx
-            my RescheduleRoundRobin
-        }
-    }
+	if {[llength $sequence_list] == 0} { return }
+
+	if {[$thread_master thread_is_available]} {
+		if {$sequence_idx >= [llength $sequence_list]} {
+			set sequence_idx 0
+		}
+
+		set seq [lindex $sequence_list $sequence_idx]
+		set thread_id [$thread_master get_available_thread]
+		if {[string is false [$seq post_job $thread_id]]} {
+
+			# let's return the thread to the idle thread pool
+
+			my move_thread_to_idle $thread_id
+
+			if {[$seq running_jobs_count] > 0} {
+				my move_to_pending $seq
+			} else {
+				my sequence_terminates $seq
+			}
+		}
+		incr sequence_idx
+
+		my RescheduleRoundRobin
+	}
+}
 ```
 
 The index `sequence_idx` points within this list to the next job sequence whose
@@ -167,27 +182,27 @@ queue and send it to the thread by calling procedure `do_task` in the recipient 
 
 ```
 method post_task {thread_id} {
-    if {[catch { set task_d [$tasks_q get] } e einfo]} {
+	if {$stop_signal || [catch { set task_d [$tasks_q get] } e einfo]} {
 
-        # the queue is empty, tasks are completed and
-        # the job sequence this job belongs to is notified
-        # that we are done with our tasks
+		# the queue is empty, tasks are completed and
+		# the job sequence this job belongs to is notified
+		# that we are done with our tasks
 
-        my notify_sequence $thread_id
-        return false
+		my notify_sequence $thread_id
+		return false
 
-    } else {
+	} else {
 
-        ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+		::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
 
-        # Communications among threads need to know which thread is recipient
-        # of a command sent calling ::thread::send. That's why the last
-        # argument passed to do_task is the thread id of the caller (returned by ::thread::id)
+		# The last argument is the thread id of the caller (returned by ::thread::id)
+		# as the worker thread needs to know the thread id of the sender in order
+		# to send back the task results
 
-        thread::send -async $thread_id [list do_task $task_d [thread::id]]
-        return true
+		thread::send -async $thread_id [list do_task $task_d [thread::id]]
+		return true
 
-    }
+	}
 }
 ```
 procedure `do_task` is in `monitor/tcl/tasks_procedures.tcl`
@@ -201,10 +216,8 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
-    set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }
-
 ```
 `::ngis::Job` object asynchronously *sends* the tasks one at a time to the assigned
 worker thread. When the task is done the worker thread in turn will notify its job
@@ -213,35 +226,34 @@ with the results of the task by means of the main thread's event loop.
 Method `::ngis::Job::task_completed`
 ```
 method task_completed {thread_id task_d} {
-    set task_result ""
-    set job_controller [$::ngis_server get_job_controller]
-    dict with task_d {
-        ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
-        set task_result $status
+	set task_result ""
+	set job_controller [$::ngis_server get_job_controller]
+	dict with task_d {
+		::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
+		set task_result $status
 
-        lassign $task_result code
-        if {$code == "not_applicable"} { 
-            ::ngis::logger emit "task not applicable. Results not posted"
-        } else {
-            $job_controller post_task_results $task_d
+		lassign $task_result code
+		if {$code == "not_applicable"} { 
+			::ngis::logger emit "task not applicable. Results not posted"
+		} else {
+			$job_controller post_task_results $task_d
 
-            # on an error code we interrupt the job
+			# on an error code we interrupt the job
 
-            if {$code == "error"} {
-                my notify_sequence $thread_id
-                return 
-            }
-        }
+			if {$code == "error"} {
+				my notify_sequence $thread_id
+				return 
+			}
+		}
 
-        my post_task $thread_id
-    }
+		my post_task $thread_id
+	}
 }
-
 ```
 Even though it's possible to send multiple commands to a thread's event queue, a Job 
 waits for a task termination before assigning a new task to the thread it's holding,
 since a fatal error condition in one task causes the interruption of the whole job. After
-the last task in a Job has completed the Job notifies the sequence it belong to and
+the last task in a Job has completed the Job notifies the sequence it belongs to and
 tells the ThreadManager to move the thread into the idle thread queue.
 
 ### Batch of tasks results
