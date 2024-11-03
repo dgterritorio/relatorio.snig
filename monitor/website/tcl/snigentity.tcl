@@ -29,6 +29,7 @@ namespace eval ::rwpage {
             ::ngis::conf readconf uris_table
             set entity_recs {}
 
+            set sql_base "SELECT * from $uris_table where eid=$eid order by description" 
             if {[dict exists $argsqs sort]} {
                 switch [dict get $argsqs sort] {
                     gid {
@@ -36,9 +37,11 @@ namespace eval ::rwpage {
                     }
                     description -
                     default {
-                        set sql "SELECT * from $uris_table where eid=$eid order by record_description"
+                        set sql $sql_base
                     }
                 }
+            } else {
+                set sql $sql_base
             }
             [$this get_dbhandle] forall $sql r {
                 lappend entity_recs [array get r]
@@ -52,24 +55,24 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
+            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set rows_l {}
-            foreach entity $entity_recs {
-                dict with entity {
 
-                    set uri_d [dict create {*}[uri::split $uri]]
+            set rows_l [lmap entity $entity_recs {
 
-                    set host ""
-                    if {[dict exists $uri_d host]} {
-                        set host [dict get $uri_d host]
-                    }
+                set gid [dict get $entity gid]
+                set description [dict get $entity description]
 
-                    lappend rows_l [::rivet::xml [join [list [::rivet::xml $gid td] \
-                                                             [::rivet::xml $record_description td] \
-                                                             [::rivet::xml $host td [list a href $uri]]] ""] tr]
-                }
+                list $gid $description [dict get $entity uri]
 
-            }
-            puts [::rivet::xml "<tr><th>gid</th><th>Description</th><th>Host</th></tr>[join $rows_l \n]" [list table class table]]
+                #lappend rows_l [::rivet::xml [join [list [::rivet::xml $gid td] \
+                #                                         [::rivet::xml $description td] \
+                #                                         [::rivet::xml $host td [list a href $uri]]] ""] tr]
+            }]
+            #puts [::rivet::xml "<tr><th>gid</th><th>Description</th><th>Host</th></tr>[join $rows_l \n]" [list table class table]]
+
+            set ns [$template_o formatters_ns]
+            puts [${ns}::entities_table $rows_l]
         }
     }
 

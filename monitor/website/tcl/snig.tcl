@@ -13,7 +13,6 @@ namespace eval ::rwpage {
 
         private variable entities
 
-
         constructor {key} {SnigPage::constructor $key} { 
             set entities [dict create]
         }
@@ -29,10 +28,7 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
-
             ::rivet::parse rvt/entities.rvt
-
-
         }
     }
 }

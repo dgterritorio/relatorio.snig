@@ -8,3 +8,4 @@ package ifneeded ngis::page               1.0 [list source [file join $dir tcl s
 package ifneeded DIO                      2.0 [list source [file join $dir generic dio.tcl]]
 package ifneeded dio_Tdbc                 2.0 [list source [file join $dir generic dio_Tdbc.tcl]]
 package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
+package ifneeded snig::page               1.0 [list source [file join $dir pages snigpage.tcl]]
