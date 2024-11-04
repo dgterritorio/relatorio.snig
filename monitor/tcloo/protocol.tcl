@@ -195,9 +195,7 @@ oo::define ngis::Protocol {
                                 return [my compose 013 $fmt]
                             }
                         }
-                        return [$formatter c104]
-                    } else {
-                        return [my compose 003 $arguments]
+                        return [$formatter c104 [$formatter format]]
                     }
                 }
                 WHOS {
