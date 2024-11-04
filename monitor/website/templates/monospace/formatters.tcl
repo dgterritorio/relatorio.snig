@@ -25,5 +25,5 @@ proc entities_table {rows_l} {
         append out [format "%4s %80s %25s\n" $gid $descr $host]
     }
     append out "</pre>"
-
+    return $out
 }

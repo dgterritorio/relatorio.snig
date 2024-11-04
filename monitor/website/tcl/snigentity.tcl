@@ -65,12 +65,7 @@ namespace eval ::rwpage {
 
                 list $gid $description [dict get $entity uri]
 
-                #lappend rows_l [::rivet::xml [join [list [::rivet::xml $gid td] \
-                #                                         [::rivet::xml $description td] \
-                #                                         [::rivet::xml $host td [list a href $uri]]] ""] tr]
             }]
-            #puts [::rivet::xml "<tr><th>gid</th><th>Description</th><th>Host</th></tr>[join $rows_l \n]" [list table class table]]
-
             set ns [$template_o formatters_ns]
             puts [${ns}::entities_table $rows_l]
         }
