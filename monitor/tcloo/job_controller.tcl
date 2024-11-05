@@ -209,7 +209,7 @@ namespace eval ::ngis {
 		# returns the list of the current sequences and the number of
 		# running sequences
 		#
-		method status {{argument "jobs"}} {
+        method status {{argument "jobs"}} {
             if {$argument == "jobs"} {
                 set njobs 0
                 foreach s [concat $sequence_list $pending_sequences] {
@@ -219,8 +219,7 @@ namespace eval ::ngis {
             } elseif {$argument == "thread_master"} {
                 return [$thread_master status]
             }
-		}
-
+        }
     }
 }
 

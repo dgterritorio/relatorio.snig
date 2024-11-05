@@ -17,7 +17,7 @@ package require struct::queue
     variable tasks_q
     variable tasks_l
     variable jobname
-    variable stop_signal
+    variable job_status
 
     constructor {service_d_ tasks} {
         set sequence    ""
@@ -25,7 +25,7 @@ package require struct::queue
         set tasks_q     [::struct::queue] 
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {[dict exists $service_d jobname] == 0} { set jobname [self] }
-        set stop_signal false
+        set job_status  created
     }
 
     destructor { }
@@ -44,28 +44,24 @@ package require struct::queue
         [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
 
-    method initialize {} {
-        if {[$tasks_q size] > 0} {
-            $tasks_q clear
-        }
+    method start_job {thread_id} {
+        if {[$tasks_q size] > 0} { $tasks_q clear }
 
         $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
-    }
-
-    method start_job {thread_id} {
-        my initialize
         return [my post_task $thread_id]
     }
 
     method stop_job {} {
-        set stop_signal true
+        set job_status stop_signal_received
     }
 
     method post_task {thread_id} {
-        if {$stop_signal || [catch { set task_d [$tasks_q get] } e einfo]} {
+        if {[string equal $job_status stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {
+
+            set job_status completed
 
             # the queue is empty, tasks are completed and
-            # the job sequence this job belongs to is notified
+            # the job sequence the job belongs to is notified
             # that we are done with our tasks
 
             my notify_sequence $thread_id
@@ -73,7 +69,10 @@ package require struct::queue
 
         } else {
 
-            ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+            set task_name [dict get $task_d task]
+            set job_status $task_name
+
+            ::ngis::logger emit "posting task '$task_name' for job [self]"
 
 			# The last argument is the thread id of the caller (returned by ::thread::id)
 			# as the worker thread needs to know the thread id of the sender in order
@@ -93,7 +92,7 @@ package require struct::queue
             set task_result $status
 
             lassign $task_result code
-            if {$code == "not_applicable"} { 
+            if {$code == "not_applicable"} {
                 ::ngis::logger emit "task not applicable. Results not posted"
             } else {
                 $job_controller post_task_results $task_d
@@ -105,6 +104,10 @@ package require struct::queue
                     return 
                 }
             }
+
+            # we don't need to change the job status here as we're not sending
+            # deferred commands to the event loop before calling post_task (which
+            # determines the new status
 
             my post_task $thread_id
         }
