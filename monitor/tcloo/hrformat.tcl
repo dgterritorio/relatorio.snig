@@ -21,7 +21,7 @@ oo::define ngis::HRFormat {
                                     005 SingleArgument  007 TwoArguments    \
                                     009 SingleArgument  013 SingleArgument  \
                                     102 NoArguments     104 SingleArgument  \
-                                    501 SingleArgument]
+                                    114 SingleArgument  501 SingleArgument]
 
         set data_matrix [::struct::matrix htformat_m]
         array set report_a [array get ::ngis::reports::report_a]
@@ -196,7 +196,7 @@ oo::define ngis::HRFormat {
 
             # it never should get to here....
 
-            return [SingleLine "110" "No tasks registered"]
+            return [my SingleLine "110" "No tasks registered"]
         }
     }
 
@@ -215,6 +215,26 @@ oo::define ngis::HRFormat {
         set top_txt [$report_top printmatrix $data_matrix]
 
         return [append top_txt $report_txt]
+    }
+
+    method c114 {args} {
+        set jobs_l {*}$args
+        set jobs_t [concat $report_a(114.capts) $jobs_l]
+
+        if {[llength $jobs_l] > 0} {
+            $data_matrix deserialize [list [llength $jobs_t] 6 $jobs_t]
+            set report_txt [$report_a(114.report) printmatrix $data_matrix]
+            set rep_width [string length [lindex $report_txt 0]]
+
+            set fstring [::ngis::reports::get_fmt_string 114]
+
+            $data_matrix deserialize [list 1 1 [list [list "\[114\] [format $fstring [llength $jobs_l]]"]]]
+            $report_top size 0 [expr $rep_width - 4]
+            set top_txt [$report_top printmatrix $data_matrix]
+            return [append top_txt $report_txt]
+        } else {
+            return [my SingleLine "114" "No Jobs Running"]
+        }
     }
 }
 

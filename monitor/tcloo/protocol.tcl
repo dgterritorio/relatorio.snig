@@ -137,10 +137,16 @@ oo::define ngis::Protocol {
                         set job_controller [$::ngis_server get_job_controller]
                         if {[llength $gids_l] > 0} {
                             set service_l [::ngis::service load_series_by_gids $gids_l]
-                            if {[llength $service_l]} {
+                            set jseq_des "Series of [llength $service_l] records"
+                            if {[llength $service_l] > 0} {
+                                # if it's a single service job we set as job sequence description
+                                # the 'description' columns in table uris_long
+                                if {[llength $service_l] == 1} {
+                                    set jseq_des [::ngis::service get_description [lindex $service_l 0]]
+                                }
                                 $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd]   \
                                                 [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $service_l]  \
-                                                "Series of [llength $service_l] records"]
+                                                $jseq_des]
                             } else {
                                 return [my compose 005 $gids_l]
                             }
@@ -149,7 +155,7 @@ oo::define ngis::Protocol {
                             foreach eid $eids_l {    
                                 set entity_d [::ngis::service load_entity_record $eid]
                                 if {[dict size $entity_d] > 0} {
-                                    set entity [dict get $entity_d description]
+                                    set entity [::ngis::service::entity get_description $entity_d]
                                     set resultset [::ngis::service load_by_entity $eid -resultset]
                                     $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
                                                     [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
@@ -166,12 +172,27 @@ oo::define ngis::Protocol {
                                         [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity_description]
                             }
                         }
-                        
+
                         return [my compose 002]
                     } else {
                         lassign $parsed_results code a
                         return [my compose $code $a]
                     }
+                }
+                JOBLIST {
+                    set job_controller [$::ngis_server get_job_controller]
+                    set job_sequences [$job_controller job_sequences]
+                    set jobs_l [lmap s $job_sequences {
+                        set aj [$s active_jobs]
+                        lmap j $aj {
+                            set sj [$j serialize]
+                            dict with sj {
+                                list $gid $description $uri_type $version $job_status $timestamp
+                            }
+                        }
+                    }]
+                    set jobs_l [eval concat $jobs_l]
+                    return [my compose 114 $jobs_l]
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations

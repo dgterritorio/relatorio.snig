@@ -57,7 +57,7 @@ this command will create a relatorio.snig directory with the monitor code. You c
   namespace eval ::ngis {
 
     variable HOST               "127.0.0.1"                ; # Postgresql database host
-    variable USERNAME           "****                      ; # Postgresql database user
+    variable USERNAME           "***"                      ; # Postgresql database user
     variable PASSWORD           "***"                      ; # Postgresql database name
     variable DB_NAME            "***"
     variable TABLE_NAME         "testsuite.uris_long"

@@ -41,6 +41,7 @@ namespace eval ::ngis {
                                             108     "%d matching entities\n%s"  \
                                             110     "%d registered tasks"       \
                                             112     "%d Sessions Connected"     \
+                                            114     "%d Job Executing"          \
                                             501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 
@@ -86,6 +87,11 @@ namespace eval ::ngis {
         set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
+        set ncolumns 6
+        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Timestamp"}]
+        set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
+
         # Entities
         set ncolumns 3
         set report_a(108.capts)     [list {"Eid" "Description" "Records"}]
@@ -128,22 +134,26 @@ namespace eval ::ngis {
     }
 
     namespace eval JobNames {
-        variable jobn -1
         variable job_cmd_root [namespace current]
+        variable job_cmd_pattern "${job_cmd_root}::job"
+
+        proc cmd_pattern {} {
+            variable job_cmd_pattern
+            return $job_cmd_pattern
+        }
 
         proc new_cmd {{gid ""}} {
-            variable jobn
             variable job_cmd_root
 
             if {$gid == ""} { }
-            set proposed "${job_cmd_root}::job${gid}"
+            set proposed "[cmd_pattern]${gid}"
             set modifier 0
             while {[info command $proposed] != ""} {
                 # set a limit to multiple jobs for the same resource
                 if {$modifier > 20} {
                     return -code error -errorcode too_many_jobs "Too many jobs for the same gid $gid"
                 }
-                set proposed "${job_cmd_root}::job[incr jobn]-[incr modifier]"
+                set proposed "[cmd_pattern]${gid}-[incr modifier]"
             }
             return $proposed
         }

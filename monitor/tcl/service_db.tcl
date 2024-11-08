@@ -86,6 +86,20 @@ namespace eval ::ngis::service {
         return -code $code -errorcode invalid_gid $result
     }
 
+    # get_description
+
+    proc get_description {service_l} {
+        dict with service_l {
+            if {[info exists description]} {
+                return $description
+            } elseif {[info exists entity]} {
+                return $entity
+            } else {
+                return "Service record id: $gid"
+            }
+        }
+    }
+
     # load_entity_record
 
     proc load_entity_record {eid} {
@@ -99,6 +113,20 @@ namespace eval ::ngis::service {
         }
         $query_result close
         return ""
+    }
+
+    namespace eval entity {
+        proc get_description {entity_d} {
+            dict with entity_d {
+                if {[info exists description] && ([string trim $description] != "")} {
+                    return $description
+                } else {
+                    return "Entity records for eid=$eid"
+                }
+            }
+        }
+        namespace export get_description
+        namespace ensemble create
     }
 
     # load_series_by_gids --

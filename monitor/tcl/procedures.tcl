@@ -87,40 +87,27 @@ namespace eval ::ngis::procedures {
     }
 
     proc bash_script_args {task_d} {
-        set url [::ngis::tasks url $task_d]
-        set script [::ngis::tasks function $task_d]
-
-        set uuid [::ngis::tasks uuid $task_d]
         set script_args [list   [::ngis::tasks gid $task_d]     \
                                 [::ngis::tasks url $task_d]     \
-                                $uuid                           \
+                                [::ngis::tasks uuid $task_d]    \
                                 [::ngis::tasks type $task_d]    \
                                 [::ngis::tasks version $task_d]]
-
-        set uri_type     [::ngis::tasks type $task_d]
-        set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
-        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
         set script_args [join $script_args |]
         return $script_args
     }
 
     proc run_bash {task_d} {
-        set url [::ngis::tasks url $task_d]
-        set script [::ngis::tasks function $task_d]
+        # The task arguments are composed into a "|" separated string
+        set script_args [bash_script_args $task_d]
 
-        set uuid [::ngis::tasks uuid $task_d]
-        set script_args [list   [::ngis::tasks gid $task_d]     \
-                                [::ngis::tasks url $task_d]     \
-                                $uuid                           \
-                                [::ngis::tasks type $task_d]    \
-                                [::ngis::tasks version $task_d]]
+        # determine the storage space for this task. The uuid_space and
+        # tmpfile_root directory are passed as arguments to the script.
 
         set uri_type     [::ngis::tasks type $task_d]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
-        set script_args [join $script_args |]
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
         ::ngis::logger debug "running command: $cmd"
         if {[catch {
@@ -132,6 +119,11 @@ namespace eval ::ngis::procedures {
         }
         return $script_results
     }
+
+    # append_http_data --
+    #
+    # Ancillary procedure of http_status. It provides a callback
+    # to tclcurl that stores in a buffer the data returned by the remote peer
 
     proc append_http_data {http_data} {
         append ::ngis::procedures::http_data $http_data

@@ -15,9 +15,9 @@ namespace eval ::ngis {
 
     ::oo::define ::ngis::JobController {
         variable sequence_list
+        variable pending_sequences
         variable sequence_idx
         variable thread_master
-        variable pending_sequences
         variable round_robin_procedure
         variable task_results_chore
         variable task_results_queue
@@ -45,6 +45,10 @@ namespace eval ::ngis {
                 ::ngis::logger debug "rescheduling job sequences round robin"
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
+        }
+
+        method job_sequences {} {
+            return [concat $sequence_list $pending_sequences]
         }
 
         method wait_for_operations_shutdown {} {

@@ -18,19 +18,24 @@ package require struct::queue
     variable tasks_l
     variable jobname
     variable job_status
+    variable timestamp
 
     constructor {service_d_ tasks} {
         set sequence    ""
         set tasks_l     $tasks
         set tasks_q     [::struct::queue] 
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
+        if {![dict exists $service_d description]} { dict set service_d description "" }
         if {[dict exists $service_d jobname] == 0} { set jobname [self] }
         set job_status  created
+        set timestamp   [clock seconds]
     }
 
     destructor { }
  
     method task_queue {} { return $tasks_q }
+    method status {} { return $job_status }
+    method status_ts {} { return $timestamp }
 
     method set_sequence {its_sequence} { set sequence $its_sequence }
 
@@ -51,14 +56,19 @@ package require struct::queue
         return [my post_task $thread_id]
     }
 
+    method SetStatus {new_status} {
+        set timestamp [clock seconds]
+        set job_status $new_status
+    }
+
     method stop_job {} {
-        set job_status stop_signal_received
+        my SetStatus stop_signal_received
     }
 
     method post_task {thread_id} {
-        if {[string equal $job_status stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {
+        if {[string equal [my status] stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {
 
-            set job_status completed
+            my SetStatus completed
 
             # the queue is empty, tasks are completed and
             # the job sequence the job belongs to is notified
@@ -70,7 +80,7 @@ package require struct::queue
         } else {
 
             set task_name [dict get $task_d task]
-            set job_status $task_name
+            my SetStatus $task_name
 
             ::ngis::logger emit "posting task '$task_name' for job [self]"
 
@@ -129,8 +139,10 @@ package require struct::queue
     }
 
     method WholeObj {} {
-        return [dict merge $service_d [dict create  tasks     $tasks_l \
-                                                    jobname   $jobname]]
+        return [dict merge $service_d [dict create  tasks       $tasks_l \
+                                                    jobname     $jobname \
+                                                    job_status  $job_status \
+                                                    timestamp   $timestamp]]
     }
 
     method get_property {jprops {output_form "-list"}} {

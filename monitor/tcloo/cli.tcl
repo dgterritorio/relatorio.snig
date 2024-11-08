@@ -12,10 +12,11 @@ package require TclOO
 
     constructor {} {
         set cli_cmds [dict create  \
-        LT [dict create cmd REGTASKS has_args no    description "List registered tasks" help lt.md ] \
-        LE [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
         C  [dict create cmd CHECK    has_args yes   description "Starts Monitoring Jobs" help check.md] \
         F  [dict create cmd FORMAT   has_args maybe description "Set/Query message format" help format.md] \
+        JL [dict create cmd JOBLIST  has_args maybe description "List Running Jobs" help jl.md] \
+        LE [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
+        LT [dict create cmd REGTASKS has_args no    description "List registered tasks" help lt.md ] \
         QS [dict create cmd QUERY    has_args no    description "Query Sequence Execution Status" help qs.md] \
         ST [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
         SX [dict create cmd EXIT     has_args no    description "Terminate Monitor and Server" help sx.md] \
