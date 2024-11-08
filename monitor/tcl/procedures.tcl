@@ -104,10 +104,12 @@ namespace eval ::ngis::procedures {
         # determine the storage space for this task. The uuid_space and
         # tmpfile_root directory are passed as arguments to the script.
 
+        set uuid         [::ngis::tasks uuid $task_d]
         set uri_type     [::ngis::tasks type $task_d]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
+        set script [::ngis::tasks script $task_d]
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
         ::ngis::logger debug "running command: $cmd"
         if {[catch {

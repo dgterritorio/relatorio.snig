@@ -145,6 +145,11 @@ oo::define ngis::JsonFormat {
             }
             112 {
                 set whos_l [lindex $args 0]
+                $json_o string nconnections integer [llength $whos_l]
+
+                # if we're here there must be at least one connection active
+                # we don't need to check [llength $whos_l]
+
                 $json_o string connections array_open
                 foreach c $whos_l {
                     lassign $c login type ncmds protocol idle_time_s
@@ -152,9 +157,27 @@ oo::define ngis::JsonFormat {
                                         string "type"       string $type    \
                                         string "ncmds"      string $ncmds   \
                                         string "protocol"   string $protocol \
-                                        string "idle"       string $idle_time_s
+                                        string "idle"       string $idle_time_s map_close
                 }
                 $json_o array_close
+            }
+            114 {
+                set jobs_l [lindex $args 0]
+                $json_o string njobs integer [llength $jobs_l]
+
+                if {[llength $jobs_l] > 0} {
+                    $json_o string jobs array_open
+                    foreach j $jobs_l {
+                        lassign $jl gid descr uri_type version job_status timestamp
+                        $json_o map_open    string "gid"            integer $gid        \
+                                            string "description"    string $descr       \
+                                            string "type"           string $uri_type    \
+                                            string "version"        string $version     \
+                                            string "status"         string $job_status  \
+                                            string "timestamp"      integer $timestamp map_close
+                    }
+                    $json_o array_close
+                }
             }
             501 {
                 $json_o string message string "Server internal error"

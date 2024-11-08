@@ -219,22 +219,29 @@ oo::define ngis::HRFormat {
 
     method c114 {args} {
         set jobs_l {*}$args
-        set jobs_t [concat $report_a(114.capts) $jobs_l]
+        if {[llength $jobs_l] == 0} { return [my SingleLine "114" "No Jobs Running"] }
 
-        if {[llength $jobs_l] > 0} {
-            $data_matrix deserialize [list [llength $jobs_t] 6 $jobs_t]
-            set report_txt [$report_a(114.report) printmatrix $data_matrix]
-            set rep_width [string length [lindex $report_txt 0]]
-
-            set fstring [::ngis::reports::get_fmt_string 114]
-
-            $data_matrix deserialize [list 1 1 [list [list "\[114\] [format $fstring [llength $jobs_l]]"]]]
-            $report_top size 0 [expr $rep_width - 4]
-            set top_txt [$report_top printmatrix $data_matrix]
-            return [append top_txt $report_txt]
-        } else {
-            return [my SingleLine "114" "No Jobs Running"]
+        set jobs_t $report_a(114.capts
+        foreach jl $jobs_l {
+            lassign $jl gid descr uri_type version job_status timestamp
+            lappend jobs_t [list $gid       \
+                                 [::ngis::utils::string_truncate $descr 60] \
+                                 $uri_type  \
+                                 $version   \
+                                 $job_status \
+                                 [::ngis::utils::delta_time_s [expr [clock seconds] - $timestamp]]]
         }
+
+        $data_matrix deserialize [list [llength $jobs_t] 6 $jobs_t]
+        set report_txt [$report_a(114.report) printmatrix $data_matrix]
+        set rep_width [string length [lindex $report_txt 0]]
+
+        set fstring [::ngis::reports::get_fmt_string 114]
+
+        $data_matrix deserialize [list 1 1 [list [list "\[114\] [format $fstring [llength $jobs_l]]"]]]
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+        return [append top_txt $report_txt]
     }
 }
 

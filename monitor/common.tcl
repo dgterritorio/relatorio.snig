@@ -46,7 +46,6 @@ namespace eval ::ngis {
                                             503     "Missing argument for code %d"]
 
         variable report_top
-
         set report_top [::report::report hr_report_top 1 style captionedtable]
         $report_top bottom      disable
         $report_top topcapsep   disable
@@ -62,8 +61,8 @@ namespace eval ::ngis {
 
         variable single_line
         set single_line [::report::report hr_report_single_line 1 style captionedtable]
-        $single_line topcapsep   disable
-        $single_line justify     0 left
+        $single_line topcapsep      disable
+        $single_line justify    0   left
 
         variable report_a
         array set report_a {}
@@ -82,11 +81,13 @@ namespace eval ::ngis {
         set report_a(110.report)    [::report::report hr_110_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(110.report) pad $c both " " }
 
+        # Connections
         set ncolumns 5
         set report_a(112.capts)     [list {"Login" "Socket" "Commands Exec." "Format" "Idle"}]
         set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
+        # Jobs
         set ncolumns 6
         set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Timestamp"}]
         set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
