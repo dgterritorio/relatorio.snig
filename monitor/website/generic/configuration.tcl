@@ -22,15 +22,16 @@ namespace eval ::ngis::conf {
                 dbhost          {value "snig.naturalgis.pt" description "Backend database host" section dbauth} \
                 dbpasswd        {value "W8a1kCUOx0mupUAF" description "DB password" section dbauth} \
                 dbport          {value "5432" description "Backend database port" section dbauth} \
-                service_stautus  {value "testsuite.service_status" description "Service Status Records" section database} \
+                service_stautus {value "testsuite.service_status" description "Service Status Records" section database} \
                 entities_table  {value "testsuite.entities" description "Entities catalog table" section database} \
                 uris_table      {value "testsuite.uris_long" description "URIs catalog table" section database} \
                 dbms_driver     {value "Tdbc Postgresql" description "Database DIO Driver" section database} \
                 jquery_root     {value "http://jquery.biol.unipr.it" description "Root of the jQuery library" section jquery } \
                 ckeditor_root   {value "http://jquery.biol.unipr.it" description "Root of the ckeditor code" section jquery } \
                 fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
-                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" description "jQuery timepicker" \
-                                                                                             section jquery}
+                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" description "jQuery timepicker" section jquery} \
+                server_ip       {value "127.0.0.1" description "SNIG Monitor Server" section network} \
+                server_port     {value "4422" description "SNIG Monitor Server Port" section network}
         ]
 
     proc sections {{s ""}} {

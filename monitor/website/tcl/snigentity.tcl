@@ -56,16 +56,15 @@ namespace eval ::rwpage {
 
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
-            set rows_l {}
 
+            set rows_l {}
             set rows_l [lmap entity $entity_recs {
 
-                set gid [dict get $entity gid]
-                set description [dict get $entity description]
-
-                list $gid $description [dict get $entity uri]
+                list [dict get $entity gid] [dict get $entity description] \
+                     [dict get $entity uri]
 
             }]
+
             set ns [$template_o formatters_ns]
             puts [${ns}::entities_table $rows_l]
         }

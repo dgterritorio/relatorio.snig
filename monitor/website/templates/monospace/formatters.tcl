@@ -7,7 +7,6 @@
 # instances of ngis::HRFormat and ngis::JSONFormat
 
 proc entities_table {rows_l} {
-
     set out "<pre>"
     foreach r $rows_l {
         lassign $r gid descr uri

@@ -89,7 +89,7 @@ namespace eval ::ngis {
 
         # Jobs
         set ncolumns 6
-        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Timestamp"}]
+        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Running"}]
         set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
 

@@ -221,14 +221,14 @@ oo::define ngis::HRFormat {
         set jobs_l {*}$args
         if {[llength $jobs_l] == 0} { return [my SingleLine "114" "No Jobs Running"] }
 
-        set jobs_t $report_a(114.capts
+        set jobs_t $report_a(114.capts)
         foreach jl $jobs_l {
             lassign $jl gid descr uri_type version job_status timestamp
-            lappend jobs_t [list $gid       \
+            lappend jobs_t [list $gid           \
                                  [::ngis::utils::string_truncate $descr 60] \
-                                 $uri_type  \
-                                 $version   \
-                                 $job_status \
+                                 $uri_type      \
+                                 $version       \
+                                 $job_status    \
                                  [::ngis::utils::delta_time_s [expr [clock seconds] - $timestamp]]]
         }
 

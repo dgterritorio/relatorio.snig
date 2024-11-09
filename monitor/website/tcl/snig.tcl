@@ -14,15 +14,23 @@ namespace eval ::rwpage {
         private variable entities
 
         constructor {key} {SnigPage::constructor $key} { 
-            set entities [dict create]
+            set entities [list]
         }
 
         public method prepare_page {language argsqs} {
             if {[dict size $entities] == 0} {
                 set dbhandle [$this get_dbhandle]
                 ::ngis::conf readconf entities_table
-                $dbhandle forall "SELECT * from $entities_table" e {
-                    dict set entities $e(eid) $e(description)
+                ::ngis::conf readconf uris_table
+
+                set    sql "SELECT e.eid eid,e.description description,count(ul.gid) as cnt from $entities_table e"
+                append sql " LEFT JOIN $uris_table ul ON ul.eid=e.eid group by e.eid order by cnt desc"
+                puts $sql
+                #$dbhandle forall "SELECT * from $entities_table" e
+                $dbhandle forall $sql e {
+                    if {$e(cnt) > 0} {
+                        lappend entities [list $e(eid) $e(description)]
+                    }
                 }
             }
         }
