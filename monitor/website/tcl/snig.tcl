@@ -25,7 +25,7 @@ namespace eval ::rwpage {
 
                 set    sql "SELECT e.eid eid,e.description description,count(ul.gid) as cnt from $entities_table e"
                 append sql " LEFT JOIN $uris_table ul ON ul.eid=e.eid group by e.eid order by cnt desc"
-                puts $sql
+                #puts $sql
                 #$dbhandle forall "SELECT * from $entities_table" e
                 $dbhandle forall $sql e {
                     if {$e(cnt) > 0} {

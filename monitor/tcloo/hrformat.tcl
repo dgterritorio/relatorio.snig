@@ -243,6 +243,34 @@ oo::define ngis::HRFormat {
         set top_txt [$report_top printmatrix $data_matrix]
         return [append top_txt $report_txt]
     }
+
+    method c116 {args} {
+        set services_l {*}$args
+        if {[llength $services_l] == 0} { return [my SingleLine "116" "No services found"] }
+
+        set service_fields_l {gid uuid description uri uri_type version}
+        array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
+        set fstring [::ngis::reports::get_fmt_string 116]
+
+        set reports_pack_l {}
+        foreach serv_d $services_l {
+            set service_table_l [lmap f $service_fields_l { list $legend_a($f) [dict get $serv_d $f] }]
+
+            $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
+            set report_txt [$report_a(116.report) printmatrix $data_matrix]
+            # assuming the first line to representative of the report actual width
+            set rep_width [string length [lindex $report_txt 0]]
+
+            set serv_descr [dict get $serv_d description]
+            if {[string trim $serv_descr] == ""} { set serv_descr "gid service [dict get $serv_d gid]" }
+            $data_matrix deserialize [list 1 1 [list [list "\[116\] $serv_descr"]]]
+            $report_top size 0 [expr $rep_width - 4]
+            set top_txt [$report_top printmatrix $data_matrix]
+
+            lappend reports_pack_l [append top_txt $report_txt]
+        }
+        return [join $reports_pack_l "\n"]
+    }
 }
 
 package provide ngis::hrformat 0.5

@@ -49,7 +49,7 @@ oo::define ngis::Protocol {
         }
     }
 
-    # resource_check
+    # resource_check_parser (and loader, see below)
     #
     # parses the arguments of command CHECK and builds job sequences
     # to be thrown to the job_controller
@@ -59,12 +59,19 @@ oo::define ngis::Protocol {
     #   1. pure integer: gid of a resource rec in uris_long
     #   2. gid=<int>: synonimous of the former
     #   3. eid=<int>: integer primary key to an entity.
-    #   4. pure text: entity definition. Does the same
+    #   4. pure text: entity or record definition.
+    #
+    # TODO: This procedure is badly designed and needs reform.
+    # It combines argument parsing and value estration to real
+    # data retrieval for two classes of information, entities and
+    # URL services records (table uris_long). Such hybrid behavior
+    # is a temporary solution and needs cleaner design
+    #
 
-    method resource_check_parser {arguments} {
+    method resource_check_parser {arguments {class entities}} {
         set gids_l {}
         set eids_l {}
-        set entities_l {}
+        set resources_l {}
         set retstatus OK
         foreach a $arguments {
             #set a [string tolower $a]
@@ -83,17 +90,25 @@ oo::define ngis::Protocol {
                 }
 
             } else {
-                # ::ngis::service list_entities returns a list of 3-element descriptors
-                # (as a matter of fact a record in the entities table with columsn stripped of the keys)
-                lappend entities_l {*}[::ngis::service list_entities $a]
+                switch $class {
+                    entities {
+                        # ::ngis::service list_entities returns a list of 3-element descriptors
+                        # (as a matter of fact a record in the entities table with columsn stripped of the keys)
+                        lappend resources_l {*}[::ngis::service list_entities $a]
+                    }
+                    services {
+                        # ::ngis::service list_servicces returns 
+                        lappend resources_l {*}[::ngis::service service_data $a]
+                    }
+                }
             }
         }
 
         if {([llength $gids_l] == 0) && ([llength $eids_l] == 0) && \
-            ([llength $entities_l] == 0)} {
+            ([llength $resources_l] == 0)} {
             return [list ERR "009" "No valid records found"]
         }
-        return [list $retstatus $gids_l $eids_l $entities_l]
+        return [list $retstatus $gids_l $eids_l $resources_l]
     }
 
     method compose {code args} {
@@ -203,6 +218,31 @@ oo::define ngis::Protocol {
                     set jc_status [[$::ngis_server get_job_controller] status]
                     set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
                     return [my compose 106 $jc_status $tm_status]
+                }
+                QURL {
+                    # returns data regarding a series of URL (as specified by
+                    # mixed forms arguments in analogy of command CHECK)
+
+                    set parsed_results [lassign [my resource_check_parser $arguments "services"] res_status]
+                    if {$res_status == "OK"} {
+
+                        # the call to 'resource_check_parser' guarantees that
+                        # in case of success the 3 list gids_l eids_l services_l
+                        # are defined, at least as empty list
+
+                        lassign $parsed_results gids_l eids_l services_l
+                        if {[llength $gids_l]} {
+                            foreach gid $gids_l {
+                                lappend services_l {*}[::ngis::service service_data $gid]
+                            }
+                        }
+
+                        return [my compose 116 $services_l]
+                    } else {
+                        lassign $parsed_results code a
+                        return [my compose $code $a]
+                    }
+
                 }
                 FORMAT {
                     if {[string length $arguments] == 0} {

@@ -212,7 +212,6 @@ namespace eval ::ngis::service {
     }
 
     proc list_entities {pattern {order "-nrecs"} {field "-description"}} {
-
         set sql [list "SELECT e.eid eid,e.description description,count(ul.gid) count" \
                       "from $::ngis::ENTITY_TABLE_NAME e" \
                       "LEFT JOIN $::ngis::TABLE_NAME ul ON ul.eid=e.eid"]
@@ -229,13 +228,42 @@ namespace eval ::ngis::service {
             lappend sql "GROUP BY e.eid ORDER BY e.description"
         }
         set sql [join $sql " "]
-        puts $sql
+        #puts $sql
 
         set query_result [exec_sql_query $sql]
         set entities [$query_result allrows -as lists]
         $query_result close
         return $entities
+    }
 
+    # service_data --
+    #
+    # loads services having a given description pattern
+
+    proc service_data {pattern} {
+        set     sql [list "SELECT ul.*,ss.* from $::ngis::TABLE_NAME ul"]
+        lappend sql "JOIN $::ngis::SERVICE_STATUS ss ON ul.gid=ss.gid"
+
+        if {[string is integer $pattern]} {
+            lappend sql "WHERE ul.gid=$pattern"
+            set sql [join $sql " "]
+            set query_result [exec_sql_query $sql]
+        } else {
+            lappend sql "WHERE ul.description LIKE '$pattern'"
+            set sql [join $sql " "]
+            set query_result [exec_sql_query $sql]
+        }
+        set services_d [dict create]
+        $query_result foreach -as dicts s_d {
+            dict with s_d {
+                if {![dict exists $services_d $gid]} {
+                    dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","]]
+                }
+                dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
+            }
+        }
+        #puts $services_d
+        return [dict values $services_d]
     }
 
     namespace export *

@@ -13,6 +13,7 @@ package require ngis::roothandler
 package require DIO 2.0
 package require dio_Tdbc 2.0
 package require ngis::protocol
+package require ngis::conf
 
 ::rivetweb::init Marshal top -nopkg
 

@@ -12,23 +12,22 @@ package require TclOO
 
     constructor {} {
         set cli_cmds [dict create  \
-        C  [dict create cmd CHECK    has_args yes   description "Starts Monitoring Jobs" help check.md] \
-        F  [dict create cmd FORMAT   has_args maybe description "Set/Query message format" help format.md] \
-        JL [dict create cmd JOBLIST  has_args maybe description "List Running Jobs" help jl.md] \
-        LE [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
-        LT [dict create cmd REGTASKS has_args no    description "List registered tasks" help lt.md ] \
-        QS [dict create cmd QUERY    has_args no    description "Query Sequence Execution Status" help qs.md] \
-        ST [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
-        SX [dict create cmd EXIT     has_args no    description "Terminate Monitor and Server" help sx.md] \
-        X  [dict create cmd ""       has_args no    description "Exit client" help x.md method stop_client] \
-        W  [dict create cmd WHOS     has_args no    description "List Active Connections" help w.md] \
-        ZZ [dict create cmd ""       has_args yes   description "Send custom messages to the server" \
-                                                    method send_custom_cmd help zz.md] \
-        ?  [dict create cmd ""       has_args maybe description "List CLI Commands" \
-                                                    method print_help_menu help help.md]]
-
+        C   [dict create cmd CHECK    has_args yes   description "Starts Monitoring Jobs" help check.md] \
+        F   [dict create cmd FORMAT   has_args maybe description "Set/Query message format" help format.md] \
+        JL  [dict create cmd JOBLIST  has_args maybe description "List Running Jobs" help jl.md] \
+        LE  [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
+        LT  [dict create cmd REGTASKS has_args no    description "List registered tasks" help lt.md ] \
+        QS  [dict create cmd QUERY    has_args no    description "Query Sequence Execution Status" help qs.md] \
+        ST  [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
+        SX  [dict create cmd EXIT     has_args no    description "Terminate Monitor and Server" help sx.md] \
+        URL [dict create cmd QURL     has_args yes   description "Query Service Data" help url.md] \
+        X   [dict create cmd ""       has_args no    description "Exit client" help x.md method stop_client] \
+        W   [dict create cmd WHOS     has_args no    description "List Active Connections" help w.md] \
+        ZZ  [dict create cmd ""       has_args yes   description "Send custom messages to the server" \
+                                                     method send_custom_cmd help zz.md] \
+        ?   [dict create cmd ""       has_args maybe description "List CLI Commands" \
+                                                     method print_help_menu help help.md]]
         set docs_base $::ngis::docs_base
-
     }
 
     method print_help_menu {} {

@@ -179,6 +179,38 @@ oo::define ngis::JsonFormat {
                     $json_o array_close
                 }
             }
+            116 {
+                set services_l [lindex $args 0]
+                $json_o string message string [format $fstring [llength $services_l]]
+                if {[llength $services_l] > 0} {
+                    $json_o string services array_open
+                    foreach s $services_l {
+
+                        dict with s {
+                            $json_o map_open    string "gid"    integer $gid    \
+                                                string "description" string $description \
+                                                string "uri"        string  $uri    \
+                                                string "uri_type"   string  $uri_type \
+                                                string "version"    string $version \
+                                                string "uuid"       string  $uuid
+                        }
+                        set tasks [dict get $s tasks]
+                        $json_o string "tasks" array_open
+                        dict for {task task_d} $tasks {
+                            $json_o map_open string "task" string $task 
+                            dict with task_d {
+                              $json_o   string "timestamp"  string $ts  \
+                                        string "status"     string $exit_status \
+                                        string "info"       string $exit_info   \
+                                        string "uuid"       string $uuid
+                            }
+                            $json_o map_close
+                        }
+                        $json_o array_close map_close
+                    }
+                    $json_o array_close
+                }
+            }
             501 {
                 $json_o string message string "Server internal error"
                 if {[llength $args] > 0} {

@@ -42,6 +42,7 @@ namespace eval ::ngis {
                                             110     "%d registered tasks"       \
                                             112     "%d Sessions Connected"     \
                                             114     "%d Job Executing"          \
+                                            116     "%d Matching services found" \
                                             501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 
@@ -92,6 +93,11 @@ namespace eval ::ngis {
         set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Running"}]
         set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
+
+        # services
+        set ncolumns 2
+        set report_a(116.report) [::report::report hr_116_data $ncolumns style simpletable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(116.report) pad $c both " " }
 
         # Entities
         set ncolumns 3
