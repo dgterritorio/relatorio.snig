@@ -7,7 +7,6 @@ package require ngis::dbresource
 #package require Thread
 package require json
 
-
 namespace eval ::rwpage {
     ::itcl::class SnigService {
         inherit SnigPage
@@ -57,7 +56,6 @@ namespace eval ::rwpage {
         public method print_content {language args} {
             set service_fields_l {gid uuid description uri uri_type version}
             array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
-            
 
             set service_table_l [lmap f $service_fields_l {
                 set row "<tr><td>$legend_a($f)</td><td>[dict get $service $f]</td></tr>"
