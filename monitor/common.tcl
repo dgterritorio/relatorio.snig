@@ -97,7 +97,7 @@ namespace eval ::ngis {
 
         # Connections
         set ncolumns 5
-        set report_a(112.capts)     [list {"Login" "Socket" "Commands Exec." "Format" "Idle"}]
+        set report_a(112.capts)     [list {"Login" "Socket" "Cmds Counter" "Format" "Idle"}]
         set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 

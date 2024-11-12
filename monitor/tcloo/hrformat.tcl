@@ -201,8 +201,7 @@ oo::define ngis::HRFormat {
         }
     }
 
-    method c112 {args} {
-        set whos_l {*}$args
+    method c112 {whos_l} {
         set whos_l [concat $report_a(112.capts) $whos_l]
 
         $data_matrix deserialize [list [llength $whos_l] 5 $whos_l]
@@ -245,8 +244,7 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
-    method c116 {args} {
-        set services_l $args
+    method c116 {services_l} {
         if {[llength $services_l] == 0} { return [my SingleLine "116" "No services found"] }
 
         set service_fields_l {gid uuid description uri uri_type version}
@@ -255,7 +253,9 @@ oo::define ngis::HRFormat {
 
         set reports_pack_l {}
         foreach serv_d $services_l {
-            set service_table_l [lmap f $service_fields_l { list $legend_a($f) [dict get $serv_d $f] }]
+            set service_table_l [lmap f $service_fields_l {
+                list $legend_a($f) [dict get $serv_d $f]
+            }]
 
             $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
             set report_txt [$report_a(two_columns) printmatrix $data_matrix]
@@ -273,19 +273,16 @@ oo::define ngis::HRFormat {
         return [join $reports_pack_l "\n"]
     }
 
-    method c118 {args} {
-        lassign $args service_d 
+    method c118 {service_d} {
+        #lassign $args service_d 
         #puts "==========\n$service_d\n========="
-        if {[dict size $service_d] == 0} { return [my SingleLine "116" "No services found"] }
+        if {[dict size $service_d] == 0} { return [my SingleLine "118" "No services found"] }
 
         # let's extract a few information out of the service
+        # a description is guaranteed to exit for a service record
+        # built by ::ngis::service::service_data
 
-        if {![dict exists $service_d description] || \
-             ([dict get $service_d description] == "")} {
-            set description "Service with gid '[dict get $service_d gid]'"
-        } else {
-            set description [dict get $service_d description]
-        }
+        set description [dict get $service_d description]
 
         # we build the task results data
 
@@ -294,9 +291,6 @@ oo::define ngis::HRFormat {
             set task_t [lmap t [::ngis::tasks::list_registered_tasks] {
                 lassign $t task procedure tdescr filename language
 
-                # each of these are lines of the matrix. So we need only
-                # the values. Assuming 'dict filter .. key ...' respects
-                # the order of the keys
                 if {[dict exists $tasks_d $task]} {
                     set tasks_data [dict get $tasks_d $task]
                     set values [lmap k {exit_status exit_info ts} {

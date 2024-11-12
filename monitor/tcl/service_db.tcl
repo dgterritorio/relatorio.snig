@@ -258,6 +258,9 @@ namespace eval ::ngis::service {
             dict with s_d {
                 if {![dict exists $services_d $gid]} {
                     dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","]]
+                    if {![dict exists $services_d $gid description]} {
+                        dict set services_d $gid description "undefined description for primary key '$gid'"
+                    }
                 }
                 dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
             }

@@ -42,6 +42,9 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
+    ## debug
+    after 5000
+    ## debug
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }
 

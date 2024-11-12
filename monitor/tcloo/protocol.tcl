@@ -112,6 +112,8 @@ oo::define ngis::Protocol {
     }
 
     method compose {code args} {
+        puts "composing message with [llength $args] arguments"
+
         return [eval $formatter c${code} $args]
     }
 
@@ -220,8 +222,8 @@ oo::define ngis::Protocol {
                     return [my compose 106 $jc_status $tm_status]
                 }
                 QSERVICE {
-                    # returns data regarding a series of URL (as specified by
-                    # mixed forms arguments in analogy of command CHECK)
+                    # returns data regarding a series of service records (as specified by
+                    # mixed forms arguments in analogy with command CHECK)
 
                     set parsed_results [lassign [my resource_check_parser $arguments "services"] res_status]
                     if {$res_status == "OK"} {
@@ -233,11 +235,14 @@ oo::define ngis::Protocol {
                         lassign $parsed_results gids_l eids_l services_l
                         if {[llength $gids_l]} {
                             foreach gid $gids_l {
+
+                                # ::ngis::service::service_data returns a *list* of service records
+                                # even when this list is made of a single element
+
                                 lappend services_l {*}[::ngis::service service_data $gid]
                             }
                         }
-
-                        return [my compose 116 {*}$services_l]
+                        return [$formatter c116 $services_l]
                     } else {
                         lassign $parsed_results code a
                         return [my compose $code $a]
@@ -255,8 +260,12 @@ oo::define ngis::Protocol {
 
                         lassign $parsed_results gids_l
                         set services_l [::ngis::service service_data [lindex $gids_l 0]]
+    
+                        # ::ngis::service::service_data returns a *list* of service records
+                        # even when this list is made of a single element. In this case
+                        # we expect to get just one service record
 
-                        return [my compose 118 {*}$services_l]
+                        return [$formatter c118 [lindex $services_l 0]]
                     } else {
                         lassign $parsed_results code a
                         return [my compose $code $a]
@@ -278,7 +287,7 @@ oo::define ngis::Protocol {
                     }
                 }
                 WHOS {
-                    return [my compose 112 [$::ngis_server whos]]
+                    return [$formatter c112 [$::ngis_server whos]]
                 }
                 SET {
 
