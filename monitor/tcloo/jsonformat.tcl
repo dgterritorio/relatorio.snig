@@ -167,7 +167,7 @@ oo::define ngis::JsonFormat {
 
                 if {[llength $jobs_l] > 0} {
                     $json_o string jobs array_open
-                    foreach j $jobs_l {
+                    foreach jl $jobs_l {
                         lassign $jl gid descr uri_type version job_status timestamp
                         $json_o map_open    string "gid"            integer $gid        \
                                             string "description"    string $descr       \

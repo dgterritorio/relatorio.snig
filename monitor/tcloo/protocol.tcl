@@ -219,7 +219,7 @@ oo::define ngis::Protocol {
                     set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
                     return [my compose 106 $jc_status $tm_status]
                 }
-                QURL {
+                QSERVICE {
                     # returns data regarding a series of URL (as specified by
                     # mixed forms arguments in analogy of command CHECK)
 
@@ -228,7 +228,7 @@ oo::define ngis::Protocol {
 
                         # the call to 'resource_check_parser' guarantees that
                         # in case of success the 3 list gids_l eids_l services_l
-                        # are defined, at least as empty list
+                        # are defined, at least as empty lists
 
                         lassign $parsed_results gids_l eids_l services_l
                         if {[llength $gids_l]} {
@@ -237,12 +237,30 @@ oo::define ngis::Protocol {
                             }
                         }
 
-                        return [my compose 116 $services_l]
+                        return [my compose 116 {*}$services_l]
                     } else {
                         lassign $parsed_results code a
                         return [my compose $code $a]
                     }
+                }
+                QTASK {
+                    # unlike QSERVICE command QTASK accepts only one argument
+                    # and it must be the gid of the associated service
+                    set parsed_results [lassign [my resource_check_parser $arguments "services"] res_status]
+                    if {$res_status == "OK"} {
 
+                        # after all for this command we are interested only in the gid value
+                        # returned by resource_check_parser and we don't event consider the
+                        # last 2 lists of parsed results
+
+                        lassign $parsed_results gids_l
+                        set services_l [::ngis::service service_data [lindex $gids_l 0]]
+
+                        return [my compose 118 {*}$services_l]
+                    } else {
+                        lassign $parsed_results code a
+                        return [my compose $code $a]
+                    }
                 }
                 FORMAT {
                     if {[string length $arguments] == 0} {

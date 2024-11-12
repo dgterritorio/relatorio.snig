@@ -4,7 +4,6 @@
 # can be placed
 #
 
-
 namespace eval ::ngis::utils {
 
     # tbreakdown --
@@ -80,7 +79,7 @@ namespace eval ::ngis::utils {
         set cnt 0
         set word ""
         set removed_len 0
-        while {([expr $slen - $removed_len - 1] > $target_len) && ([incr cnt] < 20)} { 
+        while {([expr $slen - $removed_len - 1] > $target_len) && ([incr cnt] < 20)} {
             set a_list [lassign $a_list word]
             set removed_len [expr $removed_len + [string length $word]]
             #puts "$a_list ($removed_len)"
@@ -93,9 +92,7 @@ namespace eval ::ngis::utils {
         } else {
             return "[join [lreverse $a_list] " "]..."
         }
-
     }
-
 }
 
 package provide ngis::utils 0.2

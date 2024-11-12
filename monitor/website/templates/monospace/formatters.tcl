@@ -1,4 +1,4 @@
-# formatters.tcl
+# formatters.tcl --
 #
 # formatters run within the template namespace and provide template
 # specific formatting of data
@@ -36,4 +36,9 @@ proc entities_table {rows_l} {
 #
 
 proc service_table {service_d} {
+
+    set service_report [::report::report service_report 2 style simpletable]
+ 
+
+
 }

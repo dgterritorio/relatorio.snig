@@ -263,6 +263,7 @@ namespace eval ::ngis::service {
             }
         }
         #puts $services_d
+        #puts "==========\n$services_d\n========="
         return [dict values $services_d]
     }
 

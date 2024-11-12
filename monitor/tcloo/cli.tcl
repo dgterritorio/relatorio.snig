@@ -20,7 +20,8 @@ package require TclOO
         QS  [dict create cmd QUERY    has_args no    description "Query Sequence Execution Status" help qs.md] \
         ST  [dict create cmd STOP     has_args no    description "Stop Monitor Operations" help stop.md] \
         SX  [dict create cmd EXIT     has_args no    description "Terminate Monitor and Server" help sx.md] \
-        URL [dict create cmd QURL     has_args yes   description "Query Service Data" help url.md] \
+        TSK [dict create cmd QTASK    has_args yes   description "Display Task results" help tsk.md] \
+        QSV [dict create cmd QSERVICE has_args yes   description "Query Service Data" help url.md] \
         X   [dict create cmd ""       has_args no    description "Exit client" help x.md method stop_client] \
         W   [dict create cmd WHOS     has_args no    description "List Active Connections" help w.md] \
         ZZ  [dict create cmd ""       has_args yes   description "Send custom messages to the server" \
@@ -68,13 +69,19 @@ package require TclOO
                                     set help_file [file join $docs_base [dict get $cli_cmds $help_cmd help]]
                                     if {[file exists $help_file] && [file readable $help_file]} {
 
-                                        #"sed -e s/@CMD@/$help_cmd/g -e s/@AUTHOR@/${::ngis::authorship}/g -e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"
-                                        set execcmd [list "cat $help_file" \
-                                                  "sed -e s/@CMD@/$help_cmd/g -e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g -e s%@BUG_REPORTS@%${::ngis::bug_reports}%g" \
-                                                  "pandoc -s -f markdown -t man -" \
-                                                  "man -l - 2> /dev/null"]
+                                        # sed command to substitute symbols in the man pages
 
-                                        #puts $execcmd
+                                        set sed_cmd [list   "sed" "-e s/@CMD@/$help_cmd/g" \
+                                                            "-e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g" \
+                                                            "-e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"]
+                                        set sed_cmd [join $sed_cmd " "]
+
+                                        # pulling everything together: cat -> sed -> pandoc (to nroff format) -> man (to print)
+
+                                        set execcmd [list "cat $help_file" $sed_cmd \
+                                                          "pandoc -s -f markdown -t man -" \
+                                                          "man -l - 2> /dev/null"]
+
                                         puts [exec -ignorestderr {*}[join $execcmd " | "]]
                                     } else {
                                         puts "File '$help_file' not found"

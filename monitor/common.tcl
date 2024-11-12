@@ -43,6 +43,7 @@ namespace eval ::ngis {
                                             112     "%d Sessions Connected"     \
                                             114     "%d Job Executing"          \
                                             116     "%d Matching services found" \
+                                            118     "Service %d (%s, type %s)"  \
                                             501     "Server internal error: %s" \
                                             503     "Missing argument for code %d"]
 
@@ -70,6 +71,18 @@ namespace eval ::ngis {
 
         # setup report generators
 
+        # generic 2 and 3 column
+
+        # 2 column report -------------------------
+        set ncolumns 2
+        set report_a(two_columns) [::report::report hr_two_columns $ncolumns style simpletable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(two_columns) pad $c both " " }
+        # 3 column report --------------------------
+        set ncolumns 3
+        set report_a(three_columns) [::report::report hr_three_columns $ncolumns style simpletable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(three_columns) pad $c both " " }
+
+
         # Job sequences status report
         set ncolumns 6
         set report_a(106.capts)     [list {"Seq ID" "Description" "Running Jobs" "Completed Jobs" "Total Jobs" "Status"}]
@@ -94,16 +107,17 @@ namespace eval ::ngis {
         set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
 
-        # services
-        set ncolumns 2
-        set report_a(116.report) [::report::report hr_116_data $ncolumns style simpletable]
-        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(116.report) pad $c both " " }
-
         # Entities
         set ncolumns 3
         set report_a(108.capts)     [list {"Eid" "Description" "Records"}]
         set report_a(108.report)    [::report::report hr_108_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(108.report) pad $c both " " }
+
+        # Tasks
+        set ncolumns 4
+        set report_a(118.capts)     [list {"Task" "Status" "Info" "Timestamp"}]
+        set report_a(118.report)    [::report::report hr_118_data $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(118.report) pad $c both " " }
 
         proc get_fmt_string {code} {
             variable CodeMessages
