@@ -48,24 +48,24 @@ oo::define ngis::JsonFormat {
     method JSON {code fstring args} {
         #puts "JSON >$code< >$fstring< >$args<"
         switch $code {
-            000 -
-            002 {
+            100 -
+            105 -
+            102 {
                 $json_o string message string $fstring
             }
-            001 -
-            003 -
-            005 -
-            009 {
+            101 -
+            103 -
+            109 {
                 if {[llength $args] < 1} {
                     return [my JSON 503 $code]
                 }
-                lassign $args command_arg
-                set strmsg [format $fstring $command_arg]
+                lassign $args first_argument
+                set strmsg [format $fstring $first_argument]
                 $json_o string error_code string missing_argument \
                         string error_info string "" \
-                        string message    string [format $fstring $command_arg]
+                        string message    string $strmsg
             }
-            007 {
+            107 {
                 if {[llength $args] < 2} {
                     return [my JSON 503 $code]
                 }
@@ -75,14 +75,11 @@ oo::define ngis::JsonFormat {
                         string error_info string $einfo \
                         string message    string [format $fstring $ecode ""]
             }
-            013 {
+            113 {
+                lassign $args ecode
                 $json_o string status     string error \
                         string error_code string invalid_format \
                         string message    string [format $fstring $ecode ""]
-            }
-            102 {
-                $json_o string status       string ok \
-                        string message      string $fstring
             }
             104 {
                 if {[llength $args] > 0} {
@@ -220,7 +217,6 @@ oo::define ngis::JsonFormat {
                     puts "..........\n$tasks\n........."
 
                     if {[info exists tasks]} {
-
                         foreach t [::ngis::tasks::list_registered_tasks] {
                             lassign $t task procedure tdescr filename language
 
@@ -249,6 +245,10 @@ oo::define ngis::JsonFormat {
                     }
                     $json_o array_close
                 }
+            }
+            502 {
+                $json_o string status       string ok \
+                        string message      string $fstring
             }
             503 {
                 $json_o string message string [format $fstring [lindex $args 0]]

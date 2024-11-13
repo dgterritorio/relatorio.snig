@@ -85,8 +85,6 @@ oo::define ngis::Protocol {
                     lappend eids_l $primary_id
                 } elseif {$type == "gid"} {
                     lappend gids_l $primary_id
-                } else {
-                    return [list ERR "009" $a]
                 }
 
             } else {
@@ -106,22 +104,16 @@ oo::define ngis::Protocol {
 
         if {([llength $gids_l] == 0) && ([llength $eids_l] == 0) && \
             ([llength $resources_l] == 0)} {
-            return [list ERR "009" "No valid records found"]
+            return [list ERR "109" "No valid records found"]
         }
         return [list $retstatus $gids_l $eids_l $resources_l]
-    }
-
-    method compose {code args} {
-        puts "composing message with [llength $args] arguments"
-
-        return [eval $formatter c${code} $args]
     }
 
     method parse_cmd {cmd_line} {
         set cmd_line [string trim $cmd_line]
         puts "msg >$cmd_line< ([string length $cmd_line])"
         if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
-            return "001: unrecognized command '$cmd_line'"
+            return "101: unrecognized command '$cmd_line'"
         } else {
             
             if {[regexp {^([A-Z]+)\s+(.*)$} $cmd_line m cmd arguments] == 0} {
@@ -131,7 +123,7 @@ oo::define ngis::Protocol {
             puts "arguments: '$arguments' (nargs: [llength $arguments])"
             switch $cmd {
                 REGTASKS {
-                    return [my compose 110 [::ngis::tasks list_registered_tasks]]
+                    return [$formatter c110 [::ngis::tasks list_registered_tasks]]
                 }
                 ENTITIES {
                     set order "-nrecs"
@@ -145,7 +137,7 @@ oo::define ngis::Protocol {
                             }
                         }
                     }
-                    return [my compose 108 [::ngis::service::list_entities $pattern $order]]
+                    return [$formatter c108 [::ngis::service::list_entities $pattern $order]]
                 }
                 CHECK {
                     set parsed_results [lassign [my resource_check_parser $arguments] res_status]
@@ -165,7 +157,7 @@ oo::define ngis::Protocol {
                                                 [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $service_l]  \
                                                 $jseq_des]
                             } else {
-                                return [my compose 005 $gids_l]
+                                return [$formatter c105]
                             }
                         }
                         if {[llength $eids_l] > 0} {
@@ -190,10 +182,10 @@ oo::define ngis::Protocol {
                             }
                         }
 
-                        return [my compose 002]
+                        return [$formatter c102]
                     } else {
                         lassign $parsed_results code a
-                        return [my compose $code $a]
+                        return [$formatter c$code $a]
                     }
                 }
                 JOBLIST {
@@ -209,17 +201,17 @@ oo::define ngis::Protocol {
                         }
                     }]
                     set jobs_l [eval concat $jobs_l]
-                    return [my compose 114 $jobs_l]
+                    return [$formatter c114 $jobs_l]
                 }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
                     ::ngis::logger emit "got a 'stop_operations' signal"
-                    return [my compose 102]
+                    return [$formatter c502]
                 }
                 QUERY {
                     set jc_status [[$::ngis_server get_job_controller] status]
                     set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
-                    return [my compose 106 $jc_status $tm_status]
+                    return [$formatter c106 $jc_status $tm_status]
                 }
                 QSERVICE {
                     # returns data regarding a series of service records (as specified by
@@ -245,7 +237,7 @@ oo::define ngis::Protocol {
                         return [$formatter c116 $services_l]
                     } else {
                         lassign $parsed_results code a
-                        return [my compose $code $a]
+                        return [$formatter c${code} $a]
                     }
                 }
                 QTASK {
@@ -267,20 +259,24 @@ oo::define ngis::Protocol {
 
                         return [$formatter c118 [lindex $services_l 0]]
                     } else {
+
+                        # in case of error resource_check_parser may return a 109 error
+                        # It's stored in the 'code' variable
+
                         lassign $parsed_results code a
-                        return [my compose $code $a]
+                        return [$formatter c${code} $a]
                     }
                 }
                 FORMAT {
                     if {[string length $arguments] == 0} {
-                        return [my compose 104 [$formatter format]]
+                        return [$formatter c104 [$formatter format]]
                     } else {
                         set fmt $arguments
                         switch -nocase $fmt {
                             HR   { set formatter $hr_formatter }
                             JSON { set formatter $json_formatter }
                             default {
-                                return [my compose 013 $fmt]
+                                return [$formatter c113 $fmt]
                             }
                         }
                         return [$formatter c104 [$formatter format]]
@@ -294,10 +290,10 @@ oo::define ngis::Protocol {
                 }
                 EXIT {
                     $::ngis_server shutdown
-                    return [my compose 000]
+                    return [$formatter c100]
                 }
                 default {
-                    return [my compose 001 $msg]
+                    return [$formatter c101 $msg]
                 }
             }
         }

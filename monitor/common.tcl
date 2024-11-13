@@ -27,24 +27,24 @@ package require report
 namespace eval ::ngis {
 
     namespace eval reports {
-        variable CodeMessages [dict create  000     "Server is going to exit"   \
-                                            001     "Unrecognized command: %s"  \
-                                            002     "OK"                        \
-                                            003     "Wrong arguments: '%s'"     \
-                                            005     "Invalid service gid: %d"   \
-                                            007     "Error: (%s) errorcode: %s" \
-                                            009     "Invalid arguments for '%s'" \
-                                            013     "Invalid format '%s'"       \
-                                            102     "Stopping operations"       \
+        variable CodeMessages [dict create  100     "Server is going to exit"   \
+                                            101     "Unrecognized command: %s"  \
+                                            102     "OK"                        \
+                                            103     "Wrong arguments: '%s'"     \
                                             104     "Current format: %s"        \
+                                            105     "Invalid keys in argument list" \
                                             106     "%s queued, %s pending sequences, %d jobs" \
+                                            107     "Error: (%s) errorcode: %s" \
                                             108     "%d matching entities\n%s"  \
+                                            109     "%s"                        \
                                             110     "%d registered tasks"       \
                                             112     "%d Sessions Connected"     \
+                                            113     "Invalid format '%s'"       \
                                             114     "%d Job Executing"          \
                                             116     "%d Matching services found" \
                                             118     "Service %d (%s, type %s)"  \
                                             501     "Server internal error: %s" \
+                                            502     "Stopping operations"       \
                                             503     "Missing argument for code %d"]
 
         variable report_top
@@ -103,7 +103,7 @@ namespace eval ::ngis {
 
         # Jobs
         set ncolumns 6
-        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Status" "Running"}]
+        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Task" "Running"}]
         set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
 

@@ -9,6 +9,7 @@ http::register https 443 [list ::tls::socket -tls1 true]
 
 lappend auto_path .
 
+package require ngis::conf
 package require ngis::msglogger
 package require ngis::task
 package require ngis::job
@@ -43,7 +44,7 @@ proc do_task {task_d job_thread_id} {
     }
 
     ## debug
-    after 5000
+    if {$::ngis::conf::debugging} { after 5000 }
     ## debug
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }

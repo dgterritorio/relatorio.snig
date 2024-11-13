@@ -17,12 +17,13 @@ oo::define ngis::HRFormat {
     variable handler_map
 
     constructor {} {
-        array set handler_map [list 000 NoArguments     001 SingleArgument  \
-                                    002 NoArguments     003 SingleArgument  \
-                                    005 SingleArgument  007 TwoArguments    \
-                                    009 SingleArgument  013 SingleArgument  \
-                                    102 NoArguments     104 SingleArgument  \
-                                    114 SingleArgument  501 SingleArgument]
+        array set handler_map [list 100 NoArguments     101 SingleArgument  \
+                                    102 NoArguments     103 SingleArgument  \
+                                    105 NoArguments     \
+                                    109 SingleArgument  113 SingleArgument  \
+                                    104 SingleArgument  \
+                                    114 SingleArgument  501 SingleArgument  \
+                                    502 NoArguments]
 
         set data_matrix [::struct::matrix htformat_m]
         array set report_a [array get ::ngis::reports::report_a]
@@ -83,11 +84,11 @@ oo::define ngis::HRFormat {
         return [$single_line printmatrix $data_matrix]
     }
 
-    method c007 {args} {
+    method c107 {args} {
         lassign $args e1 e2
 
-        set message_s [format [::ngis::reports::get_fmt_string 007] $e1 $e2]
-        return [my SingleLine "007" $message_s]
+        set message_s [format [::ngis::reports::get_fmt_string 107] $e1 $e2]
+        return [my SingleLine "107" $message_s]
     }
 
     method TrimDescription {d} { 
@@ -99,8 +100,7 @@ oo::define ngis::HRFormat {
         }
     }
 
-    method c106 {args} {
-        lassign $args jc_status tm_status
+    method c106 {jc_status tm_status} {
 
         lassign $jc_status queued njobs pending
         lassign $tm_status nrthreads nithreads
@@ -150,8 +150,8 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt $bottom_txt]
     }
 
-    method c108 {args} {
-        set entities_l [lmap e {*}$args {
+    method c108 {entities_l} {
+        set entities_l [lmap e $entities_l {
             lassign $e eid description nrecs
             list $eid [my TrimDescription $description] $nrecs
         }]
@@ -173,9 +173,7 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
-    method c110 {args} {
-        set tasks_l {*}$args
-
+    method c110 {tasks_l} {
         set tasks_l [concat $report_a(110.capts) $tasks_l]
         if {[llength $tasks_l] > 0} {
             $data_matrix deserialize [list [llength $tasks_l] 5 $tasks_l]
@@ -217,8 +215,7 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
-    method c114 {args} {
-        set jobs_l {*}$args
+    method c114 {jobs_l} {
         if {[llength $jobs_l] == 0} { return [my SingleLine "114" "No Jobs Running"] }
 
         set jobs_t $report_a(114.capts)
