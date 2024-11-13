@@ -250,9 +250,14 @@ oo::define ngis::HRFormat {
 
         set reports_pack_l {}
         foreach serv_d $services_l {
+
+            # the table data are built here. All the rest is just report formatting
+
             set service_table_l [lmap f $service_fields_l {
                 list $legend_a($f) [dict get $serv_d $f]
             }]
+
+            # report generation
 
             $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
             set report_txt [$report_a(two_columns) printmatrix $data_matrix]
