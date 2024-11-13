@@ -151,7 +151,7 @@ package require ngis::utils
             
             puts "read from socket: >$msg<"
 
-            if {[catch { set ret2client [$protocol parse_cmd $msg] } e einfo]} {
+            if {[catch { set ret2client [$protocol parse_exec_cmd $msg] } e einfo]} {
                 puts "e: $e"
                 puts "einfo: $einfo"
 

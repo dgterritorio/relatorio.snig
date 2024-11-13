@@ -1,6 +1,9 @@
 # protocol.tcl --
 #
-#
+# The server creates an instance of protocol for each connection
+# The overhead of doing this is justified by the small number of
+# connections simultaneously open on the server with the benefit of
+# not keeping track of a session state
 #
 #
 
@@ -109,13 +112,16 @@ oo::define ngis::Protocol {
         return [list $retstatus $gids_l $eids_l $resources_l]
     }
 
-    method parse_cmd {cmd_line} {
+    method parse_exec_cmd {cmd_line} {
         set cmd_line [string trim $cmd_line]
         puts "msg >$cmd_line< ([string length $cmd_line])"
         if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
             return "101: unrecognized command '$cmd_line'"
         } else {
             
+            # we require the protocol command to be strictly uppercase for
+            # best reading of errors and log lines
+
             if {[regexp {^([A-Z]+)\s+(.*)$} $cmd_line m cmd arguments] == 0} {
                 set arguments ""
             }
