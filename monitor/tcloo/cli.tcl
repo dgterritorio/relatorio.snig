@@ -16,7 +16,7 @@ package require ngis::common
     constructor {} {
         set cli_cmds [dict create  \
                     CHECK   [dict create cmd CHECK     has_args yes   description "Starts Monitoring Jobs" help check.md] \
-                    ENTITIES [dict create cmd ENTITIES  has_args maybe description "List Entities" help le.md] \
+                    ENTITIES [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
                     FORMAT  [dict create cmd FORMAT    has_args maybe description "Set/Query message format" help format.md] \
                     JOBLIST [dict create cmd JOBLIST   has_args maybe description "List Running Jobs" help jl.md] \
                     REGTASK [dict create cmd REGTASKS  has_args no    description "List registered tasks" help lt.md ] \
@@ -99,7 +99,7 @@ package require ngis::common
         dict with command_d {
             set nargs [llength $cmd_args]
 
-            # we first examine the case of special inner commands (protocol command cmd = "")
+            # we first examine the case of special inner commands (method key existing)
 
             if {[dict exists $command_d method]} {
                 switch $method {
