@@ -6,6 +6,7 @@
 
 package require TclOO
 package require ngis::conf
+package require ngis::common
 
 ::oo::class create ::ngis::CLI {
     variable cli_cmds 
@@ -14,22 +15,22 @@ package require ngis::conf
 
     constructor {} {
         set cli_cmds [dict create  \
-        CHECK   [dict create cmd CHECK     has_args yes   description "Starts Monitoring Jobs" help check.md] \
-        ENTITIES [dict create cmd ENTITIES  has_args maybe description "List Entities" help le.md] \
-        FORMAT  [dict create cmd FORMAT    has_args maybe description "Set/Query message format" help format.md] \
-        JOBLIST [dict create cmd JOBLIST   has_args maybe description "List Running Jobs" help jl.md] \
-        REGTASK [dict create cmd REGTASKS  has_args no    description "List registered tasks" help lt.md ] \
-        RUNSEQ  [dict create cmd QUERY     has_args no    description "Query Sequence Execution Status" help qs.md] \
-        STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
-        SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
-        TASKRES [dict create cmd QTASK     has_args yes   description "Display Task results" help tsk.md] \
-        SERVICE [dict create cmd QSERVICE  has_args yes   description "Query Service Data" help url.md] \
-        X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
-        WHOS    [dict create cmd WHOS      has_args no    description "List Active Connections" help w.md] \
-        ZZ      [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
-                                                          method send_custom_cmd help zz.md] \
-        HELP    [dict create cmd ?         has_args maybe  description "List CLI Commands" \
-                                                          method cli_help help help.md]]
+                    CHECK   [dict create cmd CHECK     has_args yes   description "Starts Monitoring Jobs" help check.md] \
+                    ENTITIES [dict create cmd ENTITIES  has_args maybe description "List Entities" help le.md] \
+                    FORMAT  [dict create cmd FORMAT    has_args maybe description "Set/Query message format" help format.md] \
+                    JOBLIST [dict create cmd JOBLIST   has_args maybe description "List Running Jobs" help jl.md] \
+                    REGTASK [dict create cmd REGTASKS  has_args no    description "List registered tasks" help lt.md ] \
+                    RUNSEQ  [dict create cmd QUERY     has_args no    description "Query Sequence Execution Status" help qs.md] \
+                    STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
+                    SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
+                    TASKRES [dict create cmd QTASK     has_args yes   description "Display Task results" help tsk.md] \
+                    SERVICE [dict create cmd QSERVICE  has_args yes   description "Query Service Data" help url.md] \
+                    X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
+                    WHOS    [dict create cmd WHOS      has_args no    description "List Active Connections" help w.md] \
+                    ZZ      [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
+                                                                      method send_custom_cmd help zz.md] \
+                    HELP    [dict create cmd ?         has_args maybe  description "List CLI Commands" \
+                                                                      method cli_help help help.md]]
 
         set cmds_list [lsort [dict keys $cli_cmds]]
 
@@ -46,8 +47,12 @@ package require ngis::conf
 
     method SearchCommand {cli_cmd} {
 
+        # we first try to resolve the command as an alias
+
+        set cli_cmd [::ngis::CLIAliases resolve_alias $cli_cmd]
+
         # unefficiently (we need a struct::tree for this!) but effectively 
-        # we identify shortened forms of a command and in case dispatch to it
+        # we identify shortened forms of a command and in case autocomplete it,
         # otherwise we return the 'command not found' error
 
         set nch 0
@@ -80,7 +85,7 @@ package require ngis::conf
             set cmd_args   ""
         } else {
             set parsed_cmd  [string range $cli_line 0 $first_space-1]
-            #set parsed_cmd  [string toupper [lindex $clicmd 0]]
+            #set parsed_cmd  [string toupper [lindex $clicmd 0]
             set cmd_args    [string range $cli_line $first_space+1 end]
         }
 

@@ -197,5 +197,24 @@ namespace eval ::ngis {
         namespace ensemble create
     }
 
+    namespace eval CLIAliases {
+        variable aliases [dict create ? HELP JL JOBLIST SX SHUT]
+
+        proc resolve_alias {cmd} {
+            variable aliases
+
+            set ucmd [string toupper $cmd]
+            if {[dict exists $aliases $ucmd]} {
+                return [dict get $aliases $ucmd]
+            }
+
+            # we haven't found it. We return the command
+            # in its original form
+            return $cmd
+        }
+        namespace export *
+        namespace ensemble create
+    }
+
 }
 package provide ngis::common 1.0
