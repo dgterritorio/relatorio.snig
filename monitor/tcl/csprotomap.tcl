@@ -9,7 +9,6 @@ namespace eval ::ngis::ClientServerProtocolMap {
 
     set cli_cmds [dict create  \
                 CHECK   [dict create cmd CHECK     has_args yes   description "Starts Monitoring Jobs" help check.md] \
-                ENTITIES [dict create cmd ENTITIES has_args maybe description "List Entities" help le.md] \
                 FORMAT  [dict create cmd FORMAT    has_args maybe description "Set/Query message format" help format.md] \
                 JOBLIST [dict create cmd JOBLIST   has_args maybe description "List Running Jobs" help jl.md] \
                 REGTASK [dict create cmd REGTASKS  has_args no    description "List registered tasks" help lt.md ] \
@@ -24,6 +23,7 @@ namespace eval ::ngis::ClientServerProtocolMap {
                                                                   method send_custom_cmd help zz.md] \
                 HELP    [dict create cmd ?         has_args maybe description "List CLI Commands" \
                                                                   method cli_help help help.md]]
+
 
     proc build_proto_map {} {
         set cs_map_d [dict create]
@@ -40,7 +40,16 @@ namespace eval ::ngis::ClientServerProtocolMap {
 
     proc map {} {
         variable cli_cmds
+        
+        set cmd_flist [glob [file join tcloo commands *.tcl]]
+        foreach f $cmd_flist {
+            source $f
 
+            set cmd_d [::ngis::client_server::tmp::identify]
+            set cli   [dict get $cmd_d cli_cmd]
+            dict unset cmd_d cli_cmd
+            dict set cli_cmds $cli $cmd_d
+        }
         return $cli_cmds
     }
 

@@ -23,6 +23,9 @@ namespace eval ::ngis::client_server {
     }
 
     namespace eval tmp {
+        proc identify {} {
+            return [dict create cli_cmd ENTITIES cmd ENTITIES has_args maybe description "List Entities" help le.md]
+        }
         proc mk_cmd_obj {} {
             return [::ngis::client_server::ListEntities create ::ngis::clicmd::ENTITIES]
         }
