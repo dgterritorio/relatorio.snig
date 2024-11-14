@@ -4,6 +4,8 @@ package require syslog
 
 set current_dir [file normalize [file dirname [info script]]]
 
+# this is important
+
 cd $current_dir
 
 set current_dir_pos [lsearch $auto_path $current_dir]
@@ -16,9 +18,15 @@ if {$current_dir_pos < 0} {
 package require ngis::common
 package require ngis::server
 package require ngis::task
-
+package require ngis::csprotomap
 
 set ::ngis_server [::ngis::Server create ::ngis_server]
+
+# load client server protocol 
+
+# temporarily we place the cs protocol map in the global namespace
+
+set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map]
 
 # load the task database
 
@@ -32,7 +40,6 @@ if {[file exists [file join $::ngis::data_root tmp]] == 0} {
 if {[file exists [file join $::ngis::data_root data]] == 0} {
     file mkdir [file join $::ngis::data_root data]
 }
-
 
 syslog -ident snig -facility user info "SNIG Monitor Start"
 

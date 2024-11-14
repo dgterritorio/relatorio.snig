@@ -20,6 +20,8 @@ package require ngis::utils
 
 ::oo::class create ::ngis::Server 
 
+puts "Protocol: [package present ngis::protocol]"
+
 ::oo::define ::ngis::Server {
     variable connections_db [dict create]
     variable job_controller
