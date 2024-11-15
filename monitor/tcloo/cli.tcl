@@ -15,7 +15,7 @@ package require ngis::csprotomap
     variable cmds_list
 
     constructor {} {
-        set cli_cmds    [::ngis::ClientServerProtocolMap map]
+        set cli_cmds    [::ngis::ClientServerProtocolMap cli_map]
         set cmds_list   [lsort [dict keys $cli_cmds]]
 
         set docs_base $::ngis::docs_base

@@ -35,10 +35,11 @@ namespace eval ::ngis::ClientServerProtocolMap {
             set cmd_obj [::ngis::client_server::tmp::mk_cmd_obj]
             dict set cs_map_d [namespace tail $cmd_obj] $cmd_obj
         }
+        namespace delete ::ngis::client_server::tmp
         return $cs_map_d
     }
 
-    proc map {} {
+    proc cli_map {} {
         variable cli_cmds
         
         set cmd_flist [glob [file join tcloo commands *.tcl]]
@@ -50,6 +51,7 @@ namespace eval ::ngis::ClientServerProtocolMap {
             dict unset cmd_d cli_cmd
             dict set cli_cmds $cli $cmd_d
         }
+        namespace delete ::ngis::client_server::tmp
         return $cli_cmds
     }
 
