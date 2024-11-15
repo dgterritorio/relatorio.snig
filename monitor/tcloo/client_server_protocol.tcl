@@ -12,8 +12,6 @@ package require ngis::csprotomap
 package require ngis::hrformat
 package require ngis::jsonformat
 
-#catch { ::ngis::Protocol destroy }
-
 oo::class create ngis::Protocol
 
 oo::define ngis::Protocol {
@@ -32,8 +30,7 @@ oo::define ngis::Protocol {
         set formatter $hr_formatter
     }
 
-    destructor {
-    }
+    destructor { }
 
     method format {} {
         return [$formatter format]
@@ -52,6 +49,8 @@ oo::define ngis::Protocol {
             }
         }
     }
+
+    method current_formatter {} { return $formatter }
 
     # resource_check_parser (and loader, see below)
     #
@@ -183,105 +182,10 @@ oo::define ngis::Protocol {
                         return [$formatter c$code $a]
                     }
                 }
-                JOBLIST {
-                    set job_controller [$::ngis_server get_job_controller]
-                    set job_sequences [$job_controller job_sequences]
-                    set jobs_l [lmap s $job_sequences {
-                        set aj [$s active_jobs]
-                        lmap j $aj {
-                            set sj [$j serialize]
-                            dict with sj {
-                                list $gid $description $uri_type $version $job_status $timestamp
-                            }
-                        }
-                    }]
-                    set jobs_l [eval concat $jobs_l]
-                    return [$formatter c114 $jobs_l]
-                }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
                     ::ngis::logger emit "got a 'stop_operations' signal"
                     return [$formatter c502]
-                }
-                QUERY {
-                    set jc_status [[$::ngis_server get_job_controller] status]
-                    set tm_status [[$::ngis_server get_job_controller] status "thread_master"]
-                    return [$formatter c106 $jc_status $tm_status]
-                }
-                QSERVICE {
-                    # returns data regarding a series of service records (as specified by
-                    # mixed forms arguments in analogy with command CHECK)
-
-                    set parsed_results [lassign [my resource_check_parser $arguments "services"] res_status]
-                    if {$res_status == "OK"} {
-
-                        # the call to 'resource_check_parser' guarantees that
-                        # in case of success the 3 list gids_l eids_l services_l
-                        # are defined, at least as empty lists
-
-                        lassign $parsed_results gids_l eids_l services_l
-                        if {[llength $gids_l]} {
-                            foreach gid $gids_l {
-
-                                # ::ngis::service::service_data returns a *list* of service records
-                                # even when this list is made of a single element
-
-                                lappend services_l {*}[::ngis::service service_data $gid]
-                            }
-                        }
-                        return [$formatter c116 $services_l]
-                    } else {
-                        lassign $parsed_results code a
-                        return [$formatter c${code} $a]
-                    }
-                }
-                QTASK {
-                    # unlike QSERVICE command QTASK accepts only one argument
-                    # and it must be the gid of the associated service
-                    set parsed_results [lassign [my resource_check_parser $arguments "services"] res_status]
-                    if {$res_status == "OK"} {
-
-                        # after all for this command we are interested only in the gid value
-                        # returned by resource_check_parser and we don't event consider the
-                        # last 2 lists of parsed results
-
-                        lassign $parsed_results gids_l
-                        set services_l [::ngis::service service_data [lindex $gids_l 0]]
-    
-                        # ::ngis::service::service_data returns a *list* of service records
-                        # even when this list is made of a single element. In this case
-                        # we expect to get just one service record
-
-                        return [$formatter c118 [lindex $services_l 0]]
-                    } else {
-
-                        # in case of error resource_check_parser may return a 109 error
-                        # It's stored in the 'code' variable
-
-                        lassign $parsed_results code a
-                        return [$formatter c${code} $a]
-                    }
-                }
-                FORMAT {
-                    if {[string length $arguments] == 0} {
-                        return [$formatter c104 [$formatter format]]
-                    } else {
-                        set fmt $arguments
-                        switch -nocase $fmt {
-                            HR   { set formatter $hr_formatter }
-                            JSON { set formatter $json_formatter }
-                            default {
-                                return [$formatter c113 $fmt]
-                            }
-                        }
-                        return [$formatter c104 [$formatter format]]
-                    }
-                }
-                WHOS {
-                    return [$formatter c112 [$::ngis_server whos]]
-                }
-                SET {
-
                 }
                 EXIT {
                     $::ngis_server shutdown

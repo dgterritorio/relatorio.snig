@@ -17,6 +17,6 @@ package ifneeded ngis::hrformat         0.5 [list source [file join $dir tcloo h
 package ifneeded ngis::jsonformat       0.1 [list source [file join $dir tcloo jsonformat.tcl]]
 package ifneeded ngis::common           1.0 [list source [file join $dir common.tcl]]
 package ifneeded ngis::cli              0.1 [list source [file join $dir tcloo cli.tcl]]
-package ifneeded ngis::utils            0.2 [list source [file join $dir utils snigutils.tcl]]
+package ifneeded ngis::utils            0.3 [list source [file join $dir utils snigutils.tcl]]
 package ifneeded ngis::csprotomap       1.0 [list source [file join $dir tcl csprotomap.tcl]]
 package ifneeded ngis::protocol         2.0 [list source [file join $dir tcloo client_server_protocol.tcl]]

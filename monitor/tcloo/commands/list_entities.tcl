@@ -1,3 +1,8 @@
+# list_entities.tcl --
+#
+#
+#
+#
 
 package require ngis::servicedb
 

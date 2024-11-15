@@ -25,6 +25,8 @@ puts "Protocol: [package present ngis::protocol]"
 ::oo::define ::ngis::Server {
     variable connections_db [dict create]
     variable job_controller
+    variable current_connection
+    variable protocol
     variable nseq
     variable ds_nseq
     variable start_time
@@ -33,11 +35,14 @@ puts "Protocol: [package present ngis::protocol]"
         set nseq    -1
         set ds_nseq -1
         set start_time [clock seconds]
+        set current_connection ""
+        set protocol [ngis::Protocol::mkprotocol]
     }
 
     method RegisterConnection {con ctype} {
         puts "registering connection $con"
-        dict set connections_db $con protocol [ngis::Protocol::mkprotocol]
+        dict set connections_db $con format   HR
+        #dict set connections_db $con protocol [ngis::Protocol::mkprotocol]
         dict set connections_db $con login    [clock seconds]
         dict set connections_db $con type     $ctype
         dict set connections_db $con ncmds    0
@@ -58,7 +63,6 @@ puts "Protocol: [package present ngis::protocol]"
 
     method RemoveConnection {con} {
         if {[dict exists $connections_db $con]} {
-            [dict get $connections_db $con protocol] destroy
             dict unset connections_db $con
         }
     }
@@ -67,8 +71,28 @@ puts "Protocol: [package present ngis::protocol]"
         return [dict get $connections_db $con]
     }
 
-    method get_protocol {con} {
-        return [dict get $connections_db $con protocol]
+    #method get_protocol {con} {
+    #    return [dict get $connections_db $con protocol]
+    #}
+
+    method get_connection_format {} {
+        if {$current_connection != ""} {
+            # ASSERT: the current_connection key
+            # must be defined in the connections db
+            return [dict get $connections_db $current_connection format]
+        }
+        return ""
+    }
+
+    method set_connection_format {fmt} {
+        if {$current_connection != ""} {
+            # ASSERT: the current_connection key
+            # must be defined in the connections db
+            # and fmt must be either HR or JSON
+            dict set connections_db $current_connection format $fmt
+
+            $protocol set_format $fmt
+        }
     }
 
     method send_to_client {con msg} {
@@ -92,9 +116,8 @@ puts "Protocol: [package present ngis::protocol]"
                 #  + idle time
 
                 set idle_time_s [::ngis::utils::delta_time_s [expr [clock seconds] - $last_cmd]]
-
-                lappend whos_l [list [clock format $login -format "%d-%m-%Y %H:%M:%S"] \
-                                     $type $ncmds [$protocol format] $idle_time_s]
+                set datetime    [clock format $login -format "%d-%m-%Y %H:%M:%S"]
+                lappend whos_l [list $datetime $type $ncmds $format $idle_time_s]
             }
         }
         return $whos_l
@@ -125,7 +148,19 @@ puts "Protocol: [package present ngis::protocol]"
         }
     }
 
+    # chan_is_readable --
+    #
+    # method invoked as callback by the I/O system. The Tcl channel 'con'
+    # is the key to access the database of connections and protocol
+    # setting. This procedure and subsequent command elaboration (method
+    # parse_exec_cmd) is synchronous, so we can assume that current_connection
+    # is not going to change during a message elaboration. This simplification
+    # comes at the cost of blocking the event loop and therefore we need  
+    # to pay close attention to delays and in perspective redesign the
+    
+
     method chan_is_readable {con} {
+        set current_connection $con
         if {[chan eof $con]} {
 
             ::ngis::logger emit "eof detected on channel $con"
@@ -133,44 +168,47 @@ puts "Protocol: [package present ngis::protocol]"
             my RemoveConnection $con
             return
 
-        }
-
-        if {[catch {gets $con msg} e einfo]} {
-
-            ::ngis::logger emit "error detected on 'gets <channel>': $e"
-            chan close $con
-            my RemoveConnection $con
-
-        } elseif {$e > 0}  {
-
-            my UpdateConnection $con
-            my UpdateConnectionTimestamp $con
-
-            ::ngis::logger emit "Got $e chars in message \"$msg\" from $con"
-            #eval my cmd_parser $con $msg
-
-            set protocol [my get_protocol $con]
-            
-            puts "read from socket: >$msg<"
-
-            if {[catch { set ret2client [$protocol parse_exec_cmd $msg] } e einfo]} {
-                puts "e: $e"
-                puts "einfo: $einfo"
-
-                ::ngis::logger emit $e
-                my send_to_client $con [$protocol compose 501 $e $einfo]
-            } else {
-                my send_to_client $con $ret2client
-            }
-
         } else {
 
-            # this might happen when the client issues a chan close command
-            # but no data were in the socket buffer
+            if {[catch {gets $con msg} e einfo]} {
 
-            ::ngis::logger emit "empty line on read, ignoring"
-            #catch {my send_to_client $con "empty line on read, ignoring"}
+                ::ngis::logger emit "error detected on 'gets <channel>': $e"
+                chan close $con
+                my RemoveConnection $con
+
+            } elseif {$e > 0} {
+
+                my UpdateConnection $con
+                my UpdateConnectionTimestamp $con
+
+                ::ngis::logger emit "Got $e chars in message \"$msg\" from $con"
+
+                #set protocol [my get_protocol $con]
+                my set_connection_format [dict get $connections_db $con format]
+
+                puts "read from socket: >$msg<"
+
+                if {[catch { set ret2client [$protocol parse_exec_cmd $msg] } e einfo]} {
+                    puts "error: $e"
+                    puts "einfo: $einfo"
+
+                    ::ngis::logger emit $e
+                    my send_to_client $con [[$protocol current_formatter] c501 $e]
+                } else {
+                    my send_to_client $con $ret2client
+                }
+
+            } else {
+
+                # this might happen when the client issues
+                # a chan close command but no data were in
+                # the socket buffer
+
+                ::ngis::logger emit "empty line on read, ignoring"
+            }
         }
+
+        set current_connection ""
     }
 
     method get_job_controller {} { return $job_controller }
