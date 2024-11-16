@@ -155,8 +155,6 @@ namespace eval ::ngis::utils {
         }
         return [list $retstatus $gids_l $eids_l $resources_l]
     }
-
-
 }
 
 package provide ngis::utils 0.3

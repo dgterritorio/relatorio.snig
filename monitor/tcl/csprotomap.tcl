@@ -8,7 +8,6 @@ namespace eval ::ngis::ClientServerProtocolMap {
     variable cli_cmds
 
     set cli_cmds [dict create  \
-                CHECK   [dict create cmd CHECK     has_args yes   description "Starts Monitoring Jobs" help check.md] \
                 STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
                 SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
                 X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
