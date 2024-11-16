@@ -1,7 +1,6 @@
 
 package ifneeded ngis::procedures       0.2 [list source [file join $dir tcl procedures.tcl]]
 package ifneeded ngis::msglogger        0.1 [list source [file join $dir tcl ngis_msglogger.tcl]]
-package ifneeded ngis::protocol         1.1 [list source [file join $dir tcloo protocol.tcl]]
 package ifneeded termio                 1.1 [list source [file join $dir tcl termio.tcl]]
 package ifneeded ngis::conf             1.1 [list source [file join $dir ngis_monitor_conf.tcl]]
 package ifneeded ngis::job              1.1 [list source [file join $dir tcloo job.tcl]]
