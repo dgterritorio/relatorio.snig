@@ -9,13 +9,14 @@ namespace eval ::ngis::client_server {
 
     ::oo::class create CheckService {
 
-        method SingleServiceChecks {services_l} {
+        method SingleServiceChecks {service_l} {
             set jseq_des "Series of [llength $service_l] records"
             # if it's a single service job we set as job sequence description
             # the 'description' columns in table uris_long
             if {[llength $service_l] == 1} {
                 set jseq_des [::ngis::service get_description [lindex $service_l 0]]
             }
+            set job_controller [$::ngis_server get_job_controller]
             $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd]   \
                             [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $service_l]  \
                             $jseq_des]
@@ -26,6 +27,7 @@ namespace eval ::ngis::client_server {
             if {[dict size $entity_d] > 0} {
                 set entity [::ngis::service::entity get_description $entity_d]
                 set resultset [::ngis::service load_by_entity $eid -resultset]
+                set job_controller [$::ngis_server get_job_controller]
                 $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
                                 [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
             } else {
@@ -75,7 +77,9 @@ namespace eval ::ngis::client_server {
         proc identify {} {
             return [dict create cli_cmd CHECK cmd CHECK has_args yes description "Starts Monitoring Jobs" help check.md]
         }
-
+        proc mk_cmd_obj {} {
+            return [::ngis::client_server::CheckService create ::ngis::clicmd::CHECK]
+        }
     }
 
 }

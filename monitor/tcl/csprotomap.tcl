@@ -6,22 +6,40 @@
 
 namespace eval ::ngis::ClientServerProtocolMap {
     variable cli_cmds
+    variable verbose    false
 
     set cli_cmds [dict create  \
-                STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
-                SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
-                X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
-                ZZ      [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
-                                                                  method send_custom_cmd help zz.md] \
-                HELP    [dict create cmd ?         has_args maybe description "List CLI Commands" \
-                                                                  method cli_help help help.md]]
+            STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
+            SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
+            X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
+            ZZ      [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
+                                                              method send_custom_cmd help zz.md] \
+            HELP    [dict create cmd ?         has_args maybe description "List CLI Commands" method cli_help help help.md]]
 
 
-    proc build_proto_map {} {
+    proc process_args {args} {
+        variable verbose
+
+        while {[llength $args] > 0} {
+            set args [lassign $args a]
+            if {$a == "-verbose"} {
+                set args [lassign $args v]
+                set verbose [string is true $v]
+            }
+        }
+
+    }
+
+    proc build_proto_map {args} {
+        variable verbose
+
+        process_args {*}$args
+
         set cs_map_d [dict create]
 
         set cmd_flist [glob [file join tcloo commands *.tcl]]
         foreach f $cmd_flist {
+            if {$verbose} { puts "sourcing $f" }
             source $f
 
             set cmd_obj [::ngis::client_server::tmp::mk_cmd_obj]
@@ -31,11 +49,13 @@ namespace eval ::ngis::ClientServerProtocolMap {
         return $cs_map_d
     }
 
-    proc cli_map {} {
+    proc cli_map {args} {
+        variable verbose
         variable cli_cmds
         
         set cmd_flist [glob [file join tcloo commands *.tcl]]
         foreach f $cmd_flist {
+            if {$verbose} { puts "sourcing $f" }
             source $f
 
             set cmd_d [::ngis::client_server::tmp::identify]
