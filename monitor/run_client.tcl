@@ -16,7 +16,7 @@ package require ngis::conf
 package require ngis::cli
 
 namespace eval ::ngis::cli {
-    variable cli [::ngis::CLI create ::cli]
+    variable cli [::ngis::CLI create ::cli $snig_monitor_dir]
 }
 
 set ::the_client [::ngis::Client new]

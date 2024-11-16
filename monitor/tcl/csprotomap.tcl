@@ -30,14 +30,14 @@ namespace eval ::ngis::ClientServerProtocolMap {
 
     }
 
-    proc build_proto_map {args} {
+    proc build_proto_map {monitor_dir args} {
         variable verbose
 
         process_args {*}$args
 
         set cs_map_d [dict create]
 
-        set cmd_flist [glob [file join tcloo commands *.tcl]]
+        set cmd_flist [glob [file join $monitor_dir tcloo commands *.tcl]]
         foreach f $cmd_flist {
             if {$verbose} { puts "sourcing $f" }
             source $f
@@ -49,11 +49,11 @@ namespace eval ::ngis::ClientServerProtocolMap {
         return $cs_map_d
     }
 
-    proc cli_map {args} {
+    proc cli_map {monitor_dir args} {
         variable verbose
         variable cli_cmds
         
-        set cmd_flist [glob [file join tcloo commands *.tcl]]
+        set cmd_flist [glob [file join $monitor_dir tcloo commands *.tcl]]
         foreach f $cmd_flist {
             if {$verbose} { puts "sourcing $f" }
             source $f

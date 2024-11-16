@@ -2,17 +2,17 @@
 
 package require syslog
 
-set current_dir [file normalize [file dirname [info script]]]
+set snig_monitor_dir [file normalize [file dirname [info script]]]
 
 # this is important
 
-cd $current_dir
+cd $snig_monitor_dir
 
-set current_dir_pos [lsearch $auto_path $current_dir]
-if {$current_dir_pos < 0} {
-    set auto_path [concat $current_dir $auto_path]
-} elseif {$current_dir_pos > 0} {
-    set auto_path [concat $current_dir [lreplace $auto_path $current_dir_pos $current_dir_pos]]
+set snig_monitor_dir_pos [lsearch $auto_path $snig_monitor_dir]
+if {$snig_monitor_dir_pos < 0} {
+    set auto_path [concat $snig_monitor_dir $auto_path]
+} elseif {$snig_monitor_dir_pos > 0} {
+    set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
 }
 
 package require ngis::common
@@ -26,11 +26,11 @@ set ::ngis_server [::ngis::Server create ::ngis_server]
 
 # temporarily we place the cs protocol map in the global namespace
 
-set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map -verbose true]
+set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map $snig_monitor_dir -verbose true]
 
 # load the task database
 
-::ngis::tasks build_tasks_database [list [file join $current_dir tasks]]
+::ngis::tasks build_tasks_database [list [file join $snig_monitor_dir tasks]]
 
 # create data root
 
