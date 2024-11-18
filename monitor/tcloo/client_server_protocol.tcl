@@ -78,7 +78,7 @@ oo::define ngis::Protocol {
                     ::ngis::logger emit "got a 'stop_operations' signal"
                     return [$formatter c502]
                 }
-                EXIT {
+                SHUTDWN {
                     $::ngis_server shutdown
                     return [$formatter c100]
                 }

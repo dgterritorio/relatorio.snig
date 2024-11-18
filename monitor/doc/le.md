@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | List Registered Entities
+% @CMD@(snig) Version 1.0 | List Registered Entities
 
 NAME
 ====

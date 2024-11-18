@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | List Connected Sessions
+% @CMD@(snig) Version 1.0 | List Connected Sessions
 
 NAME
 ====

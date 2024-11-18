@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | Stop Operation Command
+% @CMD@(snig) Version 1.0 | Stop Operation Command
 
 NAME
 ====

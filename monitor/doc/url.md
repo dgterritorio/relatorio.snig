@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | Display Service Data and Status
+% @CMD@(snig) Version 1.0 | Display Service Data and Status
 
 NAME
 ====

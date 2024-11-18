@@ -9,12 +9,12 @@ namespace eval ::ngis::ClientServerProtocolMap {
     variable verbose    false
 
     set cli_cmds [dict create  \
-            STOP    [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
-            SHUT    [dict create cmd EXIT      has_args no    description "Immediate Client and Server termination" help sx.md] \
-            X       [dict create cmd X         has_args no    description "Exit client" help x.md method stop_client] \
-            ZZ      [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
+            STOP        [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
+            SHUTDOWN    [dict create cmd SHUTDWN   has_args no    description "Immediate Client and Server termination" help sx.md] \
+            EXIT        [dict create cmd EXIT      has_args no    description "Exit client" help x.md method stop_client] \
+            ZZ          [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
                                                               method send_custom_cmd help zz.md] \
-            HELP    [dict create cmd ?         has_args maybe description "List CLI Commands" method cli_help help help.md]]
+            HELP        [dict create cmd ?         has_args maybe description "List CLI Commands" method cli_help help help.md]]
 
 
     proc process_args {args} {

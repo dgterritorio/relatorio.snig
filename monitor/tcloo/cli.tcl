@@ -115,7 +115,7 @@ package require ngis::csprotomap
 
                                     # sed command to substitute symbols in the man pages
 
-                                    set sed_cmd [list   "sed" "-e s/@CMD@/$help_cmd/g" \
+                                    set sed_cmd [list   "sed" "-e s/@CMD@/$cmd_completed/g" \
                                                         "-e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g" \
                                                         "-e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"]
                                     set sed_cmd [join $sed_cmd " "]

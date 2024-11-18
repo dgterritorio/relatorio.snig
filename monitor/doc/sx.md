@@ -1,4 +1,4 @@
-% @CMD@ Version 1.0 | Forces the server to exit
+% @CMD@(snig) Version 1.0 | Forces the server to exit
 
 NAME
 ====
