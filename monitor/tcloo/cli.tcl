@@ -77,7 +77,7 @@ package require ngis::csprotomap
         if {$cmd_tree_result == "OK"} {
             set command_d $cmd_tree_result_value
         } else {
-            return [list $cmd_tree_result $cmd_tree_result_value]
+            return [list $cmd_tree_result $cmd_completed]
         }        
 
         dict with command_d {
