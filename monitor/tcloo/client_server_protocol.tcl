@@ -83,7 +83,7 @@ oo::define ngis::Protocol {
                     return [$formatter c100]
                 }
                 default {
-                    return [$formatter c101 $msg]
+                    return [$formatter c101 "Unrecognized command $cmd"]
                 }
             }
         }

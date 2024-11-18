@@ -198,7 +198,7 @@ namespace eval ::ngis {
     }
 
     namespace eval CLIAliases {
-        variable aliases [dict create ? HELP JL JOBLIST SX SHUT]
+        variable aliases [dict create ? HELP JL JOBLIST SX SHUTDOWN X EXIT]
 
         proc resolve_alias {cmd} {
             variable aliases
