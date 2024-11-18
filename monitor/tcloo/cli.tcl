@@ -47,7 +47,7 @@ package require ngis::csprotomap
             if {$n_idx == 0} {
                 return [list ERR "Command '$cli_cmd' not found"]
             } elseif {$n_idx == 1} {
-                return [list OK [dict get $cli_cmds [lindex $cmds_list $list_idx]]]
+                return [list OK [lindex $cmds_list $list_idx] [dict get $cli_cmds [lindex $cmds_list $list_idx]]]
             } else {
                 incr nch
             }
@@ -73,7 +73,7 @@ package require ngis::csprotomap
             set cmd_args    [string range $cli_line $first_space+1 end]
         }
 
-        lassign [my SearchCommand [string toupper $parsed_cmd]] cmd_tree_result cmd_tree_result_value
+        lassign [my SearchCommand [string toupper $parsed_cmd]] cmd_tree_result cmd_completed cmd_tree_result_value
         if {$cmd_tree_result == "OK"} {
             set command_d $cmd_tree_result_value
         } else {
@@ -98,15 +98,19 @@ package require ngis::csprotomap
 
                             # we have to search the command
 
-                            lassign [my SearchCommand [string toupper $help_cmd]] cmd_tree_result cmd_tree_result_value
-                            if {$cmd_tree_result == "OK"} {
-                                set help_cmd [dict get $cmd_tree_result_value cmd]
-                            } else {
+                            set help_cmd [string toupper [string toupper $help_cmd]]
+
+                            lassign [my SearchCommand $help_cmd] cmd_tree_result cmd_completed cmd_tree_result_value
+                            puts "cmd_tree_result: $cmd_tree_result, cmd_tree_result_value: $cmd_tree_result_value"
+                            if {$cmd_tree_result != "OK"} {
+                                #set help_cmd [dict get $cmd_tree_result_value cmd]
                                 return [list ERR "Unrecognized command '$help_cmd'"
                             }
 
-                            if {[dict exists $cli_cmds $help_cmd]} {
-                                set help_file [file join $docs_base [dict get $cli_cmds $help_cmd help]]
+                            puts "help_cmd: $cmd_completed"
+
+                            if {[dict exists $cli_cmds $cmd_completed]} {
+                                set help_file [file join $docs_base [dict get $cli_cmds $cmd_completed help]]
                                 if {[file exists $help_file] && [file readable $help_file]} {
 
                                     # sed command to substitute symbols in the man pages
