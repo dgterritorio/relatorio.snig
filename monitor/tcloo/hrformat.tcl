@@ -304,7 +304,7 @@ oo::define ngis::HRFormat {
                     switch $exit_status {
                         ok      { set highlight   "\x1b\[38;5;0m\x1b\[48;5;42m" }
                         error   { set highlight   "\x1b\[38;5;20m\x1b\[48;5;9m" }
-                        default { set highlight   "\x1b\[38;5;0m\x1b\[48;5;208m" }
+                        default { set highlight   "\x1b\[38;5;0m\x1b\[48;5;226m" }
                     }
                     set column_real_width 10
                     set status_pad_len [expr int(($column_real_width - [string length $exit_status]) / 2)]
@@ -314,8 +314,6 @@ oo::define ngis::HRFormat {
                     set exit_status "${highlight}$exit_status\x1b\[m"
 
                     list $tdescr $exit_status [dict get $tasks_data exit_info] [dict get $tasks_data ts]
-
-                    #list $tdescr {*}$values
                 } else {
                     continue
                 }
