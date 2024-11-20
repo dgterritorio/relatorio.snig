@@ -68,7 +68,13 @@ oo::define ngis::Protocol {
 
             if {[dict exists $::cs_protocol $cmd]} {
                 set cmd_o [dict get $::cs_protocol $cmd]
-                return [eval $formatter [$cmd_o exec {*}$arguments]]
+
+                # we can't write the following line in compact form
+                # as [eval $formatter [$cmd_o exec {*}$arguments]]
+                # since method exec actually may change the format
+
+                set proto_msg [$cmd_o exec {*}$arguments]
+                return [eval $formatter $proto_msg]
             }
 
             puts "arguments: '$arguments' (nargs: [llength $arguments])"

@@ -34,10 +34,10 @@ namespace eval ::rwpage {
 
             if {![dict exists $answer_d code] || \
                 ([dict get $answer_d code] != "104")} {
-                return -code error -errorcode wrong_peer_answer "Server return invalid answer: '$answer'"
+                return -code error -errorcode wrong_peer_answer "Server returned invalid answer: '$answer'"
             }
 
-            chan puts  $con "QURL $service_id"
+            chan puts  $con "QSERVICE $service_id"
             chan flush $con
             set answer ""
             while {[chan gets $con l] > 0} {
@@ -46,6 +46,7 @@ namespace eval ::rwpage {
 
             chan close $con
             set answer_d [::json::json2dict $answer]
+
             set services_l [dict get $answer_d "services"]
 
             # should be just one
@@ -59,7 +60,6 @@ namespace eval ::rwpage {
 
             set service_table_l [lmap f $service_fields_l {
                 set row "<tr><td>$legend_a($f)</td><td>[dict get $service $f]</td></tr>"
-                set row
             }]
             set service_table_l [join $service_table_l "\n"]
             puts "<table>$service_table_l</table>"

@@ -28,7 +28,7 @@ namespace eval ::ngis::client_server {
                         # ::ngis::service::service_data returns a *list* of service records
                         # even when this list is made of a single element
 
-                        lappend services_l {*}[::ngis::service service_data $gid]
+                        lappend services_l [::ngis::service service_data $gid]
                     }
                 }
                 return [list c116 $services_l]
@@ -42,7 +42,7 @@ namespace eval ::ngis::client_server {
 
     namespace eval tmp {
         proc identify {} {
-            return [dict create cli_cmd SERVICE cmd QSERVICE  has_args yes   description "Query Service Data" help url.md] \
+            return [dict create cli_cmd SERVICE cmd QSERVICE has_args yes description "Query Service Data" help url.md]
         }
         proc mk_cmd_obj {} {
             return [::ngis::client_server::Services create ::ngis::clicmd::QSERVICE]

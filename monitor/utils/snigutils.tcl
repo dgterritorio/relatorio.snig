@@ -47,7 +47,7 @@ namespace eval ::ngis::utils {
         if {$days > 0} {
             return [format "%d days, %d hours, %d mins, %d secs" $days $hours $mins $secs]
         } elseif {$hours > 0} {
-            return [format "%%d hours, %d mins, %d secs" $hours $mins $secs]
+            return [format "%d hours, %d mins, %d secs" $hours $mins $secs]
         } elseif {$mins > 0} {
             return [format "%d mins, %d secs" $mins $secs]
         } else {

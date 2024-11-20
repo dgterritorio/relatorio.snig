@@ -244,13 +244,13 @@ oo::define ngis::HRFormat {
     method c116 {services_l} {
         if {[llength $services_l] == 0} { return [my SingleLine "116" "No services found"] }
 
+        #puts ">$services_l<"
         set service_fields_l {gid uuid description uri uri_type version}
         array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
         set fstring [::ngis::reports::get_fmt_string 116]
 
         set reports_pack_l {}
         foreach serv_d $services_l {
-
             # the table data are built here. All the rest is just report formatting
 
             set service_table_l [lmap f $service_fields_l {
