@@ -22,7 +22,7 @@ namespace eval ::ngis::client_server {
                 # even when this list is made of a single element. In this case
                 # we expect to get just one service record
 
-                return [list c118 [lindex $services_l 0]]
+                return [list c118 $services_l]
 
             } else {
 

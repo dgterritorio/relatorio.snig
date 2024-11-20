@@ -278,6 +278,7 @@ oo::define ngis::HRFormat {
     method c118 {service_d} {
         #lassign $args service_d 
         #puts "==========\n$service_d\n========="
+        puts $service_d
         if {[dict size $service_d] == 0} { return [my SingleLine "118" "No services found"] }
 
         # let's extract a few information out of the service
@@ -295,11 +296,26 @@ oo::define ngis::HRFormat {
 
                 if {[dict exists $tasks_d $task]} {
                     set tasks_data [dict get $tasks_d $task]
-                    set values [lmap k {exit_status exit_info ts} {
-                        dict get $tasks_data $k
-                    }]
+                    #set values [lmap k {exit_status exit_info ts} {
+                    #    dict get $tasks_data $k
+                    #}]
 
-                    list $tdescr {*}$values
+                    set exit_status [dict get $tasks_data exit_status]
+                    switch $exit_status {
+                        ok      { set highlight   "\x1b\[38;5;0m\x1b\[48;5;42m" }
+                        error   { set highlight   "\x1b\[38;5;20m\x1b\[48;5;9m" }
+                        default { set highlight   "\x1b\[38;5;0m\x1b\[48;5;208m" }
+                    }
+                    set column_real_width 10
+                    set status_pad_len [expr int(($column_real_width - [string length $exit_status]) / 2)]
+                    set pad [string repeat " " $status_pad_len]
+                    set exit_status "${pad}${exit_status}${pad}"
+                    if {[string length $exit_status] < $column_real_width} { append exit_status " " }
+                    set exit_status "${highlight}$exit_status\x1b\[m"
+
+                    list $tdescr $exit_status [dict get $tasks_data exit_info] [dict get $tasks_data ts]
+
+                    #list $tdescr {*}$values
                 } else {
                     continue
                 }
