@@ -35,9 +35,9 @@ namespace eval ::ngis::service {
         return [$sql_st execute]
     }
 
-    proc update_task_results {tasks_list} {
+    proc update_task_results {task_results_l} {
         set values_l {}
-        foreach t $tasks_list {
+        foreach t $task_results_l {
             set gid    [dict get $t job gid]
             set task   [dict get $t task]
             set status [dict get $t status]
@@ -52,7 +52,7 @@ namespace eval ::ngis::service {
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
         append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info"
-        #puts $sql
+        puts $sql
         set query_res [exec_sql_query $sql]
         $query_res close
 
@@ -241,8 +241,13 @@ namespace eval ::ngis::service {
     # loads services having a given description pattern
 
     proc service_data {pattern} {
-        set     sql [list "SELECT ul.*,ss.* from $::ngis::TABLE_NAME ul"]
+        set ul_columns "ul.*"
+        set ss_columns "ss.ts,ss.task,ss.exit_status,ss.exit_info,ss.uuid"
+        set ent_columns "ent.description entity_definition"
+
+        set     sql [list "SELECT $ul_columns,$ss_columns,$ent_columns from $::ngis::TABLE_NAME ul"]
         lappend sql "JOIN $::ngis::SERVICE_STATUS ss ON ul.gid=ss.gid"
+        lappend sql "JOIN $::ngis::ENTITY_TABLE_NAME ent ON ul.eid=ent.eid"
 
         if {[string is integer $pattern]} {
             lappend sql "WHERE ul.gid=$pattern"
@@ -256,18 +261,39 @@ namespace eval ::ngis::service {
         set services_d [dict create]
         $query_result foreach -as dicts s_d {
             dict with s_d {
+                #puts $s_d
                 if {![dict exists $services_d $gid]} {
-                    dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","]]
+                    dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","] entity_definition]
                     if {![dict exists $services_d $gid description]} {
                         dict set services_d $gid description "undefined description for primary key '$gid'"
+                    }
+                    if {![info exists entity_definition]} {
+                        dict set services_d $gid entity_definition "undefined entity definition (eid=$eid)"
+                    } else {
+                        dict set services_d $gid entity_definition "$entity_definition (eid=$eid)"
                     }
                 }
                 dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
             }
         }
-        #puts $services_d
+
+        $query_result close
         #puts "==========\n$services_d\n========="
-        return {*}[dict values $services_d]
+        #return $services_d
+        return [dict values $services_d]
+    }
+
+    proc remove_task_results {gid tasks_to_purge_l} {
+        set conditions [lmap t $tasks_to_purge_l {
+            set cond "task='$t'"
+        }]
+
+        set where_clause "gid=$gid AND ([join $conditions " OR "])"
+
+        set sql "DELETE FROM $::ngis::SERVICE_STATUS WHERE $where_clause"
+        set query_result [exec_sql_query $sql]
+
+        $query_result close
     }
 
     namespace export *

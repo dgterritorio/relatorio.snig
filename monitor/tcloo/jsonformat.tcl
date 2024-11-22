@@ -186,6 +186,7 @@ oo::define ngis::JsonFormat {
                         dict with s {
                             $json_o map_open    string "gid"    integer $gid    \
                                                 string "description" string $description \
+                                                string "entity"     string  $entity_definition \
                                                 string "uri"        string  $uri    \
                                                 string "uri_type"   string  $uri_type \
                                                 string "version"    string $version \
@@ -214,7 +215,7 @@ oo::define ngis::JsonFormat {
                     $json_o string message string [format $fstring $gid $description $uri_type]
                     $json_o string tasks array_open
 
-                    puts "..........\n$tasks\n........."
+                    #puts "..........\n$tasks\n........."
 
                     if {[info exists tasks]} {
                         foreach t [::ngis::tasks::list_registered_tasks] {

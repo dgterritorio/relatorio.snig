@@ -28,7 +28,7 @@ namespace eval ::ngis::client_server {
                         # ::ngis::service::service_data returns a *list* of service records
                         # even when this list is made of a single element
 
-                        lappend services_l [::ngis::service service_data $gid]
+                        lappend services_l {*}[::ngis::service service_data $gid]
                     }
                 }
                 return [list c116 $services_l]

@@ -11,18 +11,17 @@ namespace eval ::ngis::client_server {
             set parsed_results [lassign [::ngis::utils::resource_check_parser $args "services"] res_status]
             if {$res_status == "OK"} {
 
-                # after all for this command we are interested only in the gid value
-                # returned by resource_check_parser and we don't event consider the
+                # for this protocol command we are interested only in the gid value
+                # returned by resource_check_parser and we don't even consider the
                 # last 2 lists of parsed results
 
                 lassign $parsed_results gids_l
-                set services_l [::ngis::service service_data [lindex $gids_l 0]]
 
                 # ::ngis::service::service_data returns a *list* of service records
                 # even when this list is made of a single element. In this case
                 # we expect to get just one service record
 
-                return [list c118 $services_l]
+                return [list c118 {*}[::ngis::service service_data [lindex $gids_l 0]]]
 
             } else {
 

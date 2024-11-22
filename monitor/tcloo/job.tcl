@@ -99,9 +99,10 @@ package require struct::queue
         set job_controller [$::ngis_server get_job_controller]
         dict with task_d {
             ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
-            set task_result $status
 
+            set task_result $status
             lassign $task_result code
+
             if {$code == "not_applicable"} {
                 ::ngis::logger emit "task not applicable. Results not posted"
             } else {
@@ -110,6 +111,10 @@ package require struct::queue
                 # on an error code we interrupt the job
 
                 if {$code == "error"} {
+                    set tasks_results_to_remove [lrange $tasks_l [lsearch $tasks_l $task]+1 end]
+                    if {[llength $tasks_results_to_remove] > 0} {
+                        $job_controller post_task_results_cleanup [my gid] $tasks_results_to_remove
+                    }
                     my notify_sequence $thread_id
                     return 
                 }

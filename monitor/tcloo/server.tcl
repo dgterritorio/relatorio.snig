@@ -128,9 +128,10 @@ puts "Protocol: [package present ngis::protocol]"
         ::ngis::logger emit "syncing [$result_queue size] results"
         if {[$result_queue size] > 0} {
 
-            # hideous behavior of struct::queue. If it's returning
-            # one element, but it's a list, it becomes a list of elements
-            # It's documented, but still a despicable way Tcl works
+            # hideous behavior of struct::queue. If it's
+            # returning one element, but it's a list, it becomes
+            # a flat list of elements not a 1 element list. 
+            # It's documented, but still a despicable way Tcllib works
 
             if {[$result_queue size] == 1} {
                 set results_l [list [$result_queue get]]
@@ -148,16 +149,21 @@ puts "Protocol: [package present ngis::protocol]"
         }
     }
 
+    method remove_results {gid tasks_to_purge_l} {
+        ::ngis::logger emit "removing [llength $tasks_to_purge_l] results for gid '$gid'"
+        ::ngis::service remove_task_results $gid $tasks_to_purge_l
+    }
+
+
     # chan_is_readable --
     #
-    # method invoked as callback by the I/O system. The Tcl channel 'con'
-    # is the key to access the database of connections and protocol
-    # setting. This procedure and subsequent command elaboration (method
-    # parse_exec_cmd) is synchronous, so we can assume that current_connection
-    # is not going to change during a message elaboration. This simplification
-    # comes at the cost of blocking the event loop and therefore we need  
-    # to pay close attention to delays and in perspective redesign the
-    
+    # socket I/O callback. The Tcl channel reference 'con' is the key to access
+    # the database of connections and protocol setting. This procedure and
+    # subsequent command elaboration (method parse_exec_cmd) is synchronous,
+    # so we can assume that current_connection is not going to change during a
+    # message elaboration. This simplification comes at the cost of blocking
+    # the event loop and therefore we need to pay close attention to delays
+    # and in perspective redesign the I/O handling devolving its tasks to threads
 
     method chan_is_readable {con} {
         set current_connection $con

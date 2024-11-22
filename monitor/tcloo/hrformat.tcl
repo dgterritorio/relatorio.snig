@@ -245,8 +245,10 @@ oo::define ngis::HRFormat {
         if {[llength $services_l] == 0} { return [my SingleLine "116" "No services found"] }
 
         #puts ">$services_l<"
-        set service_fields_l {gid uuid description uri uri_type version}
-        array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
+        set service_fields_l {gid uuid description entity_definition uri uri_type version}
+        array set legend_a [list gid gid description Description \
+                                 entity_definition Entity \
+                                 uri URL uri_type Type version Version uuid uuid]
         set fstring [::ngis::reports::get_fmt_string 116]
 
         set reports_pack_l {}
@@ -302,7 +304,7 @@ oo::define ngis::HRFormat {
 
                     set exit_status [dict get $tasks_data exit_status]
                     switch $exit_status {
-                        ok      { set highlight   "\x1b\[38;5;0m\x1b\[48;5;42m" }
+                        ok      { set highlight   "\x1b\[38;5;42m\x1b\[48;5;0m" }
                         error   { set highlight   "\x1b\[38;5;20m\x1b\[48;5;9m" }
                         default { set highlight   "\x1b\[38;5;0m\x1b\[48;5;226m" }
                     }

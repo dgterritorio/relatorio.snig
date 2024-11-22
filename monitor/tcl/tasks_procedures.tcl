@@ -51,9 +51,12 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
-    ## debug
-    if {[string is true $::ngis::debugging]} { after 15000 }
-    ## debug
+    if {[string is true $::ngis::debugging]} {
+        ## debug
+        after 5000 
+        ## debug
+    } else {
+        after 1000
+    }
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }
-

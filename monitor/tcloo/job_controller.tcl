@@ -85,14 +85,18 @@ namespace eval ::ngis {
 
         method post_task_results {task_results} {
             #::ngis::logger emit "posting task result '$task_results'"
-            
+
             $task_results_queue put $task_results
             if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
                 ($task_results_chore == "")} {
-                after 100 [list $::ngis_server sync_results $task_results_queue] 
+                after 100 [list $::ngis_server sync_results $task_results_queue]
             }
 
             my RescheduleRoundRobin
+        }
+
+        method post_task_results_cleanup {gid tasks_to_purge_l} {
+            after 100 [$::ngis_server remove_results $gid $tasks_to_purge_l]
         }
 
         method move_thread_to_idle {thread_id} {
@@ -125,7 +129,6 @@ namespace eval ::ngis {
                     if {$idx < $sequence_idx} {
                         incr sequence_idx -1
                     }
-
                 }
             }
             $seq destroy
