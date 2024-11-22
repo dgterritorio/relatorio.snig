@@ -17,6 +17,10 @@ namespace eval ::ngis {
 
     variable task_results_queue_size 10
     variable max_workers_number 5
+
+    variable debug_task_delay   5000
+    variable task_delay         100
+
     variable unix_socket_name   /tmp/snig.socket
     variable rescheduling_delay 100
     variable curldir            "" 
