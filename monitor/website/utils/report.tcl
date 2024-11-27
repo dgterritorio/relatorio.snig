@@ -1385,7 +1385,7 @@ proc ::report::FormatCell {value size just} {
     }
 }
 
-proc ::report::TermWidth {string} {
+proc ::report::TermWidth {str} {
     # Look for ANSI color control sequences and remove them. Avoid
     # counting their characters as such sequences as a whole represent
     # a state change, and are logically of zero/no width.
@@ -1396,6 +1396,6 @@ proc ::report::TermWidth {string} {
         set str $element_text
     }
     
-    regsub -all "\033\\\[\[0-9;\]*m" $string {} string
+    regsub -all "\033\\\[\[0-9;\]*m" $str {} string
     return [textutil::wcswidth $string]
 }

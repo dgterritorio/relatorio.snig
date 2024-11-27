@@ -2,7 +2,7 @@
 # -- ./ngis_conf.tcl
 #
 #
-# Configuration file regenerated 08-09-2024 17:15:05 
+# Configuration file regenerated 27-11-2024 16:38:24 
 #
 
 package require ngis::conf::generator
@@ -29,6 +29,11 @@ namespace eval ngis::conf {
 	variable entities_table           "testsuite.entities"                     ;# Entities catalog table
 	variable service_stautus          "testsuite.service_status"               ;# Service Status Records
 	variable uris_table               "testsuite.uris_long"                    ;# URIs catalog table
+
+# -- Section network
+#
+	variable server_ip                "127.0.0.1"                              ;# SNIG Monitor Server
+	variable server_port              4422                                     ;# SNIG Monitor Server Port
 
 # -- Section jquery
 #

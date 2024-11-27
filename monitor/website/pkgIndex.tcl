@@ -9,3 +9,6 @@ package ifneeded DIO                      2.0 [list source [file join $dir gener
 package ifneeded dio_Tdbc                 2.0 [list source [file join $dir generic dio_Tdbc.tcl]]
 package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
 package ifneeded snig::page               1.0 [list source [file join $dir pages snigpage.tcl]]
+package ifneeded snigreport	   			  0.6 [list source [file join $dir utils report.tcl]]
+package ifneeded struct::snigmatrix       2.3 [list source [file join $dir utils matrix.tcl]]
+package ifneeded ngis::trimmers           0.1 [list source [file join $dir utils trimmers.tcl]]

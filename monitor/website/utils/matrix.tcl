@@ -2794,7 +2794,6 @@ proc ::struct::matrix::TermWidth {str} {
     # Further use wcswidth to account for double-wide Asian characters.
     
     # extending to filter markup of a simple HTML element
-    
     if {[regexp {(<\w+\s*.*>)(.*)(</\w+>)} $str -> open_tag element_text close_tag]} {
         set str $element_text
     }

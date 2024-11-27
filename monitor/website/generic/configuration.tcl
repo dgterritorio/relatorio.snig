@@ -11,7 +11,7 @@ namespace eval ::ngis::conf {
     variable currentdefs     [file join . ngis_conf.tcl]
     variable currentdefs_sh  [file join . ngis_conf.sh]
     variable confnamespace   ngis::conf
-    variable section_order   [list website dbauth database jquery]
+    variable section_order   [list website dbauth database network jquery]
     variable dbconfiguration \
         [list   website         {value "http://snig.rivetweb.org:8080" description "Website Name" section website} \
                 encoding        {value "utf-8" description "Website default character encoding" section website } \

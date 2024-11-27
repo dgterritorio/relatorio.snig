@@ -19,4 +19,3 @@ package ifneeded ngis::cli              0.1 [list source [file join $dir tcloo c
 package ifneeded ngis::utils            0.3 [list source [file join $dir utils snigutils.tcl]]
 package ifneeded ngis::csprotomap       1.0 [list source [file join $dir tcl csprotomap.tcl]]
 package ifneeded ngis::protocol         2.0 [list source [file join $dir tcloo client_server_protocol.tcl]]
-package ifneeded ngis::trimmers         0.1 [list source [file join $dir utils trimmers.tcl]]

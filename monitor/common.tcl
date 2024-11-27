@@ -43,6 +43,7 @@ namespace eval ::ngis {
                                             114     "%d Job Executing"          \
                                             116     "%d Matching services found" \
                                             118     "Service %d (%s, type %s)"  \
+                                            120     "Noop command acknoledged"  \
                                             501     "Server internal error: %s" \
                                             502     "Stopping operations"       \
                                             503     "Missing argument for code %d"]

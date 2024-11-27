@@ -3,10 +3,11 @@
 # formatters run within the template namespace and provide template
 # specific formatting of data
 
-source ~/Tcl/htmlrep.tcl
-
 package require ngis::hrformat
 package require ngis::trimmers
+package require textutil
+package require snigreport 0.6
+package require struct::snigmatrix 2.3
 
 variable hr_formatter
 
@@ -15,25 +16,6 @@ set hr_formatter [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
 
 proc entities_table {rows_l} {
     variable hr_formatter
-
-    #set out "<pre>"
-    #foreach r $rows_l {
-    #    lassign $r gid descr uri
-    #
-    #    set uri_d [uri::split $uri]
-    #
-    #    set host ""
-    #    if {[dict exists $uri_d host]} {
-    #        set host [::rivet::xml [dict get $uri_d host] [list a href $uri]]
-    #    }
-
-    #    if {[string length $descr] > 80} {
-    #        set descr "[string range $descr 0 76]..."
-    #    }
-    #    append out [format "%4s %80s %25s\n" $gid $descr $host]
-    #}
-    #append out "</pre>"
-    #return $out
 
     return [$hr_formatter c108 $rows_l]
 }

@@ -21,6 +21,11 @@ fullcal_root="http://jquery.biol.unipr.it"	# Root of FullCalendar code
 jqtimepicker="http://jquery.biol.unipr.it/jquery-timepicker-1.3.5"	# jQuery timepicker
 jquery_root="http://jquery.biol.unipr.it"	# Root of the jQuery library
 
+# -- Section network
+#
+server_ip="127.0.0.1"	# SNIG Monitor Server
+server_port="4422"	# SNIG Monitor Server Port
+
 # -- Section website
 #
 cssprogressive="0"	# CSS progressive number to force reloads

@@ -31,9 +31,9 @@
     }
 
     method trim {str {limit 80}} {
-        set matched [HTMLElementBreakdown $str element_text tag_o tag_c]
-        if {$element_text > $limit} {
-            return "${open_tag}[string range $etext 0 [expr $limit - 4]]...${close_tag}"
+        set matched [my HTMLElementBreakdown $str etext tag_o tag_c]
+        if {[string length $etext] > $limit} {
+            return "${tag_o}[string range $etext 0 [expr $limit - 4]]...${tag_c}"
         } 
         return $str
     }

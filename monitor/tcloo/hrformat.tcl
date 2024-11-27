@@ -21,7 +21,7 @@ oo::define ngis::HRFormat {
                                     102 NoArguments     103 SingleArgument  \
                                     105 NoArguments     \
                                     109 SingleArgument  113 SingleArgument  \
-                                    104 SingleArgument  \
+                                    104 SingleArgument  120 NoArguments     \
                                     114 SingleArgument  501 SingleArgument  \
                                     502 NoArguments]
 
@@ -154,7 +154,7 @@ oo::define ngis::HRFormat {
     method c108 {entities_l} {
         set entities_l [lmap e $entities_l {
             lassign $e eid description nrecs
-            list $eid [my trim $description 40] $nrecs
+            list $eid [my trim $description 80] $nrecs
         }]
 
         set entities_l [concat $report_a(108.capts) $entities_l]

@@ -79,6 +79,9 @@ oo::define ngis::Protocol {
 
             puts "arguments: '$arguments' (nargs: [llength $arguments])"
             switch $cmd {
+                NOOP {
+                    return [$formatter c120]
+                }
                 STOP {
                     [$::ngis_server get_job_controller] stop_operations
                     ::ngis::logger emit "got a 'stop_operations' signal"
