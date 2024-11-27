@@ -1,8 +1,8 @@
 # -- HRFormat
 #
 #
-package require struct::matrix
 package require ngis::common
+package require struct::matrix
 package require ngis::task
 
 oo::class create ngis::HRFormat
@@ -25,7 +25,7 @@ oo::define ngis::HRFormat {
                                     114 SingleArgument  501 SingleArgument  \
                                     502 NoArguments]
 
-        set data_matrix [::struct::matrix htformat_m]
+        set data_matrix [::struct::matrix hr_report_m]
         array set report_a [array get ::ngis::reports::report_a]
 
         set report_top      $::ngis::reports::report_top
@@ -91,12 +91,13 @@ oo::define ngis::HRFormat {
         return [my SingleLine "107" $message_s]
     }
 
-    method TrimDescription {d} { 
-        if {[string length $d] > 80} {
-            set d [string range $d 0 76]
-            append d "..."
+    method StringLength {str} { return [string length $str] }
+
+    method trim {str {limit 80}} {
+        if {[my StringLength $str] > $limit} {
+            return "[string range $str 0 [expr $limit - 4]]..."
         } else {
-            return $d
+            return $str
         }
     }
 
@@ -108,7 +109,7 @@ oo::define ngis::HRFormat {
         set jobs_l {}
         if {[llength $queued] > 0} {
             set jobs_l [lmap s $queued { list   [namespace tail $s]    \
-                                                [my TrimDescription [$s get_description]]     \
+                                                [my trim [$s get_description]]     \
                                                 [$s active_jobs_count] \
                                                 [$s completed_jobs]    \
                                                 [$s njobs]             \
@@ -116,7 +117,7 @@ oo::define ngis::HRFormat {
         }
         if {[llength $pending] > 0} {
             set pending_l [lmap s $pending { list   [namespace tail $s]     \
-                                                    [my TrimDescription [$s get_description]]   \
+                                                    [my trim [$s get_description]]   \
                                                     [$s active_jobs_count]  \
                                                     [$s completed_jobs]     \
                                                     [$s njobs]              \
@@ -153,7 +154,7 @@ oo::define ngis::HRFormat {
     method c108 {entities_l} {
         set entities_l [lmap e $entities_l {
             lassign $e eid description nrecs
-            list $eid [my TrimDescription $description] $nrecs
+            list $eid [my trim $description 40] $nrecs
         }]
 
         set entities_l [concat $report_a(108.capts) $entities_l]
@@ -280,7 +281,7 @@ oo::define ngis::HRFormat {
     method c118 {service_d} {
         #lassign $args service_d 
         #puts "==========\n$service_d\n========="
-        puts $service_d
+        #puts $service_d
         if {[dict size $service_d] == 0} { return [my SingleLine "118" "No services found"] }
 
         # let's extract a few information out of the service

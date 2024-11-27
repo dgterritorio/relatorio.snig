@@ -71,10 +71,6 @@ puts "Protocol: [package present ngis::protocol]"
         return [dict get $connections_db $con]
     }
 
-    #method get_protocol {con} {
-    #    return [dict get $connections_db $con protocol]
-    #}
-
     method get_connection_format {} {
         if {$current_connection != ""} {
             # ASSERT: the current_connection key
@@ -189,7 +185,6 @@ puts "Protocol: [package present ngis::protocol]"
 
                 ::ngis::logger emit "Got $e chars in message \"$msg\" from $con"
 
-                #set protocol [my get_protocol $con]
                 my set_connection_format [dict get $connections_db $con format]
 
                 puts "read from socket: >$msg<"

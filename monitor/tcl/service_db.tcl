@@ -8,7 +8,6 @@ package require syslog
 package require ngis::msglogger
 package require ngis::conf
 
-
 namespace eval ::ngis::service {
     variable connector ""
 

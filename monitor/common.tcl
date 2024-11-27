@@ -8,10 +8,10 @@
 package require report
 
 ::report::defstyle simpletable {} {
-    data set [split "[string repeat "| "   [columns]]|"]
-    top  set [split "[string repeat "+ - " [columns]]+"]
+    data    set [split "[string repeat "| "   [columns]]|"]
+    top     set [split "[string repeat "+ - " [columns]]+"]
     bottom  set [top get]
-    top  enable
+    top     enable
     bottom  enable
 }
 
@@ -20,8 +20,8 @@ package require report
     topdata   set [data get]
     topcapsep set [top get]
     topcapsep enable
-    tcaption $n
-    bottom  enable
+    tcaption  $n
+    bottom    enable
 }
 
 namespace eval ::ngis {
@@ -81,7 +81,6 @@ namespace eval ::ngis {
         set ncolumns 3
         set report_a(three_columns) [::report::report hr_three_columns $ncolumns style simpletable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(three_columns) pad $c both " " }
-
 
         # Job sequences status report
         set ncolumns 6
