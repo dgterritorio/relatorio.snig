@@ -162,47 +162,41 @@ namespace eval ::ngis::service {
     }
 
     proc load_by_entity {snig_entity args} {
-        set as "-list"
-        set limit 0
-        set v  ""
-        foreach a $args {
+        set as      "-list"
+        set limit   "ALL"
+        set offset  0
+
+        for {set p 0} {$p < [llength $args]} {incr p} {
+            set a [lindex $args $p]
             switch -nocase -- $a {
-                -resultset {
-                    set as $a
-                }
+                -resultset -
                 -list {
                     set as $a
                 }
+                -offset {
+                    set offset [lindex $args [incr p]]
+                }
                 -limit {
-                    set v "limit"
+                    set limit [lindex $args [incr p]]
                 }
                 default {
-                    if {$v != ""} {
-                        set $v $a
-                        set v ""
-                    }
+                    puts "unrecognized switch '$a'"
                 }
             }
         }
 
         if {[string is integer $snig_entity]} {
             set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME" \
-                          "WHERE eid=$snig_entity ORDER BY gid"]
-            set sql [join $sql " "]
+                          "WHERE eid=$snig_entity ORDER BY gid LIMIT $limit OFFSET $offset"]
         } else {
             set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME as ul" \
-                          "WHERE entity LIKE '$snig_entity' ORDER BY gid"]
-            set sql [join $sql " "]
+                          "WHERE entity LIKE '$snig_entity' ORDER BY gid LIMIT $limit OFFSET $offset"]
         }
-
-        if {$limit > 0} {
-            append sql " LIMIT $limit"
-        }
+        set sql [join $sql " "]
         #puts "exec sql: $sql"
+
         set query_result [exec_sql_query $sql]
-        if {$as == "-resultset"} {
-            return $query_result
-        }
+        if {$as == "-resultset"} { return $query_result }
 
         set snig_entities {}
         $query_result foreach -as dicts e { lappend snig_entities $e }
@@ -250,13 +244,17 @@ namespace eval ::ngis::service {
 
         if {[string is integer $pattern]} {
             lappend sql "WHERE ul.gid=$pattern"
-            set sql [join $sql " "]
-            set query_result [exec_sql_query $sql]
+        } elseif {[regexp {gid=(\d+)} $pattern -> gid]} {
+            lappend sql "WHERE ul.gid=$gid"
+        } elseif {[regexp {eid=(\d+)} $pattern -> eid]} {
+            lappend sql "WHERE ul.eid=$eid"
         } else {
             lappend sql "WHERE ul.description LIKE '$pattern'"
-            set sql [join $sql " "]
-            set query_result [exec_sql_query $sql]
         }
+
+        set sql [join $sql " "]
+        set query_result [exec_sql_query $sql]
+
         set services_d [dict create]
         $query_result foreach -as dicts s_d {
             dict with s_d {

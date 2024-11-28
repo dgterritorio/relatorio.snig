@@ -44,6 +44,7 @@ namespace eval ::ngis {
                                             116     "%d Matching services found" \
                                             118     "Service %d (%s, type %s)"  \
                                             120     "Noop command acknoledged"  \
+                                            122     "Service Records"           \
                                             501     "Server internal error: %s" \
                                             502     "Stopping operations"       \
                                             503     "Missing argument for code %d"]
@@ -82,6 +83,15 @@ namespace eval ::ngis {
         set ncolumns 3
         set report_a(three_columns) [::report::report hr_three_columns $ncolumns style simpletable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(three_columns) pad $c both " " }
+        # 4 column report --------------------------
+        set ncolumns 4
+        set report_a(four_columns) [::report::report hr_four_columns $ncolumns style simpletable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(four_columns) pad $c both " " }
+        # 4 column report --------------------------
+        set ncolumns 5
+        set report_a(five_columns) [::report::report hr_five_columns $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(five_columns) pad $c both " " }
+
 
         # Job sequences status report
         set ncolumns 6
@@ -118,6 +128,8 @@ namespace eval ::ngis {
         set report_a(118.capts)     [list {"Task" "Status" "Info" "Timestamp"}]
         set report_a(118.report)    [::report::report hr_118_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(118.report) pad $c both " " }
+
+        set report_a(122.capts)       [list {"GID" "Description" "Host" "Type" "Version"}]
 
         proc get_fmt_string {code} {
             variable CodeMessages

@@ -236,6 +236,21 @@ oo::define ngis::JsonFormat {
                     $json_o array_close
                 }
             }
+            122 {
+                set services_l [lindex $args 0]
+                $json_o string message string $fstring
+                $json_o string services array_open
+                foreach s $services_l {
+                    dict with s {
+                        $json_o map_open string gid integer $gid
+                        $json_o string description string $description
+                        $json_o string host string $host
+                        $json_o string type string $uri_type
+                        $json_o string version string $version map_close
+                    }
+                }
+                $json_o array_close
+            }
             501 {
                 $json_o string message string "Server internal error"
                 if {[llength $args] > 0} {

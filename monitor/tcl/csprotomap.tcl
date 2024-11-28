@@ -9,7 +9,8 @@ namespace eval ::ngis::ClientServerProtocolMap {
     variable verbose    false
 
     set cli_cmds [dict create  \
-            NOOP        [dict create cmd NOOP      has_args no    description "Noop command as a keep-alive of socket connections" help noop.md nodocument true] \
+            NOOP        [dict create cmd NOOP      has_args no    description "Noop command as a keep-alive of socket connections" \
+                                                   help noop.md   nodocument true] \
             STOP        [dict create cmd STOP      has_args no    description "Stop Monitor Operations" help stop.md] \
             SHUTDOWN    [dict create cmd SHUTDWN   has_args no    description "Immediate Client and Server termination" help sx.md] \
             EXIT        [dict create cmd EXIT      has_args no    description "Exit client" help x.md method stop_client] \

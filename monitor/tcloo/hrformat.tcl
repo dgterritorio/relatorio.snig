@@ -4,6 +4,7 @@
 package require ngis::common
 package require struct::matrix
 package require ngis::task
+package require uri
 
 oo::class create ngis::HRFormat
 
@@ -337,6 +338,30 @@ oo::define ngis::HRFormat {
             return [my SingleLine "118" "No tasks performed on this service"]
 
         }
+    }
+
+    method c122 {services_l} {
+        if {[llength $services_l] == 0} { return [my SingleLine "122" "No services found"] }
+
+        set services_t [lmap s $services_l {
+            dict with s {
+                set uri_d [::uri::split $uri]
+                set host [dict get $uri_d host]
+
+                set r [list $gid $description $host $uri_type $version]
+            }
+            set r
+        }]
+
+        set services_t [concat $report_a(122.capts) $services_t]
+        $data_matrix deserialize [list [llength $services_t] 5 $services_t]
+        set report_txt [$report_a(five_columns) printmatrix $data_matrix]
+        set rep_width  [string length [lindex $report_txt 0]]
+
+        $data_matrix deserialize [list 1 1 [list [list "\[122\] Service Records"]]]
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+        return [append top_txt $report_txt]
     }
 
 }
