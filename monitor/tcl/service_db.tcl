@@ -185,13 +185,22 @@ namespace eval ::ngis::service {
             }
         }
 
+        set columns [lmap c [split $::ngis::COLUMN_NAMES ","] {
+            list "ul.${c}"
+        }]
+        set columns [join $columns ","]
+        set columns "${columns},ent.description entity_definition"
         if {[string is integer $snig_entity]} {
-            set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME" \
-                          "WHERE eid=$snig_entity ORDER BY gid LIMIT $limit OFFSET $offset"]
+            set sql [list "SELECT $columns FROM $::ngis::TABLE_NAME ul" \
+                          "JOIN $::ngis::ENTITY_TABLE_NAME ent on ent.eid=ul.eid" \
+                          "WHERE ul.eid=$snig_entity"]
         } else {
-            set sql [list "SELECT $::ngis::COLUMN_NAMES FROM $::ngis::TABLE_NAME as ul" \
-                          "WHERE entity LIKE '$snig_entity' ORDER BY gid LIMIT $limit OFFSET $offset"]
+            set sql [list "SELECT $columns FROM $::ngis::TABLE_NAME ul" \
+                          "JOIN $::ngis::ENTITY_TABLE_NAME ent on ent.eid=ul.eid" \
+                          "WHERE ent.description LIKE '$snig_entity'"] 
         }
+
+        lappend sql "ORDER BY ul.uri,ul.gid LIMIT $limit OFFSET $offset"
         set sql [join $sql " "]
         #puts "exec sql: $sql"
 
@@ -199,7 +208,7 @@ namespace eval ::ngis::service {
         if {$as == "-resultset"} { return $query_result }
 
         set snig_entities {}
-        $query_result foreach -as dicts e { 
+        $query_result foreach -as dicts e {
             if {![dict exists $e description]} {
                 dict set e description "Undefined description"
             }
@@ -211,9 +220,9 @@ namespace eval ::ngis::service {
 
     proc list_entities {pattern {order "-nrecs"} {field "-description"}} {
         set sql [list "SELECT e.eid eid,e.description description,count(ul.gid) count" \
-                      "from $::ngis::ENTITY_TABLE_NAME e" \
+                      "FROM $::ngis::ENTITY_TABLE_NAME e" \
                       "LEFT JOIN $::ngis::TABLE_NAME ul ON ul.eid=e.eid"]
-        #set sql [list "SELECT eid,description from $::ngis::ENTITY_TABLE_NAME"]
+
         if {$field == "-description"} {
             lappend sql "WHERE e.description LIKE '$pattern'"
         } else {

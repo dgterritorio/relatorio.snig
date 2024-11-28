@@ -91,11 +91,29 @@ oo::define ngis::HRFormat {
         return [my SingleLine "107" $message_s]
     }
 
+    # methods that can be mixed-in (overriden) by different forms
+    # of data representation
+
     method StringLength {str} { return [string length $str] }
+
+    method highlight {code str} {
+        set code [string trim [string tolower $code]]
+        switch $code {
+            ok {
+                return "\x1b\[38;5;42m\x1b\[48;5;0m${str}\x1b\[m"
+            }
+            error {
+                return "\x1b\[38;5;20m\x1b\[48;5;9m${str}\x1b\[m"
+            }
+            default {
+                return "\x1b\[38;5;0m\x1b\[48;5;226m${str}\x1b\[m"
+            }
+        }
+    }
 
     method trim {str {limit 80}} {
         if {[my StringLength $str] > $limit} {
-            return "[string range $str 0 [expr $limit - 4]]..."
+            return "[::ngis::utils::string_truncate $str [expr $limit - 4]]..."
         } else {
             return $str
         }
@@ -304,17 +322,12 @@ oo::define ngis::HRFormat {
                     #}]
 
                     set exit_status [dict get $tasks_data exit_status]
-                    switch $exit_status {
-                        ok      { set highlight   "\x1b\[38;5;42m\x1b\[48;5;0m" }
-                        error   { set highlight   "\x1b\[38;5;20m\x1b\[48;5;9m" }
-                        default { set highlight   "\x1b\[38;5;0m\x1b\[48;5;226m" }
-                    }
                     set column_real_width 10
                     set status_pad_len [expr int(($column_real_width - [string length $exit_status]) / 2)]
                     set pad [string repeat " " $status_pad_len]
                     set exit_status "${pad}${exit_status}${pad}"
                     if {[string length $exit_status] < $column_real_width} { append exit_status " " }
-                    set exit_status "${highlight}$exit_status\x1b\[m"
+                    set exit_status [my highlight $exit_status $exit_status]
 
                     list $tdescr $exit_status [dict get $tasks_data exit_info] [dict get $tasks_data ts]
                 } else {
@@ -347,7 +360,7 @@ oo::define ngis::HRFormat {
                 set uri_d [::uri::split $uri]
                 set host [dict get $uri_d host]
 
-                set r [list $gid $description $host $uri_type $version]
+                set r [list $gid [my trim $description 40] $host $uri_type $version]
             }
             set r
         }]
