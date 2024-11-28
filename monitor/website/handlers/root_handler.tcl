@@ -45,8 +45,8 @@ namespace eval ::rwdatas {
         inherit NGIS
 
         public method init {args} {
-            $this key_class_map snig_homepage ::rwpage::SnigHome   tcl/snig.tcl
-            $this key_class_map snig_entity   ::rwpage::SnigEntity tcl/snigentity.tcl
+            $this key_class_map snig_homepage ::rwpage::SnigHome    tcl/snig.tcl
+            $this key_class_map snig_entity   ::rwpage::SnigEntity  tcl/snigentity.tcl
             $this key_class_map snig_service  ::rwpage::SnigService tcl/snig_service.tcl
         }
 

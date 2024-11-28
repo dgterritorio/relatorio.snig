@@ -20,6 +20,11 @@ proc entities_table {rows_l} {
     return [$hr_formatter c108 $rows_l]
 }
 
+proc entity_service_recs {rows_l} {
+    variable hr_formatter
+
+    return [$hr_formatter c122 $rows_l]
+}
 # service_table --
 #
 # print a table of a service data. Argument is a dictionary

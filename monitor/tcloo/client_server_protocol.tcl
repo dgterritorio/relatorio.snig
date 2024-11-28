@@ -11,6 +11,7 @@ package require ngis::common
 package require ngis::csprotomap
 package require ngis::hrformat
 package require ngis::jsonformat
+package require uri
 
 oo::class create ngis::Protocol
 

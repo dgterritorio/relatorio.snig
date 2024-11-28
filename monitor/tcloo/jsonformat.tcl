@@ -50,7 +50,8 @@ oo::define ngis::JsonFormat {
         switch $code {
             100 -
             105 -
-            102 {
+            102 -
+            120 {
                 $json_o string message string $fstring
             }
             101 -
@@ -244,7 +245,7 @@ oo::define ngis::JsonFormat {
                     dict with s {
                         $json_o map_open string gid integer $gid
                         $json_o string description string $description
-                        $json_o string host string $host
+                        $json_o string host string [dict get [::uri::split $uri] host]
                         $json_o string type string $uri_type
                         $json_o string version string $version map_close
                     }

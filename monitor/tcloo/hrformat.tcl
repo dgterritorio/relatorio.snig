@@ -4,7 +4,6 @@
 package require ngis::common
 package require struct::matrix
 package require ngis::task
-package require uri
 
 oo::class create ngis::HRFormat
 

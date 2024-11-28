@@ -15,8 +15,14 @@ namespace eval ::rwpage {
 
         private variable entity_recs
         private variable entity_d
+        private variable entity_o
 
         constructor {key} {SnigPage::constructor $key} {
+            set entity_o [::ngis::Entity::mkobj]
+        }
+
+        destructor {
+            $entity_o destroy
         }
 
         public method prepare_page {language argsqs} {
@@ -25,48 +31,31 @@ namespace eval ::rwpage {
             # if we're here there is an 'eid' url-encoded argument
 
             set eid [dict get $argsqs eid]
+            set offset 0
+            set limit  10
+            if {[dict exists $argsqs offset]} {
+                set offset [dict get $argsqs offset]
+            }
+            if {[dict exists $argsqs limit]} {
+                set limit [dict get $argsqs limit]
+            }
 
             ::ngis::conf readconf uris_table
-            set entity_recs {}
+            set entity_recs [::ngis::service load_by_entity $eid -limit $limit -offset $offset]
 
-            set sql_base "SELECT * from $uris_table where eid=$eid order by description" 
-            if {[dict exists $argsqs sort]} {
-                switch [dict get $argsqs sort] {
-                    gid {
-                        set sql "SELECT * from $uris_table where eid=$eid order by gid"
-                    }
-                    description -
-                    default {
-                        set sql $sql_base
-                    }
-                }
-            } else {
-                set sql $sql_base
-            }
-            [$this get_dbhandle] forall $sql r {
-                lappend entity_recs [array get r]
-            }
-            set entity_o [::ngis::Entity::mkobj]
             set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
             if {[dict size $entity_d]} {
                 $this title $language [dict get $entity_d description]
+            } else {
+                return -code error -errorcode entity_not_found "Error: Entity '$eid' not found"
             }
-            $entity_o destroy
         }
 
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
 
-            set rows_l {}
-            set rows_l [lmap entity $entity_recs {
-
-                list [dict get $entity gid] [dict get $entity description] \
-                     [dict get $entity uri]
-
-            }]
-
             set ns [$template_o formatters_ns]
-            puts [${ns}::entities_table $rows_l]
+            puts [::rivet::xml [${ns}::entity_service_recs $entity_recs] pre]
         }
     }
 
