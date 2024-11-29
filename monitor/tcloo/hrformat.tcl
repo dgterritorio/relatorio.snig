@@ -5,9 +5,9 @@ package require ngis::common
 package require struct::matrix
 package require ngis::task
 
-oo::class create ngis::HRFormat
+oo::class create ::ngis::HRFormat
 
-oo::define ngis::HRFormat {
+oo::define ::ngis::HRFormat {
     variable report_a
     variable report_top
     variable report_bottom
@@ -25,8 +25,8 @@ oo::define ngis::HRFormat {
                                     114 SingleArgument  501 SingleArgument  \
                                     502 NoArguments]
 
-        set data_matrix [::struct::matrix hr_report_m]
-        array set report_a [array get ::ngis::reports::report_a]
+        set data_matrix         [::struct::matrix hr_report_m]
+        array set report_a      [array get ::ngis::reports::report_a]
 
         set report_top      $::ngis::reports::report_top
         set report_bottom   $::ngis::reports::report_bottom
@@ -105,6 +105,7 @@ oo::define ngis::HRFormat {
             error {
                 return "\x1b\[38;5;20m\x1b\[48;5;9m${str}\x1b\[m"
             }
+            warning -
             default {
                 return "\x1b\[38;5;0m\x1b\[48;5;226m${str}\x1b\[m"
             }
@@ -260,14 +261,30 @@ oo::define ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
-    method c116 {services_l} {
-        if {[llength $services_l] == 0} { return [my SingleLine "116" "No services found"] }
+    method c116single {service_table_l service_description} {
 
-        #puts ">$services_l<"
+        $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
+        set report_txt [$report_a(two_columns) printmatrix $data_matrix]
+        # assuming the first line to representative of the report actual width
+        set rep_width [string length [lindex $report_txt 0]]
+
+        $data_matrix deserialize [list 1 1 [list [list "\[116\] $service_description"]]]
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+        return [append top_txt $report_txt]
+    }
+
+    method c116 {services_l} {
+        if {[llength $services_l] == 0} { return [my SingleLine "116" "No service found"] }
+
         set service_fields_l {gid uuid description entity_definition uri uri_type version}
-        array set legend_a [list gid gid description Description \
-                                 entity_definition Entity \
-                                 uri URL uri_type Type version Version uuid uuid]
+        set legend_d [dict create   gid         gid \
+                                    description Description  \
+                                    entity_definition Entity \
+                                    uri         URL     \
+                                    uri_type    Type    \
+                                    version     Version \
+                                    uuid        uuid]
         set fstring [::ngis::reports::get_fmt_string 116]
 
         set reports_pack_l {}
@@ -275,23 +292,15 @@ oo::define ngis::HRFormat {
             # the table data are built here. All the rest is just report formatting
 
             set service_table_l [lmap f $service_fields_l {
-                list $legend_a($f) [dict get $serv_d $f]
+                list [dict get $legend_d $f] [dict get $serv_d $f]
             }]
 
             # report generation
 
-            $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
-            set report_txt [$report_a(two_columns) printmatrix $data_matrix]
-            # assuming the first line to representative of the report actual width
-            set rep_width [string length [lindex $report_txt 0]]
+            set service_description [dict get $serv_d description]
+            if {[string trim $service_description] == ""} { set service_description "gid service [dict get $serv_d gid]" }
 
-            set serv_descr [dict get $serv_d description]
-            if {[string trim $serv_descr] == ""} { set serv_descr "gid service [dict get $serv_d gid]" }
-            $data_matrix deserialize [list 1 1 [list [list "\[116\] $serv_descr"]]]
-            $report_top size 0 [expr $rep_width - 4]
-            set top_txt [$report_top printmatrix $data_matrix]
-
-            lappend reports_pack_l [append top_txt $report_txt]
+            lappend reports_pack_l [my c116single $service_table_l $service_description]
         }
         return [join $reports_pack_l "\n"]
     }
@@ -300,7 +309,7 @@ oo::define ngis::HRFormat {
         #lassign $args service_d 
         #puts "==========\n$service_d\n========="
         #puts $service_d
-        if {[dict size $service_d] == 0} { return [my SingleLine "118" "No services found"] }
+        if {[dict size $service_d] == 0} { return [my SingleLine "118" "No service found"] }
 
         # let's extract a few information out of the service
         # a description is guaranteed to exit for a service record

@@ -30,6 +30,23 @@
         return [string length $element_text]
     }
 
+    method highlight {code str} {
+        set code [string trim [string tolower $code]]
+        switch $code {
+            ok {
+                return [::rivet::xml $str [list span class taskok]]
+            }
+            error {
+                return [::rivet::xml $str [list span class taskerror]]
+            }
+            warning -
+            default {
+                return [::rivet::xml $str [list span class taskwarning]]
+            }
+        }
+
+    }
+
     method trim {str {limit 80}} {
         set matched [my HTMLElementBreakdown $str etext tag_o tag_c]
         if {[string length $etext] > $limit} {

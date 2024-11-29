@@ -11,7 +11,7 @@ namespace eval ::rwpage {
     ::itcl::class SnigService {
         inherit SnigPage
 
-        variable service
+        variable service_d
 
         constructor {key} {SnigPage::constructor $key} { }
 
@@ -20,49 +20,27 @@ namespace eval ::rwpage {
             # 'service' was defined. We don't check it out
 
             set service_id [dict get $argsqs service]
-            set con [socket $::ngis::tcpaddr $::ngis::tcpport]
+            set services_l [::ngis::servicedb service_data $service_id]
+            if {[llength $services_l] > 0} {
 
-            chan puts  $con "FORMAT JSON"
-            chan flush $con
+                # we expect to have only one service record
+                # as the search key is the uris_long primary key
 
-            set answer ""
-            while {[chan gets $con l] > 0} {
-                append answer $l
+                set service_d [llength $services_l 0]
+            } else {
+
             }
 
-            set answer_d [::json::json2dict $answer]
-
-            if {![dict exists $answer_d code] || \
-                ([dict get $answer_d code] != "104")} {
-                return -code error -errorcode wrong_peer_answer "Server returned invalid answer: '$answer'"
-            }
-
-            chan puts  $con "QSERVICE $service_id"
-            chan flush $con
-            set answer ""
-            while {[chan gets $con l] > 0} {
-                append answer $l
-            }
-
-            chan close $con
-            set answer_d [::json::json2dict $answer]
-
-            set services_l [dict get $answer_d "services"]
-
-            # should be just one
-
-            set service [lindex $services_l 0]
         }
 
         public method print_content {language args} {
-            set service_fields_l {gid uuid description uri uri_type version}
-            array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
-
-            set service_table_l [lmap f $service_fields_l {
-                set row "<tr><td>$legend_a($f)</td><td>[dict get $service $f]</td></tr>"
-            }]
-            set service_table_l [join $service_table_l "\n"]
-            puts "<table>$service_table_l</table>"
+            #set service_fields_l {gid uuid description uri uri_type version}
+            #array set legend_a [list gid gid description Description uri URL uri_type Type version Version uuid uuid]
+            #set service_table_l [lmap f $service_fields_l {
+            #    set row "<tr><td>$legend_a($f)</td><td>[dict get $service $f]</td></tr>"
+            #}]
+            #set service_table_l [join $service_table_l "\n"]
+            #puts "<table>$service_table_l</table>"
         }
     }
 }

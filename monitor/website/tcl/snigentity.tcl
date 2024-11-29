@@ -51,7 +51,7 @@ namespace eval ::rwpage {
             if {[dict size $entity_d]} {
                 $this title $language [dict get $entity_d description]
             } else {
-                return -code error -errorcode entity_not_found "Error: Entity '$eid' not found"
+                return -code error -errorcode entity_not_found "Error: entity '$eid' not found"
             }
         }
 

@@ -245,7 +245,9 @@ namespace eval ::ngis::service {
 
     # service_data --
     #
-    # loads services having a given description pattern
+    # loads services having a given description pattern or gid or eid
+    #
+    #
 
     proc service_data {pattern} {
         set ul_columns "ul.*"

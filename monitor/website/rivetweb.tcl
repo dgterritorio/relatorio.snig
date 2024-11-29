@@ -17,3 +17,6 @@ package require ngis::servicedb
 set snig_header [exec /usr/bin/figlet "S.N.I.G"]
 
 ::ngis::conf init
+
+
+

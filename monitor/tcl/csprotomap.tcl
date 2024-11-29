@@ -45,6 +45,10 @@ namespace eval ::ngis::ClientServerProtocolMap {
             source $f
 
             set cmd_obj [::ngis::client_server::tmp::mk_cmd_obj]
+
+            # the search key in the CLI database is the name
+            # of the object instance representing the command
+
             dict set cs_map_d [namespace tail $cmd_obj] $cmd_obj
         }
         namespace delete ::ngis::client_server::tmp
