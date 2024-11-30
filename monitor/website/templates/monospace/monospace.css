@@ -17,6 +17,7 @@ body {
 }
 
 div.container {
-    margin-left: 1em;
-    border: 1px solid black;
+    width: 132em;
+    margin-left: 0em;
+    /* border: 1px solid black; */
 }
