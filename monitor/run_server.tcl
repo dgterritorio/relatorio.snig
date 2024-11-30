@@ -30,7 +30,7 @@ set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map $snig_monitor_
 
 # load the task database
 
-::ngis::tasks build_tasks_database [list [file join $snig_monitor_dir tasks]]
+::ngis::tasks build_tasks_database [list [file join $snig_monitor_dir tasks]] -verbose
 
 # create data root
 

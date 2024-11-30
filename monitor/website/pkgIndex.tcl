@@ -12,3 +12,4 @@ package ifneeded snig::page               1.0 [list source [file join $dir pages
 package ifneeded snigreport	   			  0.6 [list source [file join $dir utils report.tcl]]
 package ifneeded struct::snigmatrix       2.3 [list source [file join $dir utils matrix.tcl]]
 package ifneeded ngis::trimmers           0.1 [list source [file join $dir utils trimmers.tcl]]
+package ifneeded ngis::fetch_tasks        1.0 [list source [file join $dir utils fetch_registered_tasks.tcl]]

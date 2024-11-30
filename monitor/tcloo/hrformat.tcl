@@ -3,7 +3,7 @@
 #
 package require ngis::common
 package require struct::matrix
-package require ngis::task
+package require ngis::utils
 
 oo::class create ::ngis::HRFormat
 
@@ -91,8 +91,8 @@ oo::define ::ngis::HRFormat {
         return [my SingleLine "107" $message_s]
     }
 
-    # methods that can be mixed-in (overriden) by different forms
-    # of data representation
+    # methods that can be mixed-in (overriden)
+    # by different forms of data representation
 
     method StringLength {str} { return [string length $str] }
 
@@ -261,7 +261,33 @@ oo::define ::ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
-    method c116single {service_table_l service_description} {
+    # --------------------------------------------------------------
+    # C116 procedures
+    #
+    # c116 procedures are for printing a table descripting a single 
+    # service record
+    # --------------------------------------------------------------
+
+    method c116legend {} {
+        return  [dict create   gid         gid \
+                               description Description  \
+                               entity_definition Entity \
+                               uri         URL     \
+                               uri_type    Type    \
+                               version     Version \
+                               uuid        uuid]
+    }
+
+    method c116single {service_d} {
+
+        set legend_d [my c116legend]
+        set service_fields_l {gid uuid description entity_definition uri uri_type version}
+        set service_table_l [lmap f $service_fields_l {
+            list [dict get $legend_d $f] [my trim [dict get $service_d $f]]
+        }]
+
+        set service_description [dict get $service_d description]
+        if {[string trim $service_description] == ""} { set service_description "gid service [dict get $service_d gid]" }
 
         $data_matrix deserialize [list [llength $service_table_l] 2 $service_table_l]
         set report_txt [$report_a(two_columns) printmatrix $data_matrix]
@@ -277,35 +303,18 @@ oo::define ::ngis::HRFormat {
     method c116 {services_l} {
         if {[llength $services_l] == 0} { return [my SingleLine "116" "No service found"] }
 
-        set service_fields_l {gid uuid description entity_definition uri uri_type version}
-        set legend_d [dict create   gid         gid \
-                                    description Description  \
-                                    entity_definition Entity \
-                                    uri         URL     \
-                                    uri_type    Type    \
-                                    version     Version \
-                                    uuid        uuid]
-        set fstring [::ngis::reports::get_fmt_string 116]
-
         set reports_pack_l {}
-        foreach serv_d $services_l {
-            # the table data are built here. All the rest is just report formatting
-
-            set service_table_l [lmap f $service_fields_l {
-                list [dict get $legend_d $f] [dict get $serv_d $f]
-            }]
-
+        foreach service_d $services_l {
             # report generation
-
-            set service_description [dict get $serv_d description]
-            if {[string trim $service_description] == ""} { set service_description "gid service [dict get $serv_d gid]" }
-
-            lappend reports_pack_l [my c116single $service_table_l $service_description]
+            lappend reports_pack_l [my c116single $service_d]
         }
         return [join $reports_pack_l "\n"]
     }
 
-    method c118 {service_d} {
+    # --------------------------------------------------------------
+    # C118 procedures
+
+    method c118 {service_d registered_tasks} {
         #lassign $args service_d 
         #puts "==========\n$service_d\n========="
         #puts $service_d
@@ -317,18 +326,13 @@ oo::define ::ngis::HRFormat {
 
         set description [dict get $service_d description]
 
-        # we build the task results data
-
         if {[dict exists $service_d tasks]} {
             set tasks_d [dict get $service_d tasks]
-            set task_t [lmap t [::ngis::tasks::list_registered_tasks] {
+            set task_t [lmap t $registered_tasks {
                 lassign $t task procedure tdescr filename language
 
                 if {[dict exists $tasks_d $task]} {
                     set tasks_data [dict get $tasks_d $task]
-                    #set values [lmap k {exit_status exit_info ts} {
-                    #    dict get $tasks_data $k
-                    #}]
 
                     set exit_status [dict get $tasks_data exit_status]
                     set column_real_width 10
@@ -343,6 +347,8 @@ oo::define ::ngis::HRFormat {
                     continue
                 }
             }]
+
+            #puts $task_t
 
             set task_t [concat $report_a(118.capts) $task_t]
 

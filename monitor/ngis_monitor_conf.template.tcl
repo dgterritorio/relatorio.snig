@@ -12,7 +12,9 @@ namespace eval ::ngis {
     variable TIMEZONE           "Europe/Lisbon"
 
     variable data_root          [file join / tmp snig]
-    variable docs_base          [file normalize [file join [file dirname [info script]] doc]]
+    variable snig_server_root   [file normalize [file dirname [info script]]]
+    variable docs_base          [file join $snig_server_root doc]
+    variable tasks_dir          [file join $snig_server_root tasks]
     variable debugging          false
 
     variable task_results_queue_size 10

@@ -11,9 +11,10 @@ package require struct::snigmatrix 2.3
 
 variable hr_formatter
 
-
 set hr_formatter [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
 ::oo::objdefine $hr_formatter {mixin ::ngis::HTMLTrimmer}
+
+proc template_width {} { return 132 }
 
 proc entities_table {rows_l} {
     variable hr_formatter
@@ -26,6 +27,34 @@ proc entity_service_recs {rows_l} {
 
     return [$hr_formatter c122 $rows_l]
 }
+
+###################################
+#
+# utility functions to manipulate 
+#
+
+proc report_width {rep_t} {
+    return [string length [lindex [split $rep_t "\n"] 0]]
+}
+
+proc left_padding {rep_t padlen} {
+    set pad_s [string repeat " " $padlen]
+    set rep_l [lmap l [split $rep_t "\n"] {
+        concat "${pad_s}$l"
+    }]
+    return [join $rep_l "\n"]
+}
+
+proc center_report {rep_t} {
+    set rep_width [report_width $rep_t]
+    set tem_width [template_width]
+    if {$rep_width >= $tem_width} {
+        return $rep_t
+    }
+    set rep_t [left_padding $rep_t [expr int(($tem_width - $rep_width) / 2)]]
+    return $rep_t
+}
+
 # service_table --
 #
 # print a table of a service data. Argument is a dictionary
@@ -33,5 +62,11 @@ proc entity_service_recs {rows_l} {
 #
 
 proc service_table {service_d} {
+    variable hr_formatter
 
+    set service_t [center_report [$hr_formatter c116single $service_d]]
+
+    set task_t    [center_report [$hr_formatter c118 $service_d $::ngis::registered_tasks]]
+    return [::rivet::xml [join [list $service_t $task_t] "\n"] [list pre class "container"]]
 }
+

@@ -26,6 +26,10 @@ jquery_root="http://jquery.biol.unipr.it"	# Root of the jQuery library
 server_ip="127.0.0.1"	# SNIG Monitor Server
 server_port="4422"	# SNIG Monitor Server Port
 
+# -- Section snig_server
+#
+snig_server_dir=".."	# SNIG Monitor Server Root Directory
+
 # -- Section website
 #
 cssprogressive="0"	# CSS progressive number to force reloads

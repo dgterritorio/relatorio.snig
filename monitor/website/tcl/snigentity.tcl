@@ -42,11 +42,13 @@ namespace eval ::rwpage {
 
             ::ngis::conf readconf uris_table
             set entity_recs [::ngis::service load_by_entity $eid -limit $limit -offset $offset]
-            #set entity_recs [lmap er $entity_recs {
-            #    dict with er {
-            #        set href [::rivetweb::composeUrl service $gid]
-            #    }
-            #}]
+            set entity_recs [lmap er $entity_recs {
+                dict with er {
+                    set href [::rivetweb::composeUrl service $gid]
+                    set description [::rivet::xml [dict get $er description] [list a href $href]]
+                }
+                set er
+            }]
             set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
             if {[dict size $entity_d]} {
                 $this title $language [dict get $entity_d description]
@@ -57,7 +59,6 @@ namespace eval ::rwpage {
 
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
-
             set ns [$template_o formatters_ns]
             puts [::rivet::xml [${ns}::entity_service_recs $entity_recs] pre]
         }

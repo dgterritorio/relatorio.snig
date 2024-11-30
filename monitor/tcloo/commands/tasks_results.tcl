@@ -2,6 +2,7 @@
 #
 #
 
+package require ngis::task
 namespace eval ::ngis::client_server {
 
     ::oo::class create TaskResults {
@@ -21,7 +22,7 @@ namespace eval ::ngis::client_server {
                 # even when this list is made of a single element. In this case
                 # we expect to get just one service record
 
-                return [list c118 {*}[::ngis::service service_data [lindex $gids_l 0]]]
+                return [list c118 {*}[::ngis::service service_data [lindex $gids_l 0]] [::ngis::tasks::list_registered_tasks]]
 
             } else {
 

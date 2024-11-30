@@ -4,7 +4,7 @@
 
 package require ngis::task
 
-catch { ::ngis::client_server::RegTasks destroy }
+#catch { ::ngis::client_server::RegTasks destroy }
 
 namespace eval ::ngis::client_server {
 

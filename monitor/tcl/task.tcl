@@ -7,6 +7,8 @@ package require ngis::msglogger
 package require ngis::taskmessages
 
 namespace eval ::ngis::tasks {
+    variable verbose true
+
     #variable base_tasks [list congruence     ]
     #variable procedures [list data_congruence]
     #variable functions  [list ""             ]
@@ -76,60 +78,65 @@ namespace eval ::ngis::tasks {
     proc script {task_d} { return [dict get $task_d script] }
     proc language {task_d} { return [dict get $task_d language] }
 
-    proc build_tasks_database {path_list} {
+    proc term_output {str} {
+        variable verbose 
+
+        if {[string is true $verbose]} {
+            puts $str
+        }
+    }
+
+    proc build_tasks_database {task_path_dir args} {
         variable tasks
         variable tasks_db
-        #variable base_tasks
-        #variable procedures
-        #variable functions
-        #variable descriptions
+        variable verbose
 
-        #set tasks_db [dict create]
-        #set tasks $base_tasks
-        #foreach bt $base_tasks btp $procedures btf $functions btd $descriptions {
-        #    dict set tasks_db $bt [dict create  function    $btf \
-        #                                        procedure   $btp \
-        #                                        description $btd]
-        #}
-
-        foreach p $path_list {
-            set glist [glob [file join $p "*"]]
-
-            foreach script [lsort $glist] {
-                puts "analyze script: $script"
-                if {[catch {
-                    set ftype [file extension $script]
-                    if {$ftype == ".sh"} {
-                        set identity [exec /bin/bash $script identify]
-                        lassign $identity task description
-                        lappend tasks $task
-                        dict set tasks_db $task [dict create function    $script \
-                                                             script      $script \
-                                                             description $description \
-                                                             procedure   run_bash \
-                                                             language    "Bash"]
-                    } elseif {$ftype == ".tcl"} {
-
-                        #puts "ns: [namespace current]"
-                        namespace eval [namespace current] [list source $script ]
-                        set identity [eval [namespace current]::identify]
-                        lassign $identity task function description
-                        lappend tasks $task
-                        dict set tasks_db $task [dict create function    $function \
-                                                             script      $script \
-                                                             description $description \
-                                                             procedure   run_tcl \
-                                                             language    "Tcl"]
-                        rename [namespace current]::${function} ""
-                    }
-                } e einfo]} {
-                    ::ngis::logger emit "error analyzing shell script $script: $e $einfo"
-                    continue
-                }
+        set verbose true
+        foreach a $args {
+            if {$a == "-verbose"} {
+                set verbose true
+            } elseif {$a == "-quiet"} {
+                set verbose false
+            } else {
+                puts "unrecognized option '$a'"
             }
-
-            catch {rename [namespace current]::identify ""}
         }
+
+        # save current_dir to be restored
+        set glist [glob [file join $task_path_dir "*"]]
+        foreach script [lsort $glist] {
+            term_output "analyze script: $script"
+            if {[catch {
+                set ftype [file extension $script]
+                if {$ftype == ".sh"} {
+                    set identity [exec /bin/bash $script identify]
+                    lassign $identity task description
+                    lappend tasks $task
+                    dict set tasks_db $task [dict create function    $script \
+                                                         script      $script \
+                                                         description $description \
+                                                         procedure   run_bash \
+                                                         language    "Bash"]
+                } elseif {$ftype == ".tcl"} {
+
+                    #puts "ns: [namespace current]"
+                    namespace eval [namespace current] [list source $script ]
+                    set identity [eval [namespace current]::identify]
+                    lassign $identity task function description
+                    lappend tasks $task
+                    dict set tasks_db $task [dict create function    $function \
+                                                         script      $script \
+                                                         description $description \
+                                                         procedure   run_tcl \
+                                                         language    "Tcl"]
+                    rename [namespace current]::${function} ""
+                }
+            } e einfo]} {
+                ::ngis::logger emit "error analyzing shell script $script: $e $einfo"
+                continue
+            }
+        }
+        catch {rename [namespace current]::identify ""}
     }
 
     proc list_registered_tasks {} {

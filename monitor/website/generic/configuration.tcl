@@ -11,7 +11,7 @@ namespace eval ::ngis::conf {
     variable currentdefs     [file join . ngis_conf.tcl]
     variable currentdefs_sh  [file join . ngis_conf.sh]
     variable confnamespace   ngis::conf
-    variable section_order   [list website dbauth database network jquery]
+    variable section_order   [list snig_server website dbauth database network jquery]
     variable dbconfiguration \
         [list   website         {value "http://snig.rivetweb.org:8080" description "Website Name" section website} \
                 encoding        {value "utf-8" description "Website default character encoding" section website } \
@@ -31,7 +31,8 @@ namespace eval ::ngis::conf {
                 fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
                 jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" description "jQuery timepicker" section jquery} \
                 server_ip       {value "127.0.0.1" description "SNIG Monitor Server" section network} \
-                server_port     {value "4422" description "SNIG Monitor Server Port" section network}
+                server_port     {value "4422" description "SNIG Monitor Server Port" section network} \
+                snig_server_dir {value ".." description "SNIG Monitor Server Root Directory" section snig_server}
         ]
 
     proc sections {{s ""}} {

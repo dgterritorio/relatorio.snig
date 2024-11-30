@@ -1,0 +1,21 @@
+body {
+}
+
+.taskok {
+    background-color: black;
+    color: #00d787;
+}
+
+.taskerror {
+    background-color: red;
+    color: #0000d7;
+}
+
+.taskwarning {
+    background-color: #ffff00;
+    color: black;
+}
+
+.container {
+    margin-left: 1em;
+}

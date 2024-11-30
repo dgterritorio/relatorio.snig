@@ -2,11 +2,15 @@
 # -- ./ngis_conf.tcl
 #
 #
-# Configuration file regenerated 27-11-2024 16:38:24 
+# Configuration file regenerated 29-11-2024 23:59:09 
 #
 
 package require ngis::conf::generator
 namespace eval ngis::conf {
+
+# -- Section snig_server
+#
+	variable snig_server_dir          ".."                                     ;# SNIG Monitor Server Root Directory
 
 # -- Section website
 #
