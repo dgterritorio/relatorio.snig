@@ -28,6 +28,7 @@ namespace eval ::rwpage {
                 # as the search key is the uris_long primary key
 
                 set service_d [lindex $services_l 0]
+                $this title $language [dict get $service_d description]
             } else {
 
             }

@@ -3,20 +3,19 @@
         <title><?= [$::rivetweb::current_page title $::rivetweb::language] ?></title>
         <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "monospace.css"]] ?>
     </head>
-    <body>
-		<pre><?
+    <body><pre><?
 	set snig_header_l [split $::snig_header "\n"]
 	foreach l $snig_header_l {
 		puts -nonewline [string repeat " " 40]
 		puts $l
 	}
-	puts [string repeat "-" 132]
+    set hr [string repeat "-" 132]
+	puts $hr
 ?><div style="text-align: center; width: 60em"><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></div>
-<?= [string repeat "-" 132] ?></pre>
+<?= $hr ?></pre>
 <div class="container"><?= [$::rivetweb::current_page print_content $::rivetweb::language] ?></div>
-
 <footer><pre><?
-	set handler_class [[::rwdatas::UrlHandler::current_handler] info class]
+	set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
 	set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
 	set development_footer [list [$::rivetweb::current_page key] \
 								 "template: $::rivetweb::template_key" \
