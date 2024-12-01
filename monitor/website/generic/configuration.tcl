@@ -15,7 +15,7 @@ namespace eval ::ngis::conf {
     variable dbconfiguration \
         [list   website         {value "http://snig.rivetweb.org:8080" description "Website Name" section website} \
                 encoding        {value "utf-8" description "Website default character encoding" section website } \
-                cssprogressive  {value "0" description "CSS progressive number to force reloads" section website} \
+                cssprogressive  {value "20241201" description "CSS progressive number to force reloads" section website} \
                 development     {value "true" description "Flag to enable development site specific parts" section website} \
                 dbuser          {value "dgt" description "Backend database user" section dbauth } \
                 dbname          {value "snig" description "Backend database" section dbauth } \
@@ -29,7 +29,8 @@ namespace eval ::ngis::conf {
                 jquery_root     {value "http://jquery.biol.unipr.it" description "Root of the jQuery library" section jquery } \
                 ckeditor_root   {value "http://jquery.biol.unipr.it" description "Root of the ckeditor code" section jquery } \
                 fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
-                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" description "jQuery timepicker" section jquery} \
+                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" \
+                                 description "jQuery timepicker" section jquery} \
                 server_ip       {value "127.0.0.1" description "SNIG Monitor Server" section network} \
                 server_port     {value "4422" description "SNIG Monitor Server Port" section network} \
                 snig_server_dir {value ".." description "SNIG Monitor Server Root Directory" section snig_server}

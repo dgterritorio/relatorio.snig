@@ -4,10 +4,9 @@
         lappend auto_path "."
         package require ngis::ancillary_io_thread
 
-        set connection [socket $::ngis::tcpaddr $::ngis::tcpport]
-        chan event $connection readable [list read_from_chan $connection]
+        socket_connect
 
         ::thread::wait
 
-        chan close $connection
+        if {$connection != ""} { chan close $connection }
     }]

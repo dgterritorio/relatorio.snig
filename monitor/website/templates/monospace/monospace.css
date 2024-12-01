@@ -1,6 +1,12 @@
 body {
 }
 
+#headline {
+    text-align: center;
+    width: 80em;
+    margin-left: 2em;
+}
+
 .taskok {
     background-color: black;
     color: #00d787;
@@ -17,7 +23,17 @@ body {
 }
 
 div.container {
-    width: 132em;
-    margin-left: 0em;
+    /* width: 132em; */
+    margin-left: 2em;
     /* border: 1px solid black; */
+}
+
+div.bmessage {
+    border: 1px solid black;
+    margin-left: 2em;
+    padding: 1em;
+}
+
+.bmessage span {
+    font-family: Monospace;
 }

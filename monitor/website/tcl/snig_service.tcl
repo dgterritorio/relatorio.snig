@@ -1,4 +1,5 @@
-# --snig
+# snig_service --
+#
 
 package require ngis::page
 package require ngis::servicedb
@@ -14,12 +15,18 @@ namespace eval ::rwpage {
         variable service_d
 
         constructor {key} {SnigPage::constructor $key} {
+            set service_d [dict create]
+        }
+
+        public method js {} {
+            ::rivet::parse js/service_check.js
         }
 
         public method prepare_page {language argsqs} {
             ### if we are here then the URL argument
             # 'service' was defined. We don't check it out
 
+            set service_d [dict create]
             set service_id [dict get $argsqs service]
             set services_l [::ngis::service service_data $service_id]
             if {[llength $services_l] > 0} {
@@ -32,13 +39,23 @@ namespace eval ::rwpage {
             } else {
 
             }
+        }
 
+        public method service_gid {} {
+            if {[dict exists $service_d gid]} {
+                return [dict get $service_d gid]
+            }
         }
 
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set ns [$template_o formatters_ns]
             puts [${ns}::service_table $service_d]
+
+            set start_checks  [::rivet::xml "Start Checks" [list button id "start_job"]]
+            set refresh [::rivet::xml "Refresh" [list button id "refresh"]]
+            set msgline [::rivet::xml "" [list span id "response"]]
+            puts [::rivet::xml "$start_checks $refresh $msgline" [list div class bmessage]]
         }
     }
 }

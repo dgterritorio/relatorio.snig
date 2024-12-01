@@ -1,27 +1,34 @@
 <html>
     <head>
         <title><?= [$::rivetweb::current_page title $::rivetweb::language] ?></title>
-        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "monospace.css"]] ?>
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "monospace.css?v=$::ngis::cssprogressive"]] ?>
+        <script type="text/javascript" src="/jQuery/jquery-3.7.1.js"></script>
+        <script type="text/javascript"><?
+            catch { $::rivetweb::current_page js }
+        ?>
+        </script>
     </head>
-    <body><pre><?
-	set snig_header_l [split $::snig_header "\n"]
-	foreach l $snig_header_l {
-		puts -nonewline [string repeat " " 40]
-		puts $l
-	}
+    <body>
+<pre><?
+    set snig_header_l [split $::snig_header "\n"]
+    set padding [string repeat " " 50]
+    foreach l $snig_header_l {
+        puts -nonewline $padding
+        puts $l
+    }
     set hr [string repeat "-" 132]
-	puts $hr
-?><div style="text-align: center; width: 80em"><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></div>
+    puts $hr
+?><div id="headline"><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></div>
 <?= $hr ?></pre>
 <div class="container"><?= [$::rivetweb::current_page print_content $::rivetweb::language] ?></div>
 <footer><pre><?
-	set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
-	set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
-	set development_footer [list [$::rivetweb::current_page key] \
-								 "template: $::rivetweb::template_key" \
-								 [$::rivetweb::current_page info class] \
-								 $handler_db_link]
-	puts [join $development_footer " | "]
+    set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
+    set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
+    set development_footer [list [$::rivetweb::current_page key] \
+                                 "template: $::rivetweb::template_key" \
+                                 [$::rivetweb::current_page info class] \
+                                 $handler_db_link]
+    puts [join $development_footer " | "]
 ?></pre></footer>
 </body>
 </html>

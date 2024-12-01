@@ -11,6 +11,8 @@ package require ngis::protocol
 package require ngis::conf
 package require ngis::servicedb
 package require Thread
+package require ngis::ancillary_io_thread
+package require json
 
 ::rivetweb::init Marshal top -nopkg
 
@@ -20,58 +22,70 @@ set snig_header [exec /usr/bin/figlet "S.N.I.G"]
 
 namespace eval ::ngis {
     variable registered_tasks
-    variable ancillary_thread
+    variable cssprogressive
 
-    set ancillary_thread [::thread::create -joinable -preserved {
-        lappend auto_path "."
-        package require ngis::ancillary_io_thread
+    # defining the production system cssprogressive counter
 
-        set connection [socket $::ngis::tcpaddr $::ngis::tcpport]
-        chan event $connection readable [list read_from_chan $connection]
+    set cssprogressive [::ngis::conf::readconf cssprogressive]
 
-        ::thread::wait
+    # starting the ancillary thread
 
-        chan close $connection
-    }]
+    namespace eval ancillary {
+        variable thread_id
 
-    ::thread::send $::ngis::ancillary_thread [list send_command "FORMAT JSON"]
-    set status ""
-    set n 0
-    while {($status != "data_ready") && [incr n]} {
-        ::thread::send $::ngis::ancillary_thread [list get_status] status
-        after 100
-        if {$n > 10} {
-            ::rivet::apache_log_error err "ancillary thread timeout"
-            break
-        }
-    }
-    ::thread::send $::ngis::ancillary_thread [list get_data] json_data
-    ::rivet::apache_log_error err "server responded with code [dict get $json_data code]"
+        set thread_id [::thread::create -joinable -preserved {
+            lappend auto_path "."
+            package require ngis::ancillary_io_thread
 
-    ::thread::send $::ngis::ancillary_thread [list send_command "REGTASKS"]
-    set status ""
-    set n 0
-    while {($status != "data_ready") && [incr n]} {
-        ::thread::send $::ngis::ancillary_thread [list get_status] status
-        after 100
-        if {$n > 10} {
-            ::rivet::apache_log_error err "ancillary thread timeout"
-            break
-        }
-    }
-    ::thread::send $::ngis::ancillary_thread [list get_data] json_data
-    ::rivet::apache_log_error err "server responded with code [dict get $json_data code]"
+            ::ngis::ancillary::socket_connect
+            ::thread::wait
 
-    if {[dict get $json_data code] == "110"} {
-        set tasks_dl [dict get $json_data tasks]
-        set registered_tasks [lmap t $tasks_dl {
-            dict with t {
-                set task_v [list $task $function $description $procedure $script]
-            }
-            set task_v
+            if {$connection != ""} { chan close $connection }
         }]
-    } else {
-        set registered_tasks {}
-        ::rivet::apache_log_error err "Could not load the registered tasks"
+
+        ::thread::send $thread_id [list ::ngis::ancillary::send_command "FORMAT JSON"]
+        set status ""
+        set n 0
+        while {($status != "data_ready") && [incr n]} {
+            ::thread::send $thread_id [list ::ngis::ancillary::get_status] status
+            after 100
+            if {$n > 10} {
+                ::rivet::apache_log_error err "ancillary thread timeout"
+                break
+            }
+        }
+        ::thread::send $thread_id [list ::ngis::ancillary::get_data] json_data
+        set json_data [::json::json2dict $json_data]
+        ::rivet::apache_log_error err "server responded with code [dict get $json_data code]"
+
+        ::thread::send $thread_id [list ::ngis::ancillary::send_command "REGTASKS"]
+        set status ""
+        set n 0
+        while {($status != "data_ready") && [incr n]} {
+            ::thread::send $thread_id [list ::ngis::ancillary::get_status] status
+            after 100
+            if {$n > 10} {
+                ::rivet::apache_log_error err "ancillary thread timeout"
+                break
+            }
+        }
+        ::thread::send $thread_id [list ::ngis::ancillary::get_data] json_data
+        set json_data [::json::json2dict $json_data]
+        ::rivet::apache_log_error err "server responded with code [dict get $json_data code]"
+
+        if {[dict get $json_data code] == "110"} {
+            set tasks_dl [dict get $json_data tasks]
+            set ::ngis::registered_tasks [lmap t $tasks_dl {
+                dict with t {
+                    set task_v [list $task $function $description $procedure $script]
+                }
+                set task_v
+            }]
+        } else {
+            set ::ngis::registered_tasks {}
+            ::rivet::apache_log_error err "Could not load the registered tasks"
+        }
     }
 }
+
+

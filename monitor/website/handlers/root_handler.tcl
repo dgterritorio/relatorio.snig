@@ -48,6 +48,8 @@ namespace eval ::rwdatas {
             $this key_class_map snig_homepage ::rwpage::SnigHome    tcl/snig.tcl
             $this key_class_map snig_entity   ::rwpage::SnigEntity  tcl/snigentity.tcl
             $this key_class_map snig_service  ::rwpage::SnigService tcl/snig_service.tcl
+            $this key_class_map snig_server_cmd ::rwpage::SnigCommand tcl/snig_command.tcl
+            $this key_class_map snig_report   ::rwpage::SnigReports tcl/reports.tcl
         }
 
         public method willHandle {arglist keyvar} {
@@ -56,11 +58,17 @@ namespace eval ::rwdatas {
             if {$::rivetweb::is_homepage} {
                 set key snig_homepage
                 return -code break -errorcode rw_ok
+            } elseif {[dict exists $arglist cmd]} {
+                set key snig_server_cmd
+                return -code break -errorcode rw_ok
             } elseif {[dict exists $arglist service]} {
                 set key snig_service
                 return -code break -errorcode rw_ok
             } elseif {[dict exists $arglist eid]} {
                 set key snig_entity
+                return -code break -errorcode rw_ok
+            } elseif {[dict exists $arglist report]} {
+                set key snig_report
                 return -code break -errorcode rw_ok
             }
             return -code continue -errorcode rw_continue

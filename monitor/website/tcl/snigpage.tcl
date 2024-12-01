@@ -48,6 +48,8 @@ namespace eval ::rwpage {
             }
         }
 
+        public method js {} { }
+
         public method prepare {language argsqs} {
             RWPage::prepare $language $argsqs
 
