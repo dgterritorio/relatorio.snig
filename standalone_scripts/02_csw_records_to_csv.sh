@@ -8,8 +8,6 @@ rm -f "$BASEFOLDER/CSW_RECORDS_CSV/"*.csv
 # Ensure necessary directory exists
 mkdir -p "$BASEFOLDER/CSW_RECORDS_CSV"
 
-#rm CSW_RECORDS_CSV/*.csv
-
 FILES="$BASEFOLDER/CSW_RECORDS/*.xml"
 for f in $FILES
 do
