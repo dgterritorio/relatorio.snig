@@ -64,7 +64,9 @@ A PostgreSQL user is needed for the monitor, the scripts that harvest URLs from 
 ```
 The postgresql user only needs local (localhost) access to the database, but if monitor/stats tables must be accessible remotely then adjust accordingly PostgreSQL configuration files ```postgresql.conf``` and ```pg_hba.conf```.
 
-* Create the snig monitor configuration. The file <snig-monitor-root>/monitor/ngis_monitor_conf.tcl must be created from <snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl and modified with the appropriate parameters values.
+
+
+* Create the snig monitor configuration. The file ```<snig-monitor-root>/monitor/ngis_monitor_conf.tcl``` must be created from ```<snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl``` and modified with the appropriate parameters values.
 ```
   namespace eval ::ngis {
 
@@ -92,12 +94,9 @@ The postgresql user only needs local (localhost) access to the database, but if 
 
 package provide ngis::conf 1.1
 ```
-
-* Setup the Postgresql database
-
 * Create a snig-monitor service
 
-Create file /etc/systemd/system/snig-monitor.service and write the following lines in it
+Create file ```/etc/systemd/system/snig-monitor.service``` and write the following lines in it
 ```
 [Unit]
 Description=Snig Resources Monitor Server
