@@ -36,9 +36,9 @@ A collection of scripts to harvest and (health) check the services published at 
 
 apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis
 
-* User creation.
+* System user creation.
 
-If you want you may create a user to install the monitor code. Any non privileged user would work. In this documentation we assume the installation to be made by user snig having /home/snig as root 
+If you want, you may create a system user to install the monitor code. Any non privileged user would work. In this documentation we assume the installation to be made by user snig having ```/home/snig``` as root 
 
 * Cloning the repository. (In order to clone the repository the 'git' utility must be installed)
 
@@ -51,6 +51,18 @@ this command will create a relatorio.snig directory with the monitor code. You c
 ```
 # git https://github.com/dgterritorio/relatorio.snig.git <snig-monitor-root>
 ```
+
+* Setup the Postgresql database, user, tables, etc.
+
+A PostgreSQL user is needed for the monitor, the scripts that harvest URLs from https://snig.dgterritorio.gov.pt/ and to run the queries that define the tables (or views) with metrics and statistics extracted from the monitor tests results. For example
+
+```
+# su postgres
+# psql
+# CREATE ROLE dgt LOGIN PASSWORD '***';
+# CREATE DATABASE snig TEMPLATE template0 OWNER dgt;
+```
+The postgresql user only needs local (localhost) access to the database, but if monitor/stats tables must be accessible remotely then adjust accordingly PostgreSQL configuration files ```postgresql.conf``` and ```pg_hba.conf```.
 
 * Create the snig monitor configuration. The file <snig-monitor-root>/monitor/ngis_monitor_conf.tcl must be created from <snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl and modified with the appropriate parameters values.
 ```
