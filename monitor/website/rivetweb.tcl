@@ -23,6 +23,16 @@ set snig_header [exec /usr/bin/figlet "S.N.I.G"]
 namespace eval ::ngis {
     variable registered_tasks
     variable cssprogressive
+    variable jquery_url
+
+    # define the web server jQuery path
+
+    set jquery_host [::ngis::conf::readconf jquery_root]
+    set jquery_uri  [::ngis::conf::readconf jquery_uri]
+    set jquery_url  [join [list $jquery_host $jquery_uri] "/"]
+
+    ::rivet::apache_log_error info "jQuery path formed from '$jquery_host' and '$jquery_uri'"
+    
 
     # defining the production system cssprogressive counter
 

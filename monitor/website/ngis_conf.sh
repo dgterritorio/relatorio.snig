@@ -19,7 +19,8 @@ dbuser="dgt"	# Backend database user
 ckeditor_root="http://jquery.biol.unipr.it"	# Root of the ckeditor code
 fullcal_root="http://jquery.biol.unipr.it"	# Root of FullCalendar code
 jqtimepicker="http://jquery.biol.unipr.it/jquery-timepicker-1.3.5"	# jQuery timepicker
-jquery_root="http://snig.rivetweb.org:8080/jQuery/"	# Root of the jQuery library
+jquery_root="http://ngis.rivetweb.org:8080"	# Root of the jQuery library
+jquery_uri="jQuery/jquery.min.js"	# jQuery file name
 
 # -- Section network
 #

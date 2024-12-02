@@ -26,7 +26,8 @@ namespace eval ::ngis::conf {
                 entities_table  {value "testsuite.entities" description "Entities catalog table" section database} \
                 uris_table      {value "testsuite.uris_long" description "URIs catalog table" section database} \
                 dbms_driver     {value "Tdbc Postgresql" description "Database DIO Driver" section database} \
-                jquery_root     {value "http://jquery.biol.unipr.it" description "Root of the jQuery library" section jquery } \
+                jquery_root     {value "http://ngis.rivetweb.org:8080" description "Root of the jQuery library" section jquery } \
+                jquery_uri      {value "jQuery/jquery.min.js" description "jQuery file name" section jquery } \
                 ckeditor_root   {value "http://jquery.biol.unipr.it" description "Root of the ckeditor code" section jquery } \
                 fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
                 jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" \

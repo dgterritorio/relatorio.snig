@@ -29,7 +29,7 @@ namespace eval ::rwpage {
                     set data [lindex [::ngis::service service_data [dict get $argsqs gid]] 0]
                 }
                 default {
-
+                    SnigWebService::webservice $language $argsqs
                 }
             }
         }
