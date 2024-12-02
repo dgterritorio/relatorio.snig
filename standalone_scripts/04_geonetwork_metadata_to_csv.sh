@@ -1,9 +1,14 @@
 #!/bin/bash
 
-[ -e snig_geonetwork_records_csv.csv ] && rm snig_geonetwork_records_csv.csv
-[ -e snig_geonetwork_records_csv_urls.csv ] && rm snig_geonetwork_records_csv_urls.csv
+BASEFOLDER="/tmp"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-FILES="SNIG_GEONETWORK_METADATA/*.xml"
+[ -e "$BASEFOLDER/snig_geonetwork_records_csv.csv" ] && rm "$BASEFOLDER/snig_geonetwork_records_csv.csv"
+[ -e "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv" ] && rm "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
+
+find "$BASEFOLDER/SNIG_GEONETWORK_METADATA/" -type f -size 0 -exec rm -f {} +
+
+FILES="$BASEFOLDER/SNIG_GEONETWORK_METADATA/"*.xml
 for f in $FILES
 do
 
@@ -269,9 +274,8 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
  -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:explanation/gco:CharacterString" -o '$' \
  -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:pass/gco:Boolean" -o '$' \
  -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:lineage/gmd:LI_Lineage/gmd:statement/gco:CharacterString" \
- -n $f  | tr -d '\n' >> snig_geonetwork_records_csv.csv
-echo "" >> snig_geonetwork_records_csv.csv
+ -n $f  | tr -d '\n' >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
+echo "" >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
 done
 
-
-awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' snig_geonetwork_records_csv.csv > snig_geonetwork_records_csv_urls.csv
+awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
