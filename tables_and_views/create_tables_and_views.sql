@@ -1,0 +1,10 @@
+-- CREATE TABLE TO STORE GEONETWORK METADATA IN XML FORMAT
+
+CREATE TABLE testsuite.xml_metadata (
+    id SERIAL PRIMARY KEY,
+    filename TEXT NOT NULL,
+    content XML,
+    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_empty BOOLEAN NOT NULL,
+    deleted BOOLEAN DEFAULT FALSE
+);
