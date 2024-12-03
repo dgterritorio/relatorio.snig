@@ -64,13 +64,19 @@ A PostgreSQL user is needed for the monitor, the scripts that harvest URLs from 
 ```
 The postgresql user only needs local (localhost) access to the database, but if monitor/stats tables must be accessible remotely then adjust accordingly PostgreSQL configuration files ```postgresql.conf``` and ```pg_hba.conf```.
 
-Adjust the database configuration parameters in ```<snig-monitor-root>/standalonescripts/connection_parameters.txt```
+Adjust the database configuration parameters in ```<snig-monitor-root>/standalone_scripts/connection_parameters.txt```
 ```
 DB_NAME="snig"
 USERNAME="dgt"
 PASSWORD="***"
 HOST="localhost"
 ```
+Run the script that generates the encessary tables and views
+
+```
+# <snig-monitor-root>/standalone_scripts/00_create_tables_and_views.sh
+```
+
 * Create the snig monitor configuration. The file ```<snig-monitor-root>/monitor/ngis_monitor_conf.tcl``` must be created from ```<snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl``` and modified with the appropriate parameters values.
 ```
   namespace eval ::ngis {
