@@ -20,22 +20,6 @@ namespace eval ::rwpage {
         }
 
         public method prepare_page {language argsqs} {
-            #if {[dict size $entities] == 0} {
-            #    set dbhandle [$this get_dbhandle]
-            #    ::ngis::conf readconf entities_table
-            #    ::ngis::conf readconf uris_table
-            #    set    sql "SELECT e.eid eid,e.description description,count(ul.gid) as cnt from $entities_table e"
-            #    append sql " LEFT JOIN $uris_table ul ON ul.eid=e.eid group by e.eid order by cnt desc"
-            #    puts $sql
-            #    $dbhandle forall "SELECT * from $entities_table" e
-            #    $dbhandle forall $sql e {
-            #        if {$e(cnt) > 0} {
-            #            lappend entities [list $e(eid) $e(description)]
-            #        }
-            #    }
-            #}
-
-			
 
             set entities [::ngis::service::list_entities "%"]
             set entities [lmap e $entities {
@@ -49,7 +33,7 @@ namespace eval ::rwpage {
             #::rivet::parse rvt/entities.rvt
             set template_o  [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set ns [$template_o formatters_ns]
-            puts [::rivet::xml [${ns}::entities_table $entities] pre]
+            puts [${ns}::entities_table $entities]
         }
     }
 }

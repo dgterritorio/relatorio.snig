@@ -161,10 +161,42 @@ namespace eval ::ngis::service {
 
     }
 
+    proc entity_service_records_sql {entity {limit ALL} {offset 0}} {
+
+        set columns [lmap c [split $::ngis::COLUMN_NAMES ","] {
+            list "ul.${c}"
+        }]
+        set columns [join $columns ","]
+        set columns "${columns},ent.description entity_definition"
+        set sql [list "SELECT $columns FROM $::ngis::TABLE_NAME ul" \
+                      "JOIN $::ngis::ENTITY_TABLE_NAME ent on ent.eid=ul.eid"]
+        if {[string is integer $entity]} {
+            lappend sql "WHERE ul.eid=$entity"
+        } else {
+            lappend sql "WHERE ent.description LIKE '$entity'"
+        }
+
+        lappend sql "ORDER BY ul.uri,ul.gid LIMIT $limit OFFSET $offset"
+
+        return [join $sql " "]
+    }
+
+
+    # query_row_count
+
+    proc entity_service_recs_count {entity} {
+        set query_result [exec_sql_query [entity_service_records_sql $entity]]
+        set rowcount [$query_result rowcount]
+        $query_result close
+        return $rowcount
+    }
+
+
     proc load_by_entity {snig_entity args} {
-        set as      "-list"
-        set limit   "ALL"
-        set offset  0
+        set as          "-list"
+        set limit       "ALL"
+        set rowcount_f  false
+        set offset      0
 
         for {set p 0} {$p < [llength $args]} {incr p} {
             set a [lindex $args $p]
@@ -172,6 +204,10 @@ namespace eval ::ngis::service {
                 -resultset -
                 -list {
                     set as $a
+                }
+                -rowcount {
+                    set rowcount_v [lindex $args [incr p]]
+                    set rowcount_f true
                 }
                 -offset {
                     set offset [lindex $args [incr p]]
@@ -185,26 +221,19 @@ namespace eval ::ngis::service {
             }
         }
 
-        set columns [lmap c [split $::ngis::COLUMN_NAMES ","] {
-            list "ul.${c}"
-        }]
-        set columns [join $columns ","]
-        set columns "${columns},ent.description entity_definition"
-        if {[string is integer $snig_entity]} {
-            set sql [list "SELECT $columns FROM $::ngis::TABLE_NAME ul" \
-                          "JOIN $::ngis::ENTITY_TABLE_NAME ent on ent.eid=ul.eid" \
-                          "WHERE ul.eid=$snig_entity"]
-        } else {
-            set sql [list "SELECT $columns FROM $::ngis::TABLE_NAME ul" \
-                          "JOIN $::ngis::ENTITY_TABLE_NAME ent on ent.eid=ul.eid" \
-                          "WHERE ent.description LIKE '$snig_entity'"] 
+        set query_result [exec_sql_query [entity_service_records_sql $snig_entity $limit $offset]]
+
+        # TDBC documention claims with a great deal of prudence
+        # that calling method 'rowcount' on a TDBC result set
+        # in principle may invalidate the resultset interna status 
+        # (thus requiring in case an extra query). We assume that
+        # Postgresql handles this case properly
+        if {[string is true $rowcount_f]} {
+            upvar 1 $rowcount_v $rowcount_v
+        
+            set $rowcount_v [$query_result rowcount]
         }
 
-        lappend sql "ORDER BY ul.uri,ul.gid LIMIT $limit OFFSET $offset"
-        set sql [join $sql " "]
-        #puts "exec sql: $sql"
-
-        set query_result [exec_sql_query $sql]
         if {$as == "-resultset"} { return $query_result }
 
         set snig_entities {}

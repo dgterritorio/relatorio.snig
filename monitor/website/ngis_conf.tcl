@@ -2,7 +2,7 @@
 # -- ./ngis_conf.tcl
 #
 #
-# Configuration file regenerated 03-12-2024 01:04:36 
+# Configuration file regenerated 03-12-2024 16:01:36 
 #
 
 package require ngis::conf::generator
@@ -45,7 +45,7 @@ namespace eval ngis::conf {
 	variable fullcal_root             "http://jquery.biol.unipr.it"            ;# Root of FullCalendar code
 	variable jqtimepicker             "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" ;# jQuery timepicker
 	variable jquery_root              "http://ngis.rivetweb.org:8080"          ;# Root of the jQuery library
-	variable jquery_uri               "jQuery/jquery-3.7.1.js"                 ;# jQuery file name
+	variable jquery_uri               "jQuery/jquery.min.js"                   ;# jQuery file name
 
 }
 package provide ngis::configuration 1.1

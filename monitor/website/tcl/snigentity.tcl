@@ -17,6 +17,10 @@ namespace eval ::rwpage {
         private variable entity_d
         private variable entity_o
 
+        private variable limit
+        private variable offset
+        private variable rowcount
+
         constructor {key} {SnigPage::constructor $key} {
             set entity_o [::ngis::Entity::mkobj]
         }
@@ -32,7 +36,7 @@ namespace eval ::rwpage {
 
             set eid [dict get $argsqs eid]
             set offset 0
-            set limit  10
+            set limit  ALL
             if {[dict exists $argsqs offset]} {
                 set offset [dict get $argsqs offset]
             }
@@ -40,7 +44,12 @@ namespace eval ::rwpage {
                 set limit [dict get $argsqs limit]
             }
 
-            ::ngis::conf readconf uris_table
+            if {[dict exists $argsqs rowcount]} {
+                set rowcount [dict get $argsqs rowcount]
+            } else {
+                set rowcount [::ngis::service entity_service_recs_count $eid]
+            }
+
             set entity_recs [::ngis::service load_by_entity $eid -limit $limit -offset $offset]
             set entity_recs [lmap er $entity_recs {
                 dict with er {
@@ -60,7 +69,13 @@ namespace eval ::rwpage {
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set ns [$template_o formatters_ns]
-            puts [::rivet::xml [${ns}::entity_service_recs $entity_recs] pre]
+            puts [${ns}::entity_service_recs $entity_recs]
+
+            set srecs_limit [::ngis::conf::readconf service_recs_limit]
+
+            if {$rowcount > $srecs_limit} {
+                puts [${ns}::navigation_bar $rowcount $offset]
+            }
         }
     }
 

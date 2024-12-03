@@ -16,6 +16,7 @@ namespace eval ::ngis::conf {
         [list   website         {value "http://snig.rivetweb.org:8080" description "Website Name" section website} \
                 encoding        {value "utf-8" description "Website default character encoding" section website } \
                 cssprogressive  {value "20241201" description "CSS progressive number to force reloads" section website} \
+                service_recs_limit {value 100 description "Size of the default view of an entity service records" section website } \
                 development     {value "true" description "Flag to enable development site specific parts" section website} \
                 dbuser          {value "dgt" description "Backend database user" section dbauth } \
                 dbname          {value "snig" description "Backend database" section dbauth } \

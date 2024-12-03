@@ -19,13 +19,13 @@ proc template_width {} { return 132 }
 proc entities_table {rows_l} {
     variable hr_formatter
 
-    return [$hr_formatter c108 $rows_l]
+    return [::rivet::xml [$hr_formatter c108 $rows_l] pre]
 }
 
 proc entity_service_recs {rows_l} {
     variable hr_formatter
 
-    return [$hr_formatter c122 $rows_l]
+    return [::rivet::xml [$hr_formatter c122 $rows_l] pre]
 }
 
 ###################################
@@ -77,4 +77,8 @@ proc service_table {service_d} {
     set service_t [::rivet::xml [service_info $service_d] [list pre id "service_info"]]
     set task_t    [::rivet::xml [service_tasks $service_d] [list pre id "task_results"]]
     return "${service_t}\n${task_t}"
+}
+
+proc navigation_bar {rowcount offset} {
+
 }
