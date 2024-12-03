@@ -20,13 +20,13 @@ namespace eval ::rwpage {
 
         public method js {} {
             set service_gid [$::rivetweb::current_page service_gid]
-            ::rivet::parse js/start_tasks.js
             ::rivet::parse js/do_refresh.js
+            ::rivet::parse js/start_tasks.js
             puts {
-$(document).ready(function () {
-    $('#start_job').click(start_tasks);
-    $('#refresh').click(do_refresh);
-});
+                $(window).on("load",function() {
+                    $('#start_job').click(start_tasks);
+                    $('#refresh').click(do_refresh);
+                });
             }
         }
 

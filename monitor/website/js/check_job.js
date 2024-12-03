@@ -2,6 +2,13 @@
  *  this is meant to be a rvt template. It requires the following variables to be defined
  *
  *   * service_gid: gid of a service record
+ *
+ * Requirements:
+ *
+ *  It needs to element to be defined in the DOM
+ *
+ *      + 
+ *      +
  */
 
 var checkJobTimer;
@@ -17,17 +24,28 @@ function check_job (msdelay) {
             // Update the UI based on the response
             if (response.njobs > 0)
             {
-                for (var key in response.jobs) {
-                    if (json.hasOwnProperty(key)) {
-                        if {json.message[key].gid == <?= $service_gid ?>} {
-                            $('#response').text('Job running task ' + json.message[key].status);
-                        } else {
-                            clearTimeout(checkJobTimer);
-                        }
+                var service_is_being_checked = false;
+                for (var idx in response.jobs) {
+                    job = response.jobs[idx];
+                    if (job.gid == <?= $service_gid ?>) {
+                        $('#start_job').prop('disabled', true).text('Job Running...');
+                        $('#response').text('Job running task ' + job.status);
+                        service_is_being_checked = true;
+                        break;
                     }
                 }
+                if (!service_is_being_checked) {
+                    clearTimeout(checkJobTimer);
+                    do_refresh();
+                    $('#response').text('');
+                    $('#start_job').prop('disabled', false).text('Start Checks');
+                }
+
             } else {
-                $('#response').text(response.message);
+                clearTimeout(checkJobTimer);
+                do_refresh();
+                $('#response').text('');
+                $('#start_job').prop('disabled', false).text('Start Checks');
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -36,8 +54,7 @@ function check_job (msdelay) {
         },
         complete: function () {
             // Re-enable the button after the request completes
-            $('#start_job').prop('disabled', false).text('Start Checks');
+            //$('#start_job').prop('disabled', false).text('Start Checks');
         }
     });
-
 }

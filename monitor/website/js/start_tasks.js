@@ -5,46 +5,15 @@
  *
  * Requirements:
  * 
- *   * Beforehand function check_job to have been load
+ *   + Beforehand function check_job to have been load
+ *   + Must include check_job.js which defines function
+ *     check_job and the variable checkJobTimer
+ *   + The caller must have a text element with id #response
  */
 
-var checkJobTimer;
-
-function check_job (msdelay) {
-
-    $.ajax(
-    {
-        url:    '<?= [::rivetweb::composeUrl cmd JOBLIST] ?>', 
-        method: 'GET',           // HTTP method (GET, POST, etc.)
-        dataType: 'json',        // Expected response type
-        success: function (response) {
-            // Update the UI based on the response
-            if (response.njobs > 0)
-            {
-                for (var key in response.jobs) {
-                    if (json.hasOwnProperty(key)) {
-                        if {json.message[key].gid == <?= $service_gid ?>} {
-                            $('#response').text('Job running task ' + json.message[key].status);
-                        } else {
-                            clearTimeout(checkJobTimer);
-                        }
-                    }
-                }
-            } else {
-                $('#response').text(response.message);
-            }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            // Handle errors
-            $('#response').text('Error: ' + textStatus);
-        },
-        complete: function () {
-            // Re-enable the button after the request completes
-            $('#start_job').prop('disabled', false).text('Start Checks');
-        }
-    });
-
-}
+<?
+    ::rivet::parse js/check_job.js
+?>
 
 function start_tasks () {
     // Disable the button to prevent multiple clicks
@@ -66,7 +35,7 @@ function start_tasks () {
         },
         complete: function () {
             // Re-enable the button after the request completes
-            $('#start_job').prop('disabled', false).text('Start Checks');
+            // $('#start_job').prop('disabled', false).text('Start Checks');
         }
     });
 }

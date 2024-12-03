@@ -1,5 +1,6 @@
 # services.tcl --
 #
+# implements command SERVICE
 #
 
 package require ngis::utils
@@ -33,6 +34,10 @@ namespace eval ::ngis::client_server {
                 }
                 return [list c116 $services_l]
             } else {
+                # in case of malformed arguments
+                # ::ngis::utils::resource_check_parser returns
+                # its own error code and error information
+
                 lassign $parsed_results code a
                 return [list c${code} $a]
             }

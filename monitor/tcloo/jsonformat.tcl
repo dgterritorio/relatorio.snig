@@ -130,6 +130,12 @@ oo::define ngis::JsonFormat {
             }
             110 {
                 set tasks [lindex $args 0]
+                if {[llength $tasks] > 0} {
+                    set msg "[llength $tasks] jobs running"
+                } else {
+                    set msg "No job running"
+                }
+                $json_o string message string $msg
                 $json_o string tasks array_open
                 foreach t $tasks {
                     lassign $t task func desc pro script
@@ -161,6 +167,12 @@ oo::define ngis::JsonFormat {
             }
             114 {
                 set jobs_l [lindex $args 0]
+                if {[llength $jobs_l] > 0} {
+                    set msg "[llength $jobs_l] jobs running"
+                } else {
+                    set msg "No job running"
+                }
+                $json_o string message string $msg
                 $json_o string njobs integer [llength $jobs_l]
 
                 if {[llength $jobs_l] > 0} {

@@ -67,6 +67,10 @@ namespace eval ::ngis::client_server {
 
                 return [list c102]
             } else {
+                # in case of malformed arguments
+                # ::ngis::utils::resource_check_parser returns
+                # its own error code and error information
+
                 lassign $parsed_results code a
                 return [list c${code} $a]
             }

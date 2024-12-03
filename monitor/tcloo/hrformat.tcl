@@ -100,7 +100,7 @@ oo::define ::ngis::HRFormat {
         set code [string trim [string tolower $code]]
         switch $code {
             ok {
-                return "\x1b\[38;5;42m\x1b\[48;5;0m${str}\x1b\[m"
+                return "\x1b\[48;5;42m\x1b\[38;5;0m${str}\x1b\[m"
             }
             error {
                 return "\x1b\[38;5;20m\x1b\[48;5;9m${str}\x1b\[m"
