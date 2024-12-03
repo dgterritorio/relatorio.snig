@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS testsuite.uris_long_deleted
     entity text,
     description text,
     uri text,
-    uri_type,
+    uri_type text,
     eid integer,
     version character varying,
     uri_original text,
