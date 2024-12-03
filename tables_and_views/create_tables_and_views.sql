@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS testsuite.uris_long_deleted
     date_deleted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     uuid text,
     entity text,
-    description,
+    description text,
     uri text,
     uri_type,
     eid integer,
