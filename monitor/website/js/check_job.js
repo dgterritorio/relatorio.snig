@@ -29,7 +29,7 @@ function check_job (msdelay) {
                     job = response.jobs[idx];
                     if (job.gid == <?= $service_gid ?>) {
                         $('#start_job').prop('disabled', true).text('Job Running...');
-                        $('#response').text('Job running task ' + job.status);
+                        $('#response').html('<span>Job running task ' + '<span class="task_highlight">' + job.status + '</span></span>');
                         service_is_being_checked = true;
                         break;
                     }
@@ -57,4 +57,5 @@ function check_job (msdelay) {
             //$('#start_job').prop('disabled', false).text('Start Checks');
         }
     });
+
 }

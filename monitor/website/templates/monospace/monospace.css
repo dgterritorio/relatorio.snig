@@ -45,3 +45,8 @@ div.navbar pre a {
 .bmessage span {
     font-family: Monospace;
 }
+
+span.task_highlight {
+    padding: 5px;
+    background-color: #eee;
+}
