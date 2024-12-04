@@ -251,7 +251,8 @@ oo::define ngis::JsonFormat {
             }
             122 {
                 set services_l [lindex $args 0]
-                $json_o string message string $fstring
+                set description [lindex $args 1]
+                $json_o string message string $description
                 $json_o string services array_open
                 foreach s $services_l {
                     dict with s {

@@ -367,13 +367,13 @@ oo::define ::ngis::HRFormat {
         }
     }
 
-    method c122 {services_l} {
+    method c122 {services_l ent_description} {
         if {[llength $services_l] == 0} { return [my SingleLine "122" "No services found"] }
 
         set services_t [lmap s $services_l {
             dict with s {
-                set uri_d [::uri::split $uri]
-                set host [dict get $uri_d host]
+                set uri_d   [::uri::split $uri]
+                set host    [dict get $uri_d host]
 
                 set r [list $gid [my trim $description 40] $host $uri_type $version]
             }
@@ -385,7 +385,7 @@ oo::define ::ngis::HRFormat {
         set report_txt [$report_a(five_columns) printmatrix $data_matrix]
         set rep_width  [string length [lindex $report_txt 0]]
 
-        $data_matrix deserialize [list 1 1 [list [list "\[122\] Service Records"]]]
+        $data_matrix deserialize [list 1 1 [list [list "\[122\] '$ent_description'"]]]
         $report_top size 0 [expr $rep_width - 4]
         set top_txt [$report_top printmatrix $data_matrix]
         return [append top_txt $report_txt]

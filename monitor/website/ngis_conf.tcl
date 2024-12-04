@@ -2,7 +2,7 @@
 # -- ./ngis_conf.tcl
 #
 #
-# Configuration file regenerated 03-12-2024 16:01:36 
+# Configuration file regenerated 04-12-2024 00:42:57 
 #
 
 package require ngis::conf::generator
@@ -17,6 +17,7 @@ namespace eval ngis::conf {
 	variable cssprogressive           0                                        ;# CSS progressive number to force reloads
 	variable development              "true"                                   ;# Flag to enable development site specific parts
 	variable encoding                 "utf-8"                                  ;# Website default character encoding
+	variable service_recs_limit       50                                       ;# Size of the default view of an entity service records
 	variable website                  "http://snig.rivetweb.org:8080"          ;# Website Name
 
 # -- Section dbauth
@@ -45,7 +46,7 @@ namespace eval ngis::conf {
 	variable fullcal_root             "http://jquery.biol.unipr.it"            ;# Root of FullCalendar code
 	variable jqtimepicker             "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" ;# jQuery timepicker
 	variable jquery_root              "http://ngis.rivetweb.org:8080"          ;# Root of the jQuery library
-	variable jquery_uri               "jQuery/jquery.min.js"                   ;# jQuery file name
+	variable jquery_uri               "jQuery/jquery-3.7.1.js"                 ;# jQuery file name
 
 }
 package provide ngis::configuration 1.1

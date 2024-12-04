@@ -5,6 +5,7 @@
 # a reasonably easy way to declare common class variables.
 #
 #
+package require textutil
 package require report
 
 ::report::defstyle simpletable {} {

@@ -6,13 +6,30 @@
 package require ngis::hrformat
 package require ngis::trimmers
 package require textutil
+
+# the following inclusion of snigreport
+# is supposed to override the whole inclusion
+# of package 'report' done in ngis::hrformat
+# (by reuiring ngis::common)
+
 package require snigreport 0.6
 package require struct::snigmatrix 2.3
 
 variable hr_formatter
+variable snig_nav_bar
 
 set hr_formatter [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
 ::oo::objdefine $hr_formatter {mixin ::ngis::HTMLTrimmer}
+
+set snig_nav_bar [::report::report ::snig_nav_bar 4 style simpletable]
+snig_nav_bar pad 0 both "  "
+snig_nav_bar pad 1 both "  "
+snig_nav_bar pad 2 both "  "
+snig_nav_bar pad 3 both "  "
+
+set snig_nav_matrix [::struct::matrix ::snig_nav_matrix]
+
+# template width in characters
 
 proc template_width {} { return 132 }
 
@@ -22,10 +39,10 @@ proc entities_table {rows_l} {
     return [::rivet::xml [$hr_formatter c108 $rows_l] pre]
 }
 
-proc entity_service_recs {rows_l} {
+proc entity_service_recs {rows_l entity_description} {
     variable hr_formatter
 
-    return [::rivet::xml [$hr_formatter c122 $rows_l] pre]
+    return [::rivet::xml [$hr_formatter c122 $rows_l $entity_description] pre]
 }
 
 ###################################
@@ -74,11 +91,24 @@ proc service_tasks {service_d} {
 proc service_table {service_d} {
     variable hr_formatter
 
-    set service_t [::rivet::xml [service_info $service_d] [list pre id "service_info"]]
-    set task_t    [::rivet::xml [service_tasks $service_d] [list pre id "task_results"]]
+    set service_t [::rivet::xml [service_info $service_d]   [list pre id "service_info"]]
+    set task_t    [::rivet::xml [service_tasks $service_d]  [list pre id "task_results"]]
     return "${service_t}\n${task_t}"
 }
 
-proc navigation_bar {rowcount offset} {
+proc navigation_bar {rowcount offset urls} {
+    variable snig_nav_bar
+    variable snig_nav_matrix 
 
+    #set block_size [::ngis::conf::readconf service_recs_limit]
+    set links_l [lmap symb [list \u00ab \u2039 \u203A \u00bb] u $urls {
+        if {$u == ""} {
+            set symb
+        } else {
+            ::rivet::xml $symb [list a href $u]
+        }
+    }]
+
+    $snig_nav_matrix deserialize [list 1 4 [list $links_l]]
+    return [::rivet::xml [$snig_nav_bar printmatrix $snig_nav_matrix] [list div id "navbar"] pre]
 }

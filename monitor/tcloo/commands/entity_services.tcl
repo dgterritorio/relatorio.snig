@@ -15,9 +15,11 @@ namespace eval ::ngis::client_server {
             if {$limit == ""} { set limit 100 }
             if {$offset == ""} { set offset 0 }
 
+            # TODO Add error control here
+            set entity_d   [::ngis::service load_entity_record $eid]
             set services_l [::ngis::service load_by_entity $eid -offset $offset -limit $limit]
             
-            return [list c122 $services_l]
+            return [list c122 $services_l [dict get $entity_d description]]
         }
 
     }
