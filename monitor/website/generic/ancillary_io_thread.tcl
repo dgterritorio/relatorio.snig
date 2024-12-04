@@ -1,5 +1,7 @@
 # ancillary_thread.tcl --
 #
+# this is the code to be run within the ancillary I/O thread
+#
 #
 
 lappend auto_path ".."
