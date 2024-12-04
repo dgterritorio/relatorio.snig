@@ -25,6 +25,19 @@ CREATE TABLE IF NOT EXISTS testsuite.service_log
     uuid character varying
 );
 
+-- CREATE TABLE TO STORE THE DELETE RECORDS FROM THE log OF THE MONITOR
+CREATE TABLE IF NOT EXISTS testsuite.service_log_deleted
+(
+    entryid SERIAL,
+    gid integer NOT NULL,
+    date_deleted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ts timestamp without time zone NOT NULL,
+    task character varying NOT NULL,
+    exit_status character varying NOT NULL,
+    exit_info text,
+    uuid character varying
+);
+
 -- CREATE TABLE TO STORE THE entities LIST
 CREATE TABLE IF NOT EXISTS testsuite.entities
 (
