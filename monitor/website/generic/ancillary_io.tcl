@@ -67,4 +67,4 @@ namespace eval ::ngis::ancillary {
 
 }
 
-package provide ngis::ancillary_io_init 1.0
+package provide ngis::ancillary_io 1.0

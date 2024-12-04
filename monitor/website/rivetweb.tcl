@@ -12,7 +12,7 @@ package require ngis::conf
 package require ngis::servicedb
 package require Thread
 package require ngis::ancillary_io_thread
-package require ngis::ancillary_io_init
+package require ngis::ancillary_io
 package require json
 
 ::rivetweb::init Marshal top -nopkg
@@ -43,7 +43,6 @@ namespace eval ::ngis {
     namespace eval ancillary {
         variable thread_id
     }
-
 
     set ancillary::thread_id [ancillary::thread_init]
 

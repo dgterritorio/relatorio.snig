@@ -4,6 +4,7 @@
 #
 package require ngis::webservice
 package require ngis::servicedb
+package require ngis::ancillary_io
 package require yajltcl
 
 namespace eval ::rwpage {
@@ -21,12 +22,14 @@ namespace eval ::rwpage {
         }
 
         public method webservice {language argsqs} {
-            $json_o reset 
             # if we're here the 'report' argument is defined
             set report_n [dict get $argsqs report]
             switch $report_n {
                 118 {
                     set data [lindex [::ngis::service service_data [dict get $argsqs gid]] 0]
+                }
+                112 {
+                    set data [::ngis::ancillary::send_command_and_wait "WHOS"]
                 }
                 default {
                     SnigWebService::webservice $language $argsqs
@@ -37,13 +40,17 @@ namespace eval ::rwpage {
         public method print_content {language args} {
             switch $report_n {
                 118 {
+                    $json_o reset 
                     $json_o map_open string code string "618"
                     $json_o string title string [dict get $data description]
                     $json_o string report string [${fmtns}::service_tasks $data]
                     $json_o map_close
+                    puts [$json_o get]
+                }
+                default {
+                    puts $data
                 }
             }
-            puts [$json_o get]
         }
     }
 }
