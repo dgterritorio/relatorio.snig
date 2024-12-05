@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>jQuery AJAX Example</title>
+        <script type="text/javascript" src="/jQuery/jquery-3.7.1.js"></script>
+        <script type="text/javascript">
+        $(document).ready(function () {
+            $('#serverButton').click(function () {
+                // Disable the button to prevent multiple clicks
+                $(this).prop('disabled', true).text('Waiting for response...');
+
+                // Send AJAX request to the server
+                $.ajax({
+                    url: '', // Replace with your server endpoint
+                    method: 'GET',           // HTTP method (GET, POST, etc.)
+                    dataType: 'json',        // Expected response type
+                    success: function (response) {
+                        // Update the UI based on the response
+                        $('#responseMessage').text(response.message);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        // Handle errors
+                        $('#responseMessage').text('Error: ' + textStatus);
+                    },
+                    complete: function () {
+                        // Re-enable the button after the request completes
+                        $('#serverButton').prop('disabled', false).text('Send Request');
+                    }
+                });
+            });
+        });
+
+    </head>
+    <body>
+        <button id="serverButton">Send Request</button>
+        <p id="responseMessage"></p>
+    </body>
+</html>
