@@ -7,14 +7,13 @@ $(window).on("load",function() {
         success: function (response) {
             // Update the UI based on the response
             $('#report').text(response.report);
+            $('#response').text(response.nconnections + ' active connections');
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // Handle errors
             $('#response').text('Error: ' + textStatus);
         },
         complete: function () {
-            // Re-enable the button after the request completes
-            // $('#start_job').prop('disabled', false).text('Start Checks');
         }
     });
 });

@@ -21,7 +21,7 @@ namespace eval ::rwpage {
 
         public method print_content {language args} {
             puts [::rivet::xml "" div [list pre id report]]
-            puts [::rivet::xml "" [list div id response]]
+            puts [::rivet::xml "" div [list pre id response]]
         }
     }
 

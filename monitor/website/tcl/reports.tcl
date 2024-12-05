@@ -50,10 +50,14 @@ namespace eval ::rwpage {
                 112 {
                     #$json_o map_open string code string "612"
                     #$json_o string title string [dict get $data title]
+
                     set data_d [::json::json2dict $data]
+                    set connections_l [dict get $data_d connections]
+
                     $json_o map_open string code string "612"
+                    $json_o string nconnections integer [llength $connections_l]
                     $json_o string title string [dict get $data_d title]
-                    $json_o string report string [${fmtns}::display_report $report_n [dict get $data_d connections]]
+                    $json_o string report string [${fmtns}::display_report $report_n $connections_l]
                     $json_o map_close
                     puts [$json_o get]
                 }
