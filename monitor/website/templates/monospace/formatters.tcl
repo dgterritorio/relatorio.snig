@@ -130,3 +130,27 @@ proc display_report {report_n connections_ld} {
     }
 
 }
+
+proc generate_banner {language menu} {
+
+    set links [$menu links]
+
+    catch {::snig_banner_mat}
+    catch {::snig_banner}
+
+    set snig_banner_mat [::struct::matrix ::snig_banner_mat]
+    set snig_banner [::report::report ::snig_banner [llength $links] style simpletable]
+    for {set p 0} { $p < [llength $links]} {incr p} { $snig_banner pad $p both "  " }
+    set links_l [lmap l $links {
+        set owner   [$l link_owner]
+        set href    [[$owner to_url $l] attribute href]
+        set text    [$l link_text $language]
+        set ltext   [::rivet::xml $text [list a href $href]]
+    }]
+    $snig_banner_mat deserialize [list 1 [llength $links_l] [list $links_l]]
+    set snig_banner_txt [::rivet::xml [$snig_banner printmatrix $snig_banner_mat] pre]
+
+    $snig_banner destroy
+    $snig_banner_mat destroy
+    return $snig_banner_txt
+}

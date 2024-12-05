@@ -18,8 +18,13 @@ namespace eval ::rwdatas {
     ::itcl::class NGIS {
         inherit UrlHandler
 
+        private variable banner_menu
+        private variable connection_link
+
         public method init {args} {
             chain {*}$args
+
+            set banner_menu ""
         }
 
         # -- to_url
@@ -39,12 +44,51 @@ namespace eval ::rwdatas {
 
             return $lm
         }
+
+        public method menu_list {page} {
+            if {$banner_menu != ""} {
+                $banner_menu destroy
+            }
+
+            set home_link   [$::rivetweb::linkmodel create $this "" \
+                                                           [dict create en "Home" pt "Home"] \
+                                                           "" \
+                                                           [dict create en "SNIG Homepage"]]
+            set banner_menu [::rwmenu::RWMenu ::rwmenu::#auto "banner" root normal]
+            $banner_menu assign title "" ""
+            $banner_menu add_link $home_link
+
+            set lm $::rivetweb::linkmodel
+#           if {[$page key] == "snig_entity"} {
+#
+#                lassign [$page entity] eid entity_definition
+#                set linkobj [$lm create $this "" [dict create en $entity_definition]
+#                                                 [list eid $eid] ""]
+#                $banner_menu add_link $linkobj
+#            }
+
+            if {[$page key] == "snig_service"} {
+                lassign [$page entity] eid entity_definition
+                set linkobj [$lm create $this "" [dict create en $entity_definition]
+                                                 [list eid $eid] ""]
+
+                $banner_menu add_link $linkobj
+            }
+
+            set linkobj [$lm create $this "" [dict create en "Connections"] \
+                                             [list displayrep 112] ""]
+            
+            $banner_menu add_link $linkobj
+            return [dict create banner $banner_menu]
+        }
     }
+
 
     ::itcl::class Marshal {
         inherit NGIS
 
         public method init {args} {
+            chain {*}$args
             $this key_class_map snig_homepage ::rwpage::SnigHome    tcl/snig.tcl
             $this key_class_map snig_entity   ::rwpage::SnigEntity  tcl/snigentity.tcl
             $this key_class_map snig_service  ::rwpage::SnigService tcl/snig_service.tcl

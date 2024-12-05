@@ -48,9 +48,6 @@ namespace eval ::rwpage {
                     puts [$json_o get]
                 }
                 112 {
-                    #$json_o map_open string code string "612"
-                    #$json_o string title string [dict get $data title]
-
                     set data_d [::json::json2dict $data]
                     set connections_l [dict get $data_d connections]
 

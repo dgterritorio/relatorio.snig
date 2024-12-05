@@ -34,7 +34,7 @@ div.bmessage {
     /* padding: 1em; */
 }
 
-div.navbar {
+div.navbar pre {
     margin-left: 2em;
 }
 
@@ -42,6 +42,9 @@ div.navbar pre a {
     font-size: 200%;
 }
 
+div#banner {
+    margin-left: 2em;
+}
 .bmessage span {
     font-family: Monospace;
 }

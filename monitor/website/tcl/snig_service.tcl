@@ -54,6 +54,10 @@ namespace eval ::rwpage {
                 return [dict get $service_d gid]
             }
         }
+    
+        public method entity { } {
+            return [dict filter $service_d key eid entity_definition]
+        }
 
         public method print_content {language args} {
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]

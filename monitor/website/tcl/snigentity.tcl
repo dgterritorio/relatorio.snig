@@ -30,8 +30,21 @@ namespace eval ::rwpage {
             $entity_o destroy
         }
 
+        public method entity_name {} {
+            if {[dict exists $entity_d description]} {
+                return [dict get $entity_d description]
+            } else {
+                return ""
+            }
+        }
+
+        public method entity { } {
+            return [list [dict get $entity_d eid] [$this entity_name]]
+        }
+
         public method prepare_page {language argsqs} {
             set entity_recs [dict create]
+            set entity_d    [dict create]
             set srecs_limit [::ngis::conf::readconf service_recs_limit]
 
             # if we're here there is an 'eid' url-encoded argument
@@ -63,6 +76,7 @@ namespace eval ::rwpage {
                 }
                 set er
             }]
+
             set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
             if {[dict size $entity_d]} {
                 $this title $language [dict get $entity_d description]
