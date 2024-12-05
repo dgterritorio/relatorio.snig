@@ -29,7 +29,7 @@ namespace eval ::rwpage {
                     set data [lindex [::ngis::service service_data [dict get $argsqs gid]] 0]
                 }
                 112 {
-                    set data [::ngis::ancillary::send_command_and_wait "WHOS"]
+                    set data [::ngis::ancillary::send_command_and_wait $::ngis::ancillary::thread_id "WHOS"]
                 }
                 default {
                     SnigWebService::webservice $language $argsqs
@@ -38,17 +38,24 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
+            $json_o reset 
             switch $report_n {
                 118 {
-                    $json_o reset 
                     $json_o map_open string code string "618"
                     $json_o string title string [dict get $data description]
                     $json_o string report string [${fmtns}::service_tasks $data]
                     $json_o map_close
                     puts [$json_o get]
                 }
-                default {
-                    puts $data
+                112 {
+                    #$json_o map_open string code string "612"
+                    #$json_o string title string [dict get $data title]
+                    set data_d [::json::json2dict $data]
+                    $json_o map_open string code string "612"
+                    $json_o string title string [dict get $data_d title]
+                    $json_o string report string [${fmtns}::display_report $report_n [dict get $data_d connections]]
+                    $json_o map_close
+                    puts [$json_o get]
                 }
             }
         }

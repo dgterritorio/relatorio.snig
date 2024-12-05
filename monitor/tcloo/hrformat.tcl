@@ -375,7 +375,7 @@ oo::define ::ngis::HRFormat {
                 set uri_d   [::uri::split $uri]
                 set host    [dict get $uri_d host]
 
-                set r [list $gid [my trim $description 40] $host $uri_type $version]
+                set r [list $gid [my trim $description 60] $host $uri_type $version]
             }
             set r
         }]

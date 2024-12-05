@@ -150,6 +150,7 @@ oo::define ngis::JsonFormat {
             112 {
                 set whos_l [lindex $args 0]
                 $json_o string nconnections integer [llength $whos_l]
+                $json_o string title string [format $fstring [llength $whos_l]]
 
                 # if we're here there must be at least one connection active
                 # we don't need to check [llength $whos_l]

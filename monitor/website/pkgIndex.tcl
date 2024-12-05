@@ -14,5 +14,5 @@ package ifneeded struct::snigmatrix       2.3 [list source [file join $dir utils
 package ifneeded ngis::trimmers           0.1 [list source [file join $dir utils trimmers.tcl]]
 #package ifneeded ngis::fetch_tasks       1.0 [list source [file join $dir utils fetch_registered_tasks.tcl]]
 package ifneeded ngis::ancillary_io_thread 1.0 [list source [file join $dir generic ancillary_io_thread.tcl]]
-package ifneeded ngis::ancillary_io       1.0 [list source [file join $dir generic ancillary_io_init.tcl]]
+package ifneeded ngis::ancillary_io       1.0 [list source [file join $dir generic ancillary_io.tcl]]
 package ifneeded ngis::webservice         1.0 [list source [file join $dir tcl snig_wsservice.tcl]]

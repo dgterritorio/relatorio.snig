@@ -55,7 +55,6 @@ namespace eval ::rwpage {
             } else {
                 set rowcount [::ngis::service entity_service_recs_count $eid]
             }
-
             set entity_recs [::ngis::service load_by_entity $eid -limit $limit -offset $offset]
             set entity_recs [lmap er $entity_recs {
                 dict with er {
@@ -82,16 +81,16 @@ namespace eval ::rwpage {
             if {$rowcount > $srecs_limit} {
                 set urls [lrepeat 4 {}] 
                 if {$offset >= 2*$srecs_limit} {
-                    lset urls 0 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset - 2*$srecs_limit]]
+                    lset urls 0 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset - 2*$srecs_limit] rowcount $rowcount]
                 }
                 if {$offset >= $srecs_limit} {
-                    lset urls 1 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset - $srecs_limit]]
+                    lset urls 1 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset - $srecs_limit] rowcount $rowcount] 
                 }
                 if {$offset <= $rowcount - $srecs_limit} {
-                    lset urls 2 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset + $srecs_limit]]
+                    lset urls 2 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset + $srecs_limit] rowcount $rowcount]
                 }
                 if {$offset <= $rowcount - 2*$srecs_limit} {
-                    lset urls 2 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset + 2*$srecs_limit]]
+                    lset urls 3 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset + 2*$srecs_limit] rowcount $rowcount]
                 }
     
                 puts [${ns}::navigation_bar $rowcount $offset $urls]

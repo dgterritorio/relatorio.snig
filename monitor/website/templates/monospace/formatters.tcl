@@ -91,8 +91,8 @@ proc service_tasks {service_d} {
 proc service_table {service_d} {
     variable hr_formatter
 
-    set service_t [::rivet::xml [service_info $service_d]   [list pre id "service_info"]]
-    set task_t    [::rivet::xml [service_tasks $service_d]  [list pre id "task_results"]]
+    set service_t [::rivet::xml [service_info  $service_d] [list pre id "service_info"]]
+    set task_t    [::rivet::xml [service_tasks $service_d] [list pre id "task_results"]]
     return "${service_t}\n${task_t}"
 }
 
@@ -111,4 +111,22 @@ proc navigation_bar {rowcount offset urls} {
 
     $snig_nav_matrix deserialize [list 1 4 [list $links_l]]
     return [::rivet::xml [$snig_nav_bar printmatrix $snig_nav_matrix] [list div id "navbar"] pre]
+}
+
+proc display_report {report_n connections_ld} {
+    variable hr_formatter
+
+    switch $report_n {
+        112 {
+            set connections_l {}
+            foreach conn_d $connections_ld {
+                dict with conn_d {
+                    lappend connections_l [list $login $type $ncmds $protocol $idle]
+                }
+            }
+
+            return [$hr_formatter c112 $connections_l]
+        }
+    }
+
 }
