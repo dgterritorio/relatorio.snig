@@ -30,3 +30,46 @@ GROUP BY status_code
 )
 SELECT row_number() OVER () AS gid, * FROM temp
 ORDER BY gid;
+
+-- Count the URLs by they http status code and group also by organization
+CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entity AS
+WITH temp AS 
+(
+SELECT 
+    LEFT(a.exit_info, 21) AS status_code, 
+    b.entity, 
+    COUNT(*) AS count
+FROM 
+    testsuite.service_status a
+JOIN 
+    testsuite.uris_long b
+ON 
+    a.uuid = b.uuid
+WHERE 
+    a.task = 'url_status_codes' 
+    AND a.exit_info LIKE 'http_status_code: 200%'
+GROUP BY 
+    status_code, b.entity
+
+UNION
+
+SELECT 
+    a.exit_info AS status_code, 
+    b.entity, 
+    COUNT(*) AS count
+FROM 
+    testsuite.service_status a
+JOIN 
+    testsuite.uris_long b
+ON 
+    a.uuid = b.uuid
+WHERE 
+    a.task = 'url_status_codes' 
+    AND a.exit_info NOT LIKE 'http_status_code: 200%'
+GROUP BY 
+    status_code, b.entity
+ORDER BY 
+    status_code, entity
+)
+SELECT row_number() OVER () AS gid, * FROM temp
+ORDER BY entity,status_code;
