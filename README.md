@@ -74,7 +74,7 @@ HOST="localhost"
 Run the script that generates the encessary tables and views
 
 ```
-# <snig-monitor-root>/standalone_scripts/00_create_tables_and_views.sh
+# <snig-monitor-root>/standalone_scripts/create_tables_and_views.sh
 ```
 
 * Create the snig monitor configuration. The file ```<snig-monitor-root>/monitor/ngis_monitor_conf.tcl``` must be created from ```<snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl``` and modified with the appropriate parameters values.
