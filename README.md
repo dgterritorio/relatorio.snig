@@ -77,6 +77,16 @@ Run the script that generates the encessary tables and views
 # <snig-monitor-root>/standalone_scripts/create_tables_and_views.sh
 ```
 
+* Create a crontab entry for the script that will do all the operations of harvesting URLs, importing, updating, etc.
+```
+crontab -e
+```
+and write the following line in it
+```
+0 6 * * * <snit-monitor-root>/standalone_scripts/00_harvest_import_and_update.sh
+```
+adjusting the frequency as desired.
+
 * Create the snig monitor configuration. The file ```<snig-monitor-root>/monitor/ngis_monitor_conf.tcl``` must be created from ```<snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl``` and modified with the appropriate parameters values.
 ```
   namespace eval ::ngis {
