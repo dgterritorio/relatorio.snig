@@ -101,13 +101,13 @@ package require ngis::csprotomap
                             set help_cmd [string toupper [string toupper $help_cmd]]
 
                             lassign [my SearchCommand $help_cmd] cmd_tree_result cmd_completed cmd_tree_result_value
-                            puts "cmd_tree_result: $cmd_tree_result, cmd_tree_result_value: $cmd_tree_result_value"
+                            #puts "cmd_tree_result: $cmd_tree_result, cmd_tree_result_value: $cmd_tree_result_value"
                             if {$cmd_tree_result != "OK"} {
                                 #set help_cmd [dict get $cmd_tree_result_value cmd]
                                 return [list ERR "Unrecognized command '$help_cmd'"
                             }
 
-                            puts "help_cmd: $cmd_completed"
+                            #puts "help_cmd: $cmd_completed"
 
                             if {[dict exists $cli_cmds $cmd_completed]} {
                                 set help_file [file join $docs_base [dict get $cli_cmds $cmd_completed help]]

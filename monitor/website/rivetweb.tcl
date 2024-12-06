@@ -17,7 +17,7 @@ package require json
 
 ::rivetweb::init Marshal top -nopkg
 
-set snig_header [exec /usr/bin/figlet "S.N.I.G"]
+set snig_header [exec /usr/bin/figlet "S.N.I.G."]
 
 ::ngis::conf init
 

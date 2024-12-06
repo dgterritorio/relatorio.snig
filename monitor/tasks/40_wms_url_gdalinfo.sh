@@ -24,7 +24,8 @@ gdalinfo wms:"${url}"--config GDAL_HTTP_TIMEOUT $GDAL_HTTP_TIMEOUT 1> $gdalinfo_
 gdal_rcode="$?"
 
 if [ $gdal_rcode -ne 0 ]; then
-    echo $(make_error_result "timeout_error" "WMS GDAL info response failed on a $GDAL_HTTP_TIMEOUT secs timeout" "")
+    echo $(make_error_result "timeout_error" "WMS GDAL info response failed ($gdal_rcode) on a $GDAL_HTTP_TIMEOUT secs timeout" "")
+    exit 0
 fi
 
 #cat $ogrinfo_fn
