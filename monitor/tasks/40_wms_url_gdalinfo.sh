@@ -19,8 +19,7 @@ if [ ! -d $uuid_space ]; then
 fi
 
 gdalinfo_fn="${uuid_space}/gdalinfo-${version}.txt"
-
-gdalinfo wms:"${url}"--config GDAL_HTTP_TIMEOUT $GDAL_HTTP_TIMEOUT 1> $gdalinfo_fn 2>&1
+gdalinfo wms:"${url}" --config GDAL_HTTP_TIMEOUT $GDAL_HTTP_TIMEOUT 1> $gdalinfo_fn 2>&1
 gdal_rcode="$?"
 
 if [ $gdal_rcode -ne 0 ]; then
