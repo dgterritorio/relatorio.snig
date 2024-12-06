@@ -305,7 +305,7 @@ namespace eval ::ngis::service {
             dict with s_d {
                 #puts $s_d
                 if {![dict exists $services_d $gid]} {
-                    dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","] entity_definition]
+                    dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","] eid entity_definition]
                     if {![dict exists $services_d $gid description]} {
                         dict set services_d $gid description "undefined description for primary key '$gid'"
                     }

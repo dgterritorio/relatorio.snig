@@ -12,6 +12,7 @@ package require rwmenu
 package require rwlink
 package require ngis::conf::generator
 package require ngis::configuration
+package require ngis::utils
 
 namespace eval ::rwdatas {
 
@@ -68,16 +69,21 @@ namespace eval ::rwdatas {
 #            }
 
             if {[$page key] == "snig_service"} {
-                lassign [$page entity] eid entity_definition
-                set linkobj [$lm create $this "" [dict create en $entity_definition]
-                                                 [list eid $eid] ""]
+                set entity [$page entity]
+                dict with entity {
+                    set entity_definition [::ngis::utils::string_truncate $entity_definition 50]
 
+                    set linkobj [$lm create $this "" [dict create en $entity_definition] \
+                                     [list eid $eid] ""]
+                }
                 $banner_menu add_link $linkobj
             }
 
             set linkobj [$lm create $this "" [dict create en "Connections"] \
                                              [list displayrep 112] ""]
-            
+            $banner_menu add_link $linkobj
+            set linkobj [$lm create $this "" [dict create en "Jobs"] \
+                                             [list displayrep 114] ""]
             $banner_menu add_link $linkobj
             return [dict create banner $banner_menu]
         }

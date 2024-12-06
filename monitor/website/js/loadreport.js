@@ -7,7 +7,7 @@ $(window).on("load",function() {
         success: function (response) {
             // Update the UI based on the response
             $('#report').text(response.report);
-            $('#response').text(response.nconnections + ' active connections');
+            // $('#response').text(response.nconnections + ' active connections');
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // Handle errors

@@ -16,7 +16,15 @@ namespace eval ::rwpage {
 
         public method prepare_page {language argsqs} {
             set report_n [dict get $argsqs displayrep]
-            $this title $language "Active Connections"
+            switch $report_n {
+                112 {
+                    set title "Active Connections"
+                }
+                114 {
+                    set title "Running Jobs"
+                }
+            }
+            $this title $language $title
         }
 
         public method print_content {language args} {

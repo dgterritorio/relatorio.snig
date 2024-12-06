@@ -31,6 +31,9 @@ namespace eval ::rwpage {
                 112 {
                     set data [::ngis::ancillary::send_command_and_wait $::ngis::ancillary::thread_id "WHOS"]
                 }
+                114 {
+                    set data [::ngis::ancillary::send_command_and_wait $::ngis::ancillary::thread_id "JOBLIST"]
+                }
                 default {
                     SnigWebService::webservice $language $argsqs
                 }
@@ -55,6 +58,19 @@ namespace eval ::rwpage {
                     $json_o string nconnections integer [llength $connections_l]
                     $json_o string title string [dict get $data_d title]
                     $json_o string report string [${fmtns}::display_report $report_n $connections_l]
+                    $json_o map_close
+                    puts [$json_o get]
+                }
+                114 {
+                    set jobs_d [::json::json2dict $data]
+                    $json_o map_open string code string "614"
+                    $json_o string njobs  integer [dict get $jobs_d njobs]
+                    $json_o string title  string  [dict get $jobs_d message]
+                    if {[dict get $jobs_d njobs] > 0} {
+                        $json_o string report string [${fmtns}::display_report $report_n [dict get $jobs_d jobs]]
+                    } else {
+                        $json_o string report string [${fmtns}::display_report $report_n {}]
+                    }
                     $json_o map_close
                     puts [$json_o get]
                 }

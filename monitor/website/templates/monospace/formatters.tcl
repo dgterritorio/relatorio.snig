@@ -113,19 +113,29 @@ proc navigation_bar {rowcount offset urls} {
     return [::rivet::xml [$snig_nav_bar printmatrix $snig_nav_matrix] [list div id "navbar"] pre]
 }
 
-proc display_report {report_n connections_ld} {
+proc display_report {report_n data_ld} {
     variable hr_formatter
 
     switch $report_n {
         112 {
             set connections_l {}
-            foreach conn_d $connections_ld {
+            foreach conn_d $data_ld {
                 dict with conn_d {
                     lappend connections_l [list $login $type $ncmds $protocol $idle]
                 }
             }
 
             return [$hr_formatter c112 $connections_l]
+        }
+        114 {
+            set jobs_l {}
+            foreach job_d $data_ld {
+                dict with job_d {
+                    lappend jobs_l [list $gid $description $type $version $status $timestamp]
+                }
+            }
+
+            return [$hr_formatter c114 $jobs_l]
         }
     }
 
