@@ -83,9 +83,9 @@ crontab -e
 ```
 and write the following line in it
 ```
-0 6 * * * <snit-monitor-root>/standalone_scripts/00_harvest_import_and_update.sh
+0 18 * * 5 <snit-monitor-root>/standalone_scripts/00_harvest_import_and_update.sh
 ```
-adjusting the frequency as desired.
+adjusting the frequency as desired (in the above example is "run at 6pm on Fridays).
 
 * Create the snig monitor configuration. The file ```<snig-monitor-root>/monitor/ngis_monitor_conf.tcl``` must be created from ```<snig-monitor-root>/monitor/ngis_monitor_conf.template.tcl``` and modified with the appropriate parameters values.
 ```
