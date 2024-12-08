@@ -209,3 +209,9 @@ SET eid = b.eid \
 FROM testsuite.entities b \
 WHERE a.eid IS NULL \
 AND b.description IS NULL;"
+
+# In case sanitezed URLs were generated in a wrong way during the harvesting phase, then run also this query
+# psql -U $USERNAME -d $DB_NAME -h $HOST -c \
+# "DELETE FROM testsuite.uris_long a \
+# WHERE a.uri NOT IN (SELECT DISTINCT b.uri FROM testsuite.uris_long_temp b);"
+
