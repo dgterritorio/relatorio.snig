@@ -178,7 +178,14 @@ while IFS='$' read -r col1 col2 col3 col4 col5 col6; do
         # Check if the URL in the fourth column contains a "?" symbol
         if [[ "$col4" == *"?"* ]]; then
             # Extract the part before the "?" symbol
-            url_without_query="${col4%%\?*}"
+            # url_without_query="${col4%%\?*}"
+
+			# Remove trailing "?" if it exists
+			url_without_query="${col4%%\?*}"
+			if [[ "${col4}" == *"?" ]]; then
+				url_without_query="${col4%?}"
+			fi
+            
             # Check if the "map" parameter exists in the URL
             if [[ "$col4" == *"map="* ]]; then
                 # If "map" exists, keep it and append the other parameters
