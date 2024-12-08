@@ -18,6 +18,13 @@ package require struct::snigmatrix 2.3
 variable hr_formatter
 variable snig_nav_bar
 
+variable message_box_mat    [namespace current]::msgbox_mat
+variable message_box_rep    [namespace current]::msgbox_rep
+
+catch { $message_box_mat destroy }
+
+::struct::matrix $message_box_mat
+
 set hr_formatter [::ngis::HRFormat create [::ngis::Formatters new_cmd hr]]
 ::oo::objdefine $hr_formatter {mixin ::ngis::HTMLTrimmer}
 
@@ -163,4 +170,17 @@ proc generate_banner {language menu} {
     $snig_banner destroy
     $snig_banner_mat destroy
     return $snig_banner_txt
+}
+
+proc message_box {message_l} {
+    variable message_box_mat
+    variable message_box_rep
+
+    catch { $message_box_rep destroy }
+
+    ::report::report $message_box_rep 2 style simpletable
+    for {set l 0} {$l < [llength $message_l]} {incr l} { $message_box_rep pad $l both " " }
+
+    $message_box_mat deserialize [list [llength $message_l] 2 $message_l]
+    return [::rivet::xml [$message_box_rep printmatrix $message_box_mat] pre]
 }

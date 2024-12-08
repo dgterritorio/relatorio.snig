@@ -284,7 +284,7 @@ namespace eval ::ngis::service {
         set ent_columns "ent.description entity_definition"
 
         set     sql [list "SELECT $ul_columns,$ss_columns,$ent_columns from $::ngis::TABLE_NAME ul"]
-        lappend sql "JOIN $::ngis::SERVICE_STATUS ss ON ul.gid=ss.gid"
+        lappend sql "LEFT JOIN $::ngis::SERVICE_STATUS ss ON ul.gid=ss.gid"
         lappend sql "JOIN $::ngis::ENTITY_TABLE_NAME ent ON ul.eid=ent.eid"
 
         if {[string is integer $pattern]} {
@@ -315,7 +315,9 @@ namespace eval ::ngis::service {
                         dict set services_d $gid entity_definition "$entity_definition (eid=$eid)"
                     }
                 }
-                dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
+                if {[info exists task]} {
+                    dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
+                }
             }
         }
 

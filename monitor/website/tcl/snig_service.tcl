@@ -44,8 +44,9 @@ namespace eval ::rwpage {
 
                 set service_d [lindex $services_l 0]
                 $this title $language [dict get $service_d description]
-            } else {
 
+            } else {
+                $::ngis::messagebox post_message "No service records found for gid '$service_id'" error
             }
         }
 
@@ -60,14 +61,16 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
-            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
-            set ns [$template_o formatters_ns]
-            puts [${ns}::service_table $service_d]
+            if {[dict size $service_d] > 0} {
+                set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+                set ns [$template_o formatters_ns]
+                puts [${ns}::service_table $service_d]
 
-            set start_checks  [::rivet::xml "Start Checks" [list button id "start_job"]]
-            set refresh [::rivet::xml "Refresh" [list button id "refresh"]]
-            set msgline [::rivet::xml "" [list span id "response"]]
-            puts [::rivet::xml "$start_checks $refresh $msgline" [list div class bmessage]]
+                set start_checks  [::rivet::xml "Start Checks" [list button id "start_job"]]
+                set refresh [::rivet::xml "Refresh" [list button id "refresh"]]
+                set msgline [::rivet::xml "" [list span id "response"]]
+                puts [::rivet::xml "$start_checks $refresh $msgline" [list div class bmessage]]
+            }
         }
     }
 }

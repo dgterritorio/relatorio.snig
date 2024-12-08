@@ -70,13 +70,15 @@ namespace eval ::rwdatas {
 
             if {[$page key] == "snig_service"} {
                 set entity [$page entity]
-                dict with entity {
-                    set entity_definition [::ngis::utils::string_truncate $entity_definition 50]
+                if {[dict size $entity] > 0} {
+                    dict with entity {
+                        set entity_definition [::ngis::utils::string_truncate $entity_definition 50]
 
-                    set linkobj [$lm create $this "" [dict create en $entity_definition] \
-                                     [list eid $eid] ""]
+                        set linkobj [$lm create $this "" [dict create en $entity_definition] \
+                                         [list eid $eid] ""]
+                        $banner_menu add_link $linkobj
+                    }
                 }
-                $banner_menu add_link $linkobj
             }
 
             set linkobj [$lm create $this "" [dict create en "Connections"] \
@@ -95,12 +97,12 @@ namespace eval ::rwdatas {
 
         public method init {args} {
             chain {*}$args
-            $this key_class_map snig_homepage ::rwpage::SnigHome    tcl/snig.tcl
-            $this key_class_map snig_entity   ::rwpage::SnigEntity  tcl/snigentity.tcl
-            $this key_class_map snig_service  ::rwpage::SnigService tcl/snig_service.tcl
+            $this key_class_map snig_homepage   ::rwpage::SnigHome    tcl/snig.tcl
+            $this key_class_map snig_entity     ::rwpage::SnigEntity  tcl/snigentity.tcl
+            $this key_class_map snig_service    ::rwpage::SnigService tcl/snig_service.tcl
             $this key_class_map snig_server_cmd ::rwpage::SnigCommand tcl/snig_command.tcl
-            $this key_class_map snig_report_ws ::rwpage::SnigReports tcl/reports.tcl
-            $this key_class_map snig_report   ::rwpage::DisplayReport tcl/snig_report.tcl
+            $this key_class_map snig_report_ws  ::rwpage::SnigReports tcl/reports.tcl
+            $this key_class_map snig_report     ::rwpage::DisplayReport tcl/snig_report.tcl
         }
 
         public method willHandle {arglist keyvar} {

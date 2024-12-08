@@ -2,6 +2,7 @@ package require uri
 
 ::rivet::apache_log_error info "auto_path: $auto_path"
 
+package require MessagePrinter
 package require ngis::logger
 package require ngis::configuration
 package require ngis::roothandler
@@ -25,7 +26,7 @@ namespace eval ::ngis {
     variable registered_tasks
     variable cssprogressive
     variable jquery_url
-
+    variable messagebox
     # define the web server jQuery path
 
     set jquery_host [::ngis::conf::readconf jquery_root]
@@ -47,4 +48,6 @@ namespace eval ::ngis {
     set ancillary::thread_id [ancillary::thread_init]
 
     set registered_tasks [ancillary::connection_init $ancillary::thread_id]
+    set messagebox [MessagePrinter [namespace current]::#auto]
+
 }
