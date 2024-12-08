@@ -10,17 +10,16 @@ source "$SCRIPT_DIR/connection_parameters.txt"
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "TRUNCATE TABLE testsuite.uris_wide;"
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "ALTER SEQUENCE testsuite.uris_wide_gid_seq RESTART WITH 1;"
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "\COPY testsuite.uris_wide(uuid,entity,description,uri1,uri2,uri3,uri4,uri5,uri6,uri7,uri8,uri9,uri10,uri11,uri12,uri13) FROM $BASEFOLDER/geonetwork_records_urls_wide.csv DELIMITER '$' CSV;"
-#psql -U $USERNAME -d $DB_NAME -h $HOST -c "\COPY testsuite.uris_wide_all(uuid,entity,description,uri1,uri2,uri3,uri4,uri5,uri6,uri7,uri8,uri9,uri10,uri11,uri12,uri13) FROM $BASEFOLDER/geonetwork_records_urls_wide.csv DELIMITER '$' CSV;"
+psql -U $USERNAME -d $DB_NAME -h $HOST -c "\COPY testsuite.uris_wide_all(uuid,entity,description,uri1,uri2,uri3,uri4,uri5,uri6,uri7,uri8,uri9,uri10,uri11,uri12,uri13) FROM $BASEFOLDER/geonetwork_records_urls_wide.csv DELIMITER '$' CSV;"
 
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "TRUNCATE TABLE testsuite.uris_long_temp;"
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "ALTER SEQUENCE testsuite.uris_long_temp_gid_seq RESTART WITH 1;"
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "\COPY testsuite.uris_long_temp(uuid,entity,description,uri_original,uri_type,version,uri) FROM $BASEFOLDER/geonetwork_records_urls_long_with_type.csv DELIMITER '$' CSV;"
 
-# From the \"long\" temp table remove the rows that actually do not have any URL
-psql -U $USERNAME -d $DB_NAME -h $HOST -c "DELETE FROM testsuite.uris_long_temp WHERE uri IS NULL;"
+# In the \"long\" temp table copy to the proper column, for records that are not OGC services, the URLs to be tested
+psql -U $USERNAME -d $DB_NAME -h $HOST -c "UPDATE testsuite.uris_long_temp SET uri=uri_original WHERE uri IS NULL;"
 
-
-# Use the records in \"uris_long_temp\" to delete from \"uris_long\" recorss with UUIDs that do not exist anymore and
+# Use the records in \"uris_long_temp\" to delete from \"uris_long\" the recorsds with UUIDs that do not exist anymore and
 # URLs that have changed, then import in \"uris_long\" from \"uris_long_temp\" the records corresponding to UUIDs that are missing
 # Also make copies of deleted records in the approrriate \"_deleted\" tables
 psql -U $USERNAME -d $DB_NAME -h $HOST -c \
