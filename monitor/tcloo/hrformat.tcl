@@ -283,6 +283,9 @@ oo::define ::ngis::HRFormat {
         set legend_d [my c116legend]
         set service_fields_l {gid uuid description entity_definition uri uri_type version}
         set service_table_l [lmap f $service_fields_l {
+            if {![dict exists $service_d $f]} {
+                dict set service_d $f ""
+            }
             list [dict get $legend_d $f] [my trim [dict get $service_d $f]]
         }]
 
@@ -375,6 +378,7 @@ oo::define ::ngis::HRFormat {
                 set uri_d   [::uri::split $uri]
                 set host    [dict get $uri_d host]
 
+                if {![info exists version]} { set version "" }
                 set r [list $gid [my trim $description 60] $host $uri_type $version]
             }
             set r
