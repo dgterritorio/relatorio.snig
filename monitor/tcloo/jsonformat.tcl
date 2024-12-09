@@ -198,12 +198,13 @@ oo::define ngis::JsonFormat {
                     foreach s $services_l {
 
                         dict with s {
+                            if {![info exists version]} { set version "" }
                             $json_o map_open    string "gid"    integer $gid    \
                                                 string "description" string $description \
                                                 string "entity"     string  $entity_definition \
                                                 string "uri"        string  $uri    \
                                                 string "uri_type"   string  $uri_type \
-                                                string "version"    string $version \
+                                                string "version"    string  $version \
                                                 string "uuid"       string  $uuid
                         }
                         set tasks [dict get $s tasks]
@@ -257,6 +258,8 @@ oo::define ngis::JsonFormat {
                 $json_o string services array_open
                 foreach s $services_l {
                     dict with s {
+                        if {![info exists version]} { set version "" }
+
                         $json_o map_open string gid integer $gid
                         $json_o string description string $description
                         $json_o string host string [dict get [::uri::split $uri] host]
