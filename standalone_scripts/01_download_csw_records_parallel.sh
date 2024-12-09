@@ -32,6 +32,11 @@ process_chunk() {
         "https://snig.dgterritorio.gov.pt/rndg/srv/por/csw?request=GetRecords&service=CSW" \
         -o "$BASEFOLDER/CSW_RECORDS/csw_records_${start}_$((start + step)).xml"
 
+    # Harvest also the ISPIRE catalog
+    curl -X POST --header "Content-Type:text/xml;charset=UTF-8" --data @"$BASEFOLDER/$payload_file" \
+        "https://snig.dgterritorio.gov.pt/rndg/srv/eng/csw-inspire?request=GetRecords&service=CSW" \
+        -o "$BASEFOLDER/CSW_RECORDS/csw_records_inspire_${start}_$((start + step)).xml"
+
     # Cleanup temporary file
     rm -f "$BASEFOLDER/$payload_file"
 }
