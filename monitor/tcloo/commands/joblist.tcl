@@ -14,6 +14,8 @@ namespace eval ::ngis::client_server {
                 lmap j $aj {
                     set sj [$j serialize]
                     dict with sj {
+                        if {![info exists version]} { set version "" }
+
                         list $gid $description $uri_type $version $job_status $timestamp
                     }
                 }
