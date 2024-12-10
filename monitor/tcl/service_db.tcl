@@ -300,10 +300,12 @@ namespace eval ::ngis::service {
         set sql [join $sql " "]
         set query_result [exec_sql_query $sql]
 
+        puts "SQL: $sql"
+
         set services_d [dict create]
         $query_result foreach -as dicts s_d {
             dict with s_d {
-                #puts $s_d
+                #puts "RES: $s_d"
                 if {![dict exists $services_d $gid]} {
                     dict set services_d $gid [dict filter $s_d key {*}[split $::ngis::COLUMN_NAMES ","] eid entity_definition]
                     if {![dict exists $services_d $gid description]} {
@@ -315,6 +317,10 @@ namespace eval ::ngis::service {
                         dict set services_d $gid entity_definition "$entity_definition (eid=$eid)"
                     }
                 }
+
+                # service records for which no task has ever been performed don't have a 'task'
+                # element defined (NULL in the query result)
+
                 if {[info exists task]} {
                     dict set services_d $gid tasks $task [dict filter $s_d key exit_status exit_info uuid ts]
                 }

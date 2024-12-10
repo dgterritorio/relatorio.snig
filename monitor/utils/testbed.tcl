@@ -27,7 +27,7 @@ set ::ngis_server [::ngis::Server create ::ngis_server]
 
 set jcontroller [::ngis_server create_job_controller 100]
 set tm ::ngis::thread_master
-set gid_rec [::ngis::service::load_by_gid 4161]
+set gid_rec [::ngis::service::load_by_gid 4]
 
 # faking a sequence
 #::oo::define ::ngis::JobSequence {
