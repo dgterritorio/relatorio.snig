@@ -31,7 +31,7 @@ namespace eval ::ngis {
         variable CodeMessages [dict create  100     "Server is going to exit"   \
                                             101     "Unrecognized command: %s"  \
                                             102     "OK"                        \
-                                            103     "Wrong arguments: '%s'"     \
+                                            103     "Wrong argument(s): '%s'"   \
                                             104     "Current format: %s"        \
                                             105     "Invalid keys in argument list" \
                                             106     "%s queued, %s pending sequences, %d jobs" \
