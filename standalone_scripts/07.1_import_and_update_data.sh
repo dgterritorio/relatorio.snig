@@ -26,8 +26,8 @@ psql -U $USERNAME -d $DB_NAME -h $HOST -c "UPDATE testsuite.uris_long_temp SET u
 
 # I guess gid was to be defined beforehand as foreign key for both service_status and service_log. Currently it's not!
 
-ALTER TABLE testsuite.service_status ADD CONSTRAINT "service_gid_ref1" FOREIGN KEY (gid) REFERENCES (uris_long) ON DELETE CASCADE;
-ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN KEY (gid) REFERENCES (uris_long) ON DELETE CASCADE;
+ALTER TABLE testsuite.service_status ADD CONSTRAINT "service_gid_ref1" FOREIGN KEY (gid) REFERENCES uris_long (gid) ON DELETE CASCADE;
+ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN KEY (gid) REFERENCES uris_long (gid) ON DELETE CASCADE;
 
 # 
 #
