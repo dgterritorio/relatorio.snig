@@ -62,7 +62,7 @@ ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN K
 
 # Remove records of set A
 # 
-# If the constrained I defined above are applied records in service_status
+# If the constraints I defined above are applied then records in service_status
 # and service_log are removed automatically
 
 DELETE FROM testsuite.uris_long WHERE uri NOT IN (SELECT uri from testsuite.uris_long_temp);
