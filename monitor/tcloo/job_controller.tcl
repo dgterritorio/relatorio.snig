@@ -59,7 +59,7 @@ namespace eval ::ngis {
         # implements a flat policy of threads quota among sequences
         #
 
-        method LoadBalancerChore {} {
+        method load_balancer_chore {} {
             set running_jobs [my running_jobs_tot]
             set max_threads_num $::ngis::max_workers_number
 
@@ -68,7 +68,7 @@ namespace eval ::ngis {
 
         method ScheduleLoadBalancer {} {
             if {$load_balancer_chore == ""} {
-                set load_balancer_chore [after 2000 [list my LoadBalancerChore]]
+                set load_balancer_chore [after 2000 [list [self] load_balancer_chore]]
             }
         }
 
@@ -168,7 +168,7 @@ namespace eval ::ngis {
                     ::ngis::logger emit "$s: '[$s get_description]' [$s running_jobs_count] jobs"
                 }
 
-                if {([llength $sequence_list] == 1) && ($load_balancer_chore != ""} {
+                if {([llength $sequence_list] == 1) && ($load_balancer_chore != "")} {
                     after cancel $load_balancer_chore
                 }
                 my RescheduleRoundRobin
