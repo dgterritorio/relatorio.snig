@@ -17,20 +17,26 @@ namespace eval ::ngis {
         variable sequence_list
         variable pending_sequences
         variable sequence_idx
+        variable sequence_mark_idx
         variable thread_master
         variable round_robin_procedure
         variable task_results_chore
         variable task_results_queue
+        variable load_balancer_chore
+        variable jobs_quota
         variable shutdown_counter
         variable shutdown_signal
 
         constructor {max_workers_num} {
             set sequence_list           {}
             set sequence_idx            0
+            set sequence_mark_idx       0
             set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_workers_num]
             set pending_sequences       {}
             set round_robin_procedure   ""
             set task_results_chore      ""
+            set load_balancer_chore     ""
+            set jobs_quota              $max_workers_num
             set task_results_queue      [::struct::queue ::ngis::task_results]
             set shutdown_signal         false
             set stop_operations         false
@@ -40,10 +46,29 @@ namespace eval ::ngis {
             $thread_master destroy
         }
 
-        method RescheduleRoundRobin {} {
+        method RescheduleRoundRobin {{multiple 1}} {
             if {$round_robin_procedure == ""} {
-                ::ngis::logger debug "rescheduling job sequences round robin"
-                set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
+                ::ngis::logger debug "rescheduling job sequences round robin with delay multiplicator = $multiple"
+                set round_robin_procedure \
+                    [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
+            }
+        }
+
+        # -- LoadBalancerChore
+        #
+        # implements a flat policy of threads quota among sequences
+        #
+
+        method LoadBalancerChore {} {
+            set running_jobs [my running_jobs_tot]
+            set max_threads_num $::ngis::max_workers_number
+
+            set jobs_quota [expr 1 + int($max_threads_num/$running_jobs)]
+        }
+
+        method ScheduleLoadBalancer {} {
+            if {$load_balancer_chore == ""} {
+                set load_balancer_chore [after 2000 [list my LoadBalancerChore]]
             }
         }
 
@@ -81,6 +106,10 @@ namespace eval ::ngis {
             ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
             my RescheduleRoundRobin
+
+            if {[llength $sequence_list] > 1} {
+                my ScheduleLoadBalancer
+            }
         }
 
         method post_task_results {task_results} {
@@ -138,12 +167,19 @@ namespace eval ::ngis {
                 foreach s $sequence_list {
                     ::ngis::logger emit "$s: '[$s get_description]' [$s running_jobs_count] jobs"
                 }
+
+                if {([llength $sequence_list] == 1) && ($load_balancer_chore != ""} {
+                    after cancel $load_balancer_chore
+                }
                 my RescheduleRoundRobin
             } else {
 
                 # any pending task result in the results buffer is stored in the database
 
-                after 100 [list $::ngis_server sync_results $task_results_queue] 
+                after 100 [list $::ngis_server sync_results $task_results_queue]
+
+                if {$load_balancer_chore != ""} { after cancel $load_balancer_chore }
+
             }
         }
 
@@ -161,6 +197,19 @@ namespace eval ::ngis {
                 lappend pending_sequences $seq
             }
         }
+
+        # -- running_jobs_tot
+        #
+        #
+
+        method running_jobs_tot {} {
+            set njobs 0
+            foreach s [concat $sequence_list $pending_sequences] {
+                set njobs [expr $njobs + [$s active_jobs_count]]
+            }
+            return $njobs
+        }
+
 
         # -- sequence_roundrobin
         #
@@ -188,11 +237,30 @@ namespace eval ::ngis {
             if {[llength $sequence_list] == 0} { return }
 
             if {[$thread_master thread_is_available]} {
+
+                # the sequence_idx (index) had been incremented
+                # at the end of the previous run of sequence_roundrobin.
+                # We reset it in case of overrun of the sequence_list
+
                 if {$sequence_idx >= [llength $sequence_list]} {
                     set sequence_idx 0
                 }
 
+                # we must check whether a sequence is eligible to be scheduled
                 set seq [lindex $sequence_list $sequence_idx]
+                if {[$seq running_jobs_count] >= $jobs_quota} {
+
+                    # we have found a sequence exceeding the 
+                    # dyamic (though flat) job quota value.
+                    # We resubmit the round-robin with a longer
+                    # delay to determine a new sequence and
+                    # allow for some job termination
+
+                    incr sequence_idx
+                    my RescheduleRoundRobin 2
+                    return
+                }
+
                 set thread_id [$thread_master get_available_thread]
                 if {[string is false [$seq post_job $thread_id]]} {
 
@@ -205,6 +273,9 @@ namespace eval ::ngis {
                         my sequence_terminates $seq
                     }
                 }
+
+                # update the sequence_idx
+
                 incr sequence_idx
 
                 my RescheduleRoundRobin
@@ -213,16 +284,16 @@ namespace eval ::ngis {
         
 		# -- status
 		#
-		# returns the list of the current sequences and the number of
-		# running sequences
+		# returns two forms of data:
+        #    + argument jobs (default): returns the list of current 
+        #               running sequences, the total number of jobs and
+        #               the list of pending_sequences
+        #    + argument thread_master: returns the status of the
+        #               monitor thread master
 		#
         method status {{argument "jobs"}} {
             if {$argument == "jobs"} {
-                set njobs 0
-                foreach s [concat $sequence_list $pending_sequences] {
-                    set njobs [expr $njobs + [$s active_jobs_count]]
-                }
-                return [list $sequence_list $njobs $pending_sequences]
+                return [list $sequence_list [my running_jobs_tot] $pending_sequences]
             } elseif {$argument == "thread_master"} {
                 return [$thread_master status]
             }
