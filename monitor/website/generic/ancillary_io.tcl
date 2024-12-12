@@ -30,7 +30,7 @@ namespace eval ::ngis::ancillary {
         while {($status != "data_ready") && [incr n]} {
             ::thread::send $thread_id [list ::ngis::ancillary::get_status] status
             after 100
-            if {$n > 10} {
+            if {$n > 100} {
                 ::ngis log "ancillary thread timeout" error
                 return -code error -errorcode ancillary_thread_timeout "Timeout on sending command '$snig_command'"
             }
