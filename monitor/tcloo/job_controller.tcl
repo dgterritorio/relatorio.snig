@@ -60,10 +60,14 @@ namespace eval ::ngis {
         #
 
         method load_balancer_chore {} {
-            set running_jobs [my running_jobs_tot]
+            set load_balancer_chore ""
             set max_threads_num $::ngis::max_workers_number
+            set num_sequences [my sequence_number_tot]
 
-            set jobs_quota [expr 1 + int($max_threads_num/$running_jobs)]
+            set jobs_quota [expr 1 + int($max_threads_num/$num_sequences)]
+            ::ngis::logger debug "LoadBalancer: computed jobs_quota = $jobs_quota ($max_threads_num/$num_sequences)"
+
+            my ScheduleLoadBalancer
         }
 
         method ScheduleLoadBalancer {} {
@@ -76,11 +80,18 @@ namespace eval ::ngis {
             return [concat $sequence_list $pending_sequences]
         }
 
+        method sequence_number_tot {} {
+            return [llength [my job_sequences]]
+        }
+
         method wait_for_operations_shutdown {} {
-            if {([incr shutdown_counter -1] == 0) || ([llength $sequence_list] == 0)} {
+
+            set jc_sequence_number [my sequence_number_tot]
+
+            if {([incr shutdown_counter -1] == 0) || ($jc_sequence_number == 0)} {
                 return
             }
-            ::ngis::logger emit "\[$shutdown_counter\]: still [llength $sequence_list] sequences running"
+            ::ngis::logger emit "\[$shutdown_counter\]: still $jc_sequence_number sequences running"
 
             after 1000 [list [self] wait_for_operations_shutdown]
         }
@@ -95,7 +106,15 @@ namespace eval ::ngis {
         # stop_operations
 
         method stop_operations {} {
-            foreach seq $sequence_list { $seq stop_sequence }
+
+            # signal sequences to stop jobs and
+            # move them into the pending sequences list
+
+            foreach seq $sequence_list { 
+                $seq stop_sequence
+                my move_to_pending $seq
+            }
+
             # stopping the threads is actually not needed
             # as threads may be busy and we have just stopped
             # the jobs, as a matter of fact 
@@ -236,48 +255,59 @@ namespace eval ::ngis {
 
             if {[llength $sequence_list] == 0} { return }
 
-            if {[$thread_master thread_is_available]} {
+            # the sequence_idx (index) had been incremented
+            # at the end of the previous run of sequence_roundrobin.
+            # We reset it in case of have overrun the sequence_list size
 
-                # the sequence_idx (index) had been incremented
-                # at the end of the previous run of sequence_roundrobin.
-                # We reset it in case of overrun of the sequence_list
+            if {$sequence_idx >= [llength $sequence_list]} {
+                set sequence_idx 0
+            }
 
-                if {$sequence_idx >= [llength $sequence_list]} {
-                    set sequence_idx 0
-                }
+            # we must check whether a sequence is eligible to be scheduled
+            set seq [lindex $sequence_list $sequence_idx]
+            set batch $::ngis::batch_num_jobs
 
-                # we must check whether a sequence is eligible to be scheduled
-                set seq [lindex $sequence_list $sequence_idx]
+            while {[$thread_master thread_is_available] && ($batch > 0)} {
+
                 if {[$seq running_jobs_count] >= $jobs_quota} {
 
                     # we have found a sequence exceeding the 
                     # dyamic (though flat) job quota value.
-                    # We resubmit the round-robin with a longer
-                    # delay to determine a new sequence and
-                    # allow for some job termination
+                    # We break out of the while loop forcing
+                    # a resubmit by setting batch = 0
 
-                    incr sequence_idx
-                    my RescheduleRoundRobin 2
-                    return
-                }
+                    set batch 0
+                    break
 
-                set thread_id [$thread_master get_available_thread]
-                if {[string is false [$seq post_job $thread_id]]} {
+                } else {
+                    set thread_id [$thread_master get_available_thread]
+                    if {[string is false [$seq post_job $thread_id]]} {
 
-                    # let's return the thread to the idle thread pool
-                    my move_thread_to_idle $thread_id
+                        # let's return the thread to the idle thread pool
+                        my move_thread_to_idle $thread_id
 
-                    if {[$seq running_jobs_count] > 0} {
-                        my move_to_pending $seq
-                    } else {
-                        my sequence_terminates $seq
+                        if {[$seq running_jobs_count] > 0} {
+                            my move_to_pending $seq
+                        } else {
+                            my sequence_terminates $seq
+                        }
+
+                        set batch 0
+                        break
                     }
+                    incr batch -1
                 }
+            }
 
+            # if $batch hasn't been decremented then we haven't 
+            # lauched any jobs/threads and we didn't found a sequence
+            # that reached a jobs quota limit. In this case we don't want to 
+            # increment sequence_idx, as the current sequence might
+            # need attention as soon as some threads becomes available
+
+            if {$batch < $::ngis::batch_num_jobs} {
                 # update the sequence_idx
-
                 incr sequence_idx
-
                 my RescheduleRoundRobin
             }
         }

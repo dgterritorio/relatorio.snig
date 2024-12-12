@@ -300,7 +300,7 @@ namespace eval ::ngis::service {
         set sql [join $sql " "]
         set query_result [exec_sql_query $sql]
 
-        puts "SQL: $sql"
+        #puts "SQL: $sql"
 
         set services_d [dict create]
         $query_result foreach -as dicts s_d {

@@ -39,10 +39,6 @@ catch { ::ngis::JobSequence destroy }
     method active_jobs {} { return $running_jobs }
     method completed_jobs {} { return $num_of_completed_jobs }
 
-    method job_scheduling_completed {job_o} {
-        ::ngis::logger emit "$job_o scheduling has completed"
-    }
-
     method delete_jobs {} {
         ::ngis::logger emit "[self] cleaning up finished jobs"
         foreach j $jobs_to_destroy { $j destroy }
