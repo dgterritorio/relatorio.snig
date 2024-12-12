@@ -25,11 +25,11 @@ curl_rcode="$?"
 if [ $curl_rcode -ne 0 ]; then
     wget --timeout=$TIMEOUT --output-document=$capabilities_fn --tries=1 "$url"
     wget_rcode="$?"
-    if [ $wget_rcode ne 0]; then
+    if [ $wget_rcode ne 0 ]; then
 
         if [[ $curl_rcode -eq 28 && $wget_rcode -eq 4 ]]; then
             echo $(make_error_result "timeout error" \
-                 "Capabilities version ${version} failed on a $TIMEOUT secs error" "")   
+                 "Capabilities version ${version} failed on a $TIMEOUT secs error" "")
         else
             echo $(make_error_result "download_failure" \
                 "Capabilities version ${version} download failed (curl error: $curl_rcode, wget error: $wget_rcode)" "")
@@ -42,7 +42,7 @@ fi
 xmlvalid=$(xmlstarlet validate $capabilities_fn | grep invalid)
 
 if [ -z "$xmlvalid" ]; then 
-    echo $(make_ok_result "valid WFS Capabilities XML document version $version")
+    echo $(make_ok_result "Valid WFS Capabilities XML document version $version")
 else 
     echo $(make_error_result "invalidxml" "Invalid XML Capabilities Document $version")
 fi

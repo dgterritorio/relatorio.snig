@@ -26,8 +26,8 @@ psql -U $USERNAME -d $DB_NAME -h $HOST -c "UPDATE testsuite.uris_long_temp SET u
 
 # I guess gid was to be defined beforehand as foreign key for both service_status and service_log. Currently it's not!
 
-ALTER TABLE testsuite.service_status ADD CONSTRAINT "service_gid_ref1" FOREIGN KEY (gid) REFERENCES (uris_long) ON DELETE CASCADE;
-ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN KEY (gid) REFERENCES (uris_long) ON DELETE CASCADE;
+ALTER TABLE testsuite.service_status ADD CONSTRAINT "service_gid_ref1" FOREIGN KEY (gid) REFERENCES uris_long (gid) ON DELETE CASCADE;
+ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN KEY (gid) REFERENCES uris_long (gid) ON DELETE CASCADE;
 
 # 
 #
@@ -55,16 +55,17 @@ ALTER TABLE testsuite.service_log    ADD CONSTRAINT "service_gid_ref2" FOREIGN K
 # C: Rows in uris_long_temp but not in uris_long
 #
 # How can determine if a row belongs to uris_long or to uris_long table? 
-# * It's the uri column* as per telephone conversation we had last sunday
+# * It's the uri column * as per telephone conversation we had last sunday
 
-# I'm assuming that column uri uniquely identifies a row (a UNIQUE constraint must 
+# I'm assuming that column uri uniquely identifies a row (some sort
+# of constraint should enforce this fact)
 
 # Remove records of set A
 # 
-# If the constrained I defined above are applied records in service_status
+# If the constraints I defined above are applied then records in service_status
 # and service_log are removed automatically
 
-DELETE FROM testsuite.uris_long WHERE uri NOT IN (SELECT uri from testsuite.uris_long_table);
+DELETE FROM testsuite.uris_long WHERE uri NOT IN (SELECT uri from testsuite.uris_long_temp);
 
 # Update records of set B
 
@@ -86,4 +87,3 @@ WHERE testsuite.uris_long.uri = subquery.uri;
 INSERT INTO testsuite.uris_long ul (uri,uri_original,uri_type,version,entity,description,eid) VALUES 
     (SELECT uri,uri_original,uri_type,version,entity,description,eid from testsuite.uris_long_temp ult where ult.uri NOT IN
     (SELECT uri FROM testsuite.uris_long))
-
