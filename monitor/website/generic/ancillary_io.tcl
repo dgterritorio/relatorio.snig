@@ -45,12 +45,12 @@ namespace eval ::ngis::ancillary {
         set json_data [send_command_and_wait $thread_id "FORMAT JSON"]
 
         set json_data [::json::json2dict $json_data]
-        ::ngis::log "server responded with code [dict get $json_data code]" error
+        ::ngis::log "server responded with code [dict get $json_data code]" info
 
         set json_data [send_command_and_wait $thread_id "REGTASKS"]
         set json_data [::json::json2dict $json_data]
         set code [dict get $json_data code]
-        ::ngis::log "server responded with code $code" error
+        ::ngis::log "server responded with code $code" info
 
         if {$code == "110"} {
             set tasks_dl [dict get $json_data tasks]

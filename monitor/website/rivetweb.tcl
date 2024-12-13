@@ -51,3 +51,4 @@ namespace eval ::ngis {
     set messagebox [MessagePrinter [namespace current]::#auto]
 
 }
+::rivet::apache_log_error info "rivetweb.tcl successfully terminates"
