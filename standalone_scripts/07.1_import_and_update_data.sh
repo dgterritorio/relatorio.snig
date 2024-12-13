@@ -74,9 +74,9 @@ WITH subquery AS (
     FROM  testsuite.uris_long_temp
 )
 UPDATE testsuite.uris_long
-SET uuid     = subquery.uuid,
-    entity   = subquery.entity,
-    eid      = subquery.eid,
+SET uuid        = subquery.uuid,
+    entity      = subquery.entity,
+    eid         = subquery.eid,
     description = subquery.description,
     uri_original = subquery.uri_original
 FROM subquery
