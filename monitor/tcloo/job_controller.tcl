@@ -17,7 +17,6 @@ namespace eval ::ngis {
         variable sequence_list
         variable pending_sequences
         variable sequence_idx
-        variable sequence_mark_idx
         variable thread_master
         variable round_robin_procedure
         variable task_results_chore
@@ -29,7 +28,6 @@ namespace eval ::ngis {
         constructor {max_workers_num} {
             set sequence_list           {}
             set sequence_idx            0
-            set sequence_mark_idx       0
             set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_workers_num]
             set pending_sequences       {}
             set round_robin_procedure   ""
