@@ -42,20 +42,21 @@ namespace eval ::ngis::service {
             set status [dict get $t status]
             set uuid   [dict get $t job uuid]
             if {$status == ""} { break }
-            lassign $status exit_status exit_info exit_trace exit_info timestamp
-            lappend values_l "($gid,timezone('$::ngis::TIMEZONE',to_timestamp($timestamp)),'$task','$exit_status','$exit_info','$uuid')"
+            lassign $status exit_status exit_info exit_trace exit_info timestamp task_duration
+            lappend values_l "($gid,timezone('$::ngis::TIMEZONE',to_timestamp($timestamp)),'$task','$exit_status','$exit_info','$uuid',$task_duration)"
         }
 
-        set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info,uuid) "
+        set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info,uuid,task_duration) "
         append sql "VALUES [join $values_l ","] "
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
-        append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info"
+        append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info, "
+        append sql "task_duration = EXCLUDED.task_duration"
         puts $sql
         set query_res [exec_sql_query $sql]
         $query_res close
 
-        set    sql "INSERT INTO $::ngis::SERVICE_LOG (gid,ts,task,exit_status,exit_info,uuid) "
+        set    sql "INSERT INTO $::ngis::SERVICE_LOG (gid,ts,task,exit_status,exit_info,uuid,task_duration) "
         append sql "VALUES [join $values_l ","] "
         #puts $sql
         set query_res [exec_sql_query $sql]

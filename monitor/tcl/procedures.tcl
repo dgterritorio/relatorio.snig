@@ -62,6 +62,10 @@ namespace eval ::ngis::procedures {
         return [::ngis::tasks::make_ok_result "[string length $http_returned_data] characters returned"]
     }
     
+    proc format_elapsed_time {et} {
+        return [format "%.3f" [expr double($et)/1000.]]
+    }
+
     proc run_tcl {task_d} {
 
         set script [::ngis::tasks script $task_d]
@@ -77,7 +81,10 @@ namespace eval ::ngis::procedures {
         set uuid_space      [file join $::ngis::data_root data $uri_type $uuid]
         set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
         if {[ catch {
+            set t1 [clock milliseconds]
             set script_results [::ngis::tasks::${function} $task_d $tmpfile_root $uuid_space]
+            set t2 [clock milliseconds]
+            lappend script_results [format_elapsed_time [expr $t2 - $t1]]
         } e einfo] } {
             ::ngis::logger emit "Tcl script error: $e $einfo"
             return [::ngis::tasks::make_error_result $e $einfo ""]
@@ -113,7 +120,10 @@ namespace eval ::ngis::procedures {
         set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
         ::ngis::logger debug "running command: $cmd"
         if {[catch {
+            set t1 [clock milliseconds]
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
+            set t2 [clock milliseconds]
+            lappend script_results [format_elapsed_time [expr $t2 - $t1]]
         } e einfo]} {
             ::ngis::logger emit "bash script error: $e $einfo"
             return [::ngis::tasks::task_execution_error $e [dict get $einfo -errorcode] \
