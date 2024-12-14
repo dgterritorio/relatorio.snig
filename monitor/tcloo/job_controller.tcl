@@ -22,7 +22,6 @@ namespace eval ::ngis {
         variable round_robin_procedure
         variable task_results_chore
         variable task_results_queue
-        variable load_balancer_chore
         variable jobs_quota
         variable shutdown_counter
         variable shutdown_signal
@@ -35,7 +34,6 @@ namespace eval ::ngis {
             set pending_sequences       {}
             set round_robin_procedure   ""
             set task_results_chore      ""
-            set load_balancer_chore     ""
             set jobs_quota              $max_workers_num
             set task_results_queue      [::struct::queue ::ngis::task_results]
             set shutdown_signal         false
@@ -54,13 +52,12 @@ namespace eval ::ngis {
             }
         }
 
-        # -- LoadBalancerChore
+        # -- LoadBalancer
         #
         # implements a flat policy of threads quota among sequences
         #
 
-        method load_balancer_chore {} {
-            set load_balancer_chore ""
+        method LoadBalancer {} {
             set max_threads_num $::ngis::max_workers_number
             set num_sequences [my sequence_number_tot]
 
@@ -118,7 +115,7 @@ namespace eval ::ngis {
         method post_sequence {job_sequence} {
             ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
-            my load_balancer_chore            
+            my LoadBalancer
             my RescheduleRoundRobin
         }
 
@@ -155,7 +152,6 @@ namespace eval ::ngis {
             return $njobs
         }
 
-
         # -- sequence_roundrobin
         #
         # Round robin handling of job sequences. We execute one
@@ -174,7 +170,7 @@ namespace eval ::ngis {
                 set psidx 0
                 foreach seq $ps {
                     if {[$seq running_jobs_count] == 0} {
-                        set sequence_list [lreplace $sequence_list $psidx $psidx]
+                        set pending_sequences [lreplace $pending_sequences $psidx $psidx]
                     }
                 }
 
@@ -185,7 +181,9 @@ namespace eval ::ngis {
             # up with their termination
 
             if {[llength $pending_sequences] > 0} {
-                my RescheduleRoundRobin
+                set multiple 1
+                if {[llength $sequence_list] == 0} { set multiple 5 }
+                my RescheduleRoundRobin $multiple
             }
 
             # we don't have anything to do here if there are no
@@ -243,7 +241,7 @@ namespace eval ::ngis {
 
                         }
                         my RescheduleRoundRobin
-                        my load_balancer_chore
+                        my LoadBalancer
                         return
                     }
                 }
