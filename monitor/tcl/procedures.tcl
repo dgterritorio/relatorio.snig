@@ -117,18 +117,33 @@ namespace eval ::ngis::procedures {
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
         set script [::ngis::tasks script $task_d]
-        set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
-        ::ngis::logger debug "running command: $cmd"
-        if {[catch {
+        set cmd [list /usr/bin/timeout "${::ngis::task_timeout}s" /bin/bash $script "$script_args" $tmpfile_root $uuid_space]
+        ::ngis::logger debug "running command: [join $cmd " "]"
+
+        try {
+
             set t1 [clock milliseconds]
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
             set t2 [clock milliseconds]
             lappend script_results [format_elapsed_time [expr $t2 - $t1]]
-        } e einfo]} {
-            ::ngis::logger emit "bash script error: $e $einfo"
-            return [::ngis::tasks::task_execution_error $e [dict get $einfo -errorcode] \
-                                                           [dict get $task_d task]]
+
+        } trap CHILDSTATUS {results options} {
+            set status [lindex [dict get $options -errorcode] 2]
+            switch $status {
+                124 {
+                    set script_results [::ngis::tasks::make_error_result task_timeout "task execution times out after $::ngis::task_timeout" "task_timeout"]
+                    lappend script_results $::ngis::task_timeout
+                }
+                default {
+                    set script_results [::ngis::tasks::task_execution_error task_error "Task execution failed" [dict get $options -errorcode]]
+                    lappend script_results 0
+                }
+            }
+        } on error {e options} {
+            ::ngis::logger emit "bash script error: $e $options"
+            return -options $options -level 0 $e
         }
+
         return $script_results
     }
 

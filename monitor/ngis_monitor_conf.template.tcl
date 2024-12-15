@@ -18,6 +18,7 @@ namespace eval ::ngis {
     variable debugging          false
 
     variable task_results_queue_size 10
+    variable task_timeout       30
     variable max_workers_number 5
 
     variable debug_task_delay   5000
