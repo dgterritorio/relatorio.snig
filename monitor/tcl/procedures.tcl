@@ -131,7 +131,7 @@ namespace eval ::ngis::procedures {
             set status [lindex [dict get $options -errorcode] 2]
             switch $status {
                 124 {
-                    set script_results [::ngis::tasks::make_error_result task_timeout "task execution times out after $::ngis::task_timeout" "task_timeout"]
+                    set script_results [::ngis::tasks::make_error_result task_timeout "task execution times out after $::ngis::task_timeout secs" "task_timeout"]
                     lappend script_results $::ngis::task_timeout
                 }
                 default {

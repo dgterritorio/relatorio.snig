@@ -169,6 +169,7 @@ namespace eval ::ngis {
                 foreach seq $ps {
                     if {[$seq running_jobs_count] == 0} {
                         set pending_sequences [lreplace $pending_sequences $psidx $psidx]
+                        $seq destroy
                     }
                 }
 
@@ -187,7 +188,10 @@ namespace eval ::ngis {
             # we don't have anything to do here if there are no
             # active sequences on 'sequence_list'
 
-            if {[llength $sequence_list] == 0} { return }
+            if {[llength $sequence_list] == 0} {
+                after 100 [list $::ngis_server sync_results $task_results_queue]
+                return 
+            }
 
             # the sequence_idx (index) had been incremented
             # at the end of the previous run of sequence_roundrobin.
@@ -204,7 +208,7 @@ namespace eval ::ngis {
 
                 # we must check whether a sequence is eligible to be scheduled
 
-                if {[$seq running_jobs_count] >= $jobs_quota} {
+                if {[$seq running_jobs_count] >= int(0.9*$jobs_quota)} {
 
                     # This sequence is exceeding the dynamic (though flat)
                     # job quota value. We break out of the while loop
@@ -216,9 +220,10 @@ namespace eval ::ngis {
                     set thread_id [$thread_master get_available_thread]
                     if {[string is false [$seq post_job $thread_id]]} {
 
-                        # let's return the thread to the idle thread pool
+                        # let's return the thread back to the idle threads pool
                         my move_thread_to_idle $thread_id
 
+                        set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
                         if {[$seq running_jobs_count] == 0} {
 
                             # the sequence has terminated its jobs. We don't
@@ -226,16 +231,15 @@ namespace eval ::ngis {
                             # lets shifts sequences on the list to the right of
                             # the current index sequence
 
-                            set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+                            $seq destroy
 
                         } else {
 
                             # the sequence turned down the just allocated thread
-                            # and that means no more of its jobs need to be scheduled.
-                            # We move the sequence into the pending sequences list
+                            # and that means it has no more service records to be checked.
+                            # We move the sequence into the pending sequences list.
 
                             lappend pending_sequences $seq
-                            set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
 
                         }
                         my RescheduleRoundRobin
