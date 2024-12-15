@@ -14,9 +14,9 @@ catch { ::ngis::JobSequence destroy }
 ::oo::class create ::ngis::JobSequence {
     variable data_source
     variable description
-    variable running_jobs
     variable stop_signal
-    variable completed_jobs
+    variable num_of_completed_jobs
+    variable running_jobs
     variable jobs_to_destroy
 
     constructor {ds {dscr ""}} {
@@ -24,7 +24,7 @@ catch { ::ngis::JobSequence destroy }
         set description     $dscr
         set stop_signal     false
         set current_job     ""
-        set completed_jobs  0
+        set num_of_completed_jobs  0
         set jobs_to_destroy {}
         set running_jobs    {}
     }
@@ -37,11 +37,7 @@ catch { ::ngis::JobSequence destroy }
 	method get_description {} { return $description }
     method active_jobs_count {} { return [my running_jobs_count] }
     method active_jobs {} { return $running_jobs }
-    method completed_jobs {} { return $completed_jobs }
-
-    method job_scheduling_completed {job_o} {
-        ::ngis::logger emit "$job_o scheduling has completed"
-    }
+    method completed_jobs {} { return $num_of_completed_jobs }
 
     method delete_jobs {} {
         ::ngis::logger emit "[self] cleaning up finished jobs"
@@ -53,7 +49,7 @@ catch { ::ngis::JobSequence destroy }
     # callback from ::ngis::Job to signal that tasks are completed
 
     method job_completed {job_o} {
-        incr completed_jobs
+        incr num_of_completed_jobs
         lappend jobs_to_destroy $job_o
 
         set j [lsearch $running_jobs $job_o]

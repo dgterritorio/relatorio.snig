@@ -46,6 +46,7 @@ namespace eval ::rwpage {
                 118 {
                     $json_o map_open string code string "618"
                     $json_o string title string [dict get $data description]
+                    $json_o string message string "Data refreshed"
                     $json_o string report string [${fmtns}::service_tasks $data]
                     $json_o map_close
                     puts [$json_o get]

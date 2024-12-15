@@ -15,11 +15,13 @@ namespace eval ::ngis {
     variable snig_server_root   [file normalize [file dirname [info script]]]
     variable docs_base          [file join $snig_server_root doc]
     variable tasks_dir          [file join $snig_server_root tasks]
+    variable utils_dir          [file join $snig_server_root utils]
     variable debugging          false
 
     variable task_results_queue_size 10
     variable task_timeout       30
-    variable max_workers_number 5
+    variable max_workers_number 50
+    variable batch_num_jobs     10
 
     variable debug_task_delay   5000
     variable task_delay         100

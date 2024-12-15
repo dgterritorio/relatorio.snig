@@ -57,17 +57,17 @@ catch {::ngis::ThreadMaster destroy }
         if {[$idle_thread_queue size] == 0} {
             if {[array size running_threads] < $max_threads_number} {
                 set thread_id [my start_worker_thread]
-                my move_to_running $thread_id
                 ::ngis::logger debug "'$thread_id' started ========"
             } else {
                 ::ngis::logger emit \
-                    "Internal server error: a thread was supposed to be available"
-                return -code 1 -errorcode thread_not_available "A thread was supposed to be available"
+                    "Internal server error: running threads number exceeds max_threads_number"
+                return -code 1 -errorcode thread_not_available "Running threads number exceeds max_threads_number"
             }
         } else {
             set thread_id [$idle_thread_queue get]
-            my move_to_running $thread_id
         }
+
+        my move_to_running $thread_id
 
         ::ngis::logger emit "[array size running_threads] running, [$idle_thread_queue size] idle threads"
         return $thread_id
