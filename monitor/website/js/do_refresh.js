@@ -15,7 +15,7 @@ function do_refresh () {
         dataType: 'json',        // Expected response type
         success: function (response) {
             // Update the UI based on the response
-            $('#response').text(response.title);
+            $('#response').text(response.message);
             $('#task_results').html(response.report);
         },
         error: function (jqXHR, textStatus, errorThrown) {
