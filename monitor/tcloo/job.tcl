@@ -49,6 +49,11 @@ package require struct::queue
         [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
 
+    method initialize {} {
+        if {[$tasks_q size] > 0} { $tasks_q clear }
+        $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
+    }
+
     method start_job {thread_id} {
         if {[$tasks_q size] > 0} { $tasks_q clear }
 
