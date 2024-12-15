@@ -23,7 +23,7 @@ time_dot=$(echo $time | sed 's/,/./')
 
 valid_code=$(echo $sc | grep -oP ${HTTP_VALID_CODES})
 if [ "$valid_code" == "" ]; then
-    echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $sc")
+    echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $sc" "$sc")
 else
     echo $(make_ok_result "http_status_code: $sc ping_time: $time_dot")
 fi
