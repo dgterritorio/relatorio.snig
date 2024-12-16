@@ -57,9 +57,9 @@ namespace eval ::ngis {
 
         method LoadBalancer {} {
             set max_threads_num $::ngis::max_workers_number
-            set num_sequences [my sequence_number_tot]
+            set num_sequences [llength $sequence_list]
 
-            if {$num_sequences <= 1} { 
+            if {$num_sequences <= 1} {
                 set jobs_quota $max_threads_num
             } else {
                 set jobs_quota [expr 1 + int($max_threads_num/$num_sequences)]
@@ -165,14 +165,14 @@ namespace eval ::ngis {
                 # 'ps' because by calling we modify this list
 
                 set ps $pending_sequences
-                set psidx 0
-                foreach seq $ps {
+                set pending_sequences [lmap seq $ps {
                     if {[$seq running_jobs_count] == 0} {
-                        set pending_sequences [lreplace $pending_sequences $psidx $psidx]
                         $seq destroy
+                        continue
+                    } else {
+                        set seq
                     }
-                }
-
+                }]
             }
 
             # just in case there are pending sequences left
@@ -228,7 +228,7 @@ namespace eval ::ngis {
 
                             # the sequence has terminated its jobs. We don't
                             # need to increment sequence_idx, since lreplace
-                            # lets shifts sequences on the list to the right of
+                            # shifts sequences on the list to the right of
                             # the current index sequence
 
                             $seq destroy
