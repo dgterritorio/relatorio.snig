@@ -1,3 +1,4 @@
+#!/usr/bin/tclsh
 # -- testbed.tcl
 #
 #
@@ -8,6 +9,8 @@ if {$dot < 0} {
 } elseif {$dot > 0} {
     set auto_path [concat "." [lreplace $auto_path $dot $dot]]
 }
+
+package require tclreadline
 
 package require ngis::conf
 package require ngis::server
@@ -21,13 +24,29 @@ package require ngis::procedures
 
 package require ngis::hrformat
 
+set arguments $argv
+set gid 9000
+while {[llength $arguments]} {
+
+    set arguments [lassign $arguments argname]
+    switch $argname {
+        gid {
+            set arguments [lassign $arguments gid]
+        }
+        default {
+            puts "unknown argument: $argname"
+        }
+    }
+
+}
+
 ::ngis::tasks build_tasks_database ./tasks
 
 set ::ngis_server [::ngis::Server create ::ngis_server]
 
-set jcontroller [::ngis_server create_job_controller 100]
-set tm ::ngis::thread_master
-set gid_rec [::ngis::service::load_by_gid 9000]
+set jcontroller [::ngis_server create_job_controller 50]
+set tm           ::ngis::thread_master
+set gid_rec     [::ngis::service::load_by_gid $gid]
 
 # faking a sequence
 #::oo::define ::ngis::JobSequence {
@@ -48,7 +67,13 @@ set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registere
 
 $job_o initialize
 set q [$job_o task_queue]
-set task_d [$q get]
+
+set task_l [$q peek [$q size]]
+
+foreach t $task_l {
+    set task_a([dict get $t task]) $t
+}
+
 
 #source tcl/tasks_procedures.tcl
 #$job_o post_task [thread::id]
@@ -61,3 +86,5 @@ set task_d [$q get]
 #}
 
 #set hr_f [::ngis::HRFormat new]
+
+::tclreadline::Loop
