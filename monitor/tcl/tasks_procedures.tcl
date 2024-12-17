@@ -52,9 +52,10 @@ proc do_task {task_d job_thread_id} {
     }
 
     if {[string is true $::ngis::debugging]} {
-        after $::ngis::debug_task_delay 
+        after $::ngis::debug_task_delay
     } else {
         after $::ngis::task_delay
     }
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
+
 }
