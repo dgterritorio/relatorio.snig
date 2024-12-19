@@ -39,16 +39,6 @@ package require struct::queue
 
     method set_sequence {its_sequence} { set sequence $its_sequence }
 
-    method notify_sequence {thread_id} {
-        ::ngis::logger emit "Job [self] terminates"
-        
-        if {$sequence != ""} { 
-            $sequence job_completed [self]
-        }
-        # this call eventually reschedules the job sequence round robin
-        [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
-    }
-
     method initialize {} {
         if {[$tasks_q size] > 0} { $tasks_q clear }
         $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
@@ -68,6 +58,14 @@ package require struct::queue
 
     method stop_job {} {
         my SetStatus stop_signal_received
+    }
+
+    method notify_sequence {thread_id} {
+        ::ngis::logger emit "Job [self] terminates"
+        
+        if {$sequence != ""} { $sequence job_completed [self] }
+        # this call eventually reschedules the job sequence round robin
+        [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
 
     method post_task {thread_id} {

@@ -26,12 +26,16 @@ package require ngis::hrformat
 
 set arguments $argv
 set gid 9000
+set eid ""
 while {[llength $arguments]} {
 
     set arguments [lassign $arguments argname]
     switch $argname {
         gid {
             set arguments [lassign $arguments gid]
+        }
+        eid {
+            set arguments [lassign $arguments eid]
         }
         default {
             puts "unknown argument: $argname"
@@ -58,10 +62,11 @@ set gid_rec     [::ngis::service::load_by_gid $gid]
 #set entity "Instituto Nacional de Estatística, I.P."
 #puts "building the job sequence for $entity"
 
-#set resultset       [::ngis::service load_by_entity $entity -resultset]
-#set datasource      [::ngis::DBJobSequence create ::jbsequenceds $resultset]
-#set the_sequence    [::ngis::JobSequence create ::job_sequence $datasource]
-
+if {$eid != ""} {
+    set service_l    [::ngis::service load_by_entity $eid]
+    set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
+    set the_sequence [::ngis::JobSequence create ::job_sequence $datasource ""]
+}
 set thread_id [$tm get_available_thread]
 set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registered_tasks]]
 

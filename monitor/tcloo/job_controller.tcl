@@ -175,15 +175,15 @@ namespace eval ::ngis {
                 }]
             }
 
-            # just in case there are pending sequences left
-            # we reschedule the round robin in order to catch
-            # up with their termination
-
-            if {[llength $pending_sequences] > 0} {
-                set multiple 1
-                if {[llength $sequence_list] == 0} { set multiple 5 }
-                my RescheduleRoundRobin $multiple
-            }
+            ## just in case there are pending sequences left
+            ## we reschedule the round robin in order to catch
+            ## up with their termination
+            #
+            #if {[llength $pending_sequences] > 0} {
+                #set multiple 1
+                #if {[llength $sequence_list] == 0} { set multiple 5 }
+                #my RescheduleRoundRobin $multiple
+            #}
 
             # we don't have anything to do here if there are no
             # active sequences on 'sequence_list'

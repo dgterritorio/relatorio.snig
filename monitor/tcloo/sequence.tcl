@@ -111,8 +111,12 @@ catch { ::ngis::JobSequence destroy }
 
 ::oo::class create ::ngis::DataSource {
 
+    variable jobs_created 0
+
     method njobs {} { return 0 }
     method get_next {} { return "" }
+    method jobs_created {} { return $jobs_created }
+    method incr_jobs_created {} { incr jobs_created }
 
 }
 
@@ -139,7 +143,6 @@ catch { ::ngis::JobSequence destroy }
             ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
             set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $res_d [::ngis::tasks get_registered_tasks]]
-
             return $job_o
         }
         return ""
@@ -151,31 +154,28 @@ catch { ::ngis::JobSequence destroy }
     superclass ::ngis::DataSource
 
     variable service_l
-    variable service_idx
+    variable service_l_length
 
     constructor {sl} {
-
-        foreach service_d $sl {
-            set gid [dict get $service_d gid]
-            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_d [::ngis::tasks get_registered_tasks]]
-            lappend service_l $job_o
-        }
-
-        set service_idx -1
+        set service_l $sl
+        set service_l_length [llength $service_l]
     }
 
     destructor {
-        #foreach j $service_l { $j destroy }
+        ::ngis::logger debug "[self] returned [my jobs_created] job objects out of $service_l_length initial service records"
     }
 
-    method njobs {} { return [llength $service_l] }
+    method njobs {} { return $service_l_length }
 
     method get_next {} {
-        if {$service_idx < [llength $service_l]} {
-            return [lindex $service_l [incr service_idx]]
-        } else {
-            return ""
-        }
+        set service_l [lassign $service_l service_rec_d]
+        if { $service_rec_d == ""} { return "" }
+
+        set gid [dict get $service_rec_d gid]
+        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d [::ngis::tasks get_registered_tasks]]
+
+        my incr_jobs_created
+        return $job_o
     }
 
 }
