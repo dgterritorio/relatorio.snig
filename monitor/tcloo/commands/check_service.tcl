@@ -28,6 +28,7 @@ namespace eval ::ngis::client_server {
                 set entity [::ngis::service::entity get_description $entity_d]
                 set services_l [::ngis::service load_by_entity $eid]
                 set job_controller [$::ngis_server get_job_controller]
+                ::ngis::logger emit "Posting sequence for entity $entity ($eid) with [llength $services_l] service records"
                 $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
                                 [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $services_l] $entity]
             } else {
