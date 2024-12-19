@@ -26,10 +26,10 @@ namespace eval ::ngis::client_server {
             set entity_d [::ngis::service load_entity_record $eid]
             if {[dict size $entity_d] > 0} {
                 set entity [::ngis::service::entity get_description $entity_d]
-                set resultset [::ngis::service load_by_entity $eid -resultset]
+                set services_l [::ngis::service load_by_entity $eid]
                 set job_controller [$::ngis_server get_job_controller]
                 $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
-                                [::ngis::DBJobSequence create [::ngis::DataSources new_cmd] $resultset] $entity]
+                                [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $services_l] $entity]
             } else {
                 ::ngis::logger emit "No entity record found for eid $eid"
             }
