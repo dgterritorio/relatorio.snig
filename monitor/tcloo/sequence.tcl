@@ -111,7 +111,11 @@ catch { ::ngis::JobSequence destroy }
 
 ::oo::class create ::ngis::DataSource {
 
-    variable jobs_created 0
+    variable jobs_created
+
+    constructor {} {
+        set jobs_created 0
+    }
 
     method njobs {} { return 0 }
     method get_next {} { return "" }

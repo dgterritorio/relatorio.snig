@@ -50,6 +50,7 @@ catch {::ngis::ThreadMaster destroy }
     method thread_is_available {} {
         if {[$idle_thread_queue size] > 0} { return true }
         if {[array size running_threads] < $max_threads_number} { return true }
+        syslog -ident snig -facility user info "\[JOB_CONTROLLER\] no more threads available"
         return false
     }
 

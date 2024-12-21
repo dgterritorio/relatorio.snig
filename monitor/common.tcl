@@ -142,11 +142,29 @@ namespace eval ::ngis {
     namespace eval Sequences {
         variable seqn -1
         variable seq_cmd_root [namespace current]
+        variable seq_cmd_pattern [namespace current]::seq
 
-        proc new_cmd {} {
+        proc cmd_pattern {} {
+            variable seq_cmd_pattern
+
+            return $seq_cmd_pattern
+        }
+
+        proc new_cmd {{eid ""}} {
             variable seqn
             variable seq_cmd_root
-            return "${seq_cmd_root}::seq[incr seqn]"
+
+            set proposed "[cmd_pattern]${eid}"
+            set modifier 0
+            while {[info command $proposed] != ""} {
+                # set a limit to multiple jobs for the same resource
+                if {$modifier > 20} {
+                    return -code error -errorcode too_many_sequences "Too many sequences for the same eid $eid"
+                }
+                set proposed "[cmd_pattern]${eid}-[incr modifier]"
+            }
+            return $proposed
+
         }
 
         namespace export *

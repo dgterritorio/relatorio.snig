@@ -17,7 +17,7 @@ namespace eval ::ngis::client_server {
                 set jseq_des [::ngis::service get_description [lindex $service_l 0]]
             }
             set job_controller [$::ngis_server get_job_controller]
-            $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd]   \
+            $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd "000"]   \
                             [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $service_l]  \
                             $jseq_des]
         }
@@ -29,7 +29,7 @@ namespace eval ::ngis::client_server {
                 set services_l [::ngis::service load_by_entity $eid]
                 set job_controller [$::ngis_server get_job_controller]
                 ::ngis::logger emit "Posting sequence for entity $entity ($eid) with [llength $services_l] service records"
-                $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd] \
+                $job_controller post_sequence [::ngis::JobSequence create [::ngis::Sequences new_cmd $eid] \
                                 [::ngis::PlainJobList create [::ngis::DataSources new_cmd] $services_l] $entity]
             } else {
                 ::ngis::logger emit "No entity record found for eid $eid"

@@ -136,7 +136,12 @@ puts "Protocol: [package present ngis::protocol]"
             }
 
             if {[catch {
+                puts "storing [llength $results_l] results"
+                set t1 [clock milliseconds]
                 ::ngis::service::update_task_results $results_l
+                set t2 [clock milliseconds]
+
+                puts "[llength $results_l] results stored in [expr $t2 - $t1]ms"
             } e einfo]} {
                 ::ngis::logger emit "error syncing results: $e"
                 ::ngis::logger emit "===== error_info ====="

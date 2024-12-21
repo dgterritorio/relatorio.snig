@@ -44,9 +44,8 @@ namespace eval ::ngis {
 
         method RescheduleRoundRobin {{multiple 1}} {
             if {$round_robin_procedure == ""} {
-                ::ngis::logger debug "rescheduling job sequences round robin with delay multiplicator = $multiple"
-                set round_robin_procedure \
-                    [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
+                ::ngis::logger debug "\[JOB_CONTROLLER\] rescheduling job sequences round robin with delay multiplicator = $multiple"
+                set round_robin_procedure [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
             }
         }
 
@@ -107,14 +106,16 @@ namespace eval ::ngis {
             }
             set sequence_list [list]
 
-            my RescheduleRoundRobin
+            my RescheduleRoundRobin 1
         }
 
         method post_sequence {job_sequence} {
             ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
+            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] sequence_list after $job_sequence has been appended"
+            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] >$sequence_list<"
             my LoadBalancer
-            my RescheduleRoundRobin
+            my RescheduleRoundRobin 1
         }
 
         method post_task_results {task_results} {
@@ -126,7 +127,7 @@ namespace eval ::ngis {
                 after 100 [list $::ngis_server sync_results $task_results_queue]
             }
 
-            my RescheduleRoundRobin
+            my RescheduleRoundRobin 1
         }
 
         method post_task_results_cleanup {gid tasks_to_purge_l} {
@@ -135,7 +136,7 @@ namespace eval ::ngis {
 
         method move_thread_to_idle {thread_id} {
             $thread_master move_to_idle $thread_id
-            my RescheduleRoundRobin
+            my RescheduleRoundRobin 1
         }
 
         # -- running_jobs_tot
@@ -175,16 +176,6 @@ namespace eval ::ngis {
                 }]
             }
 
-            ## just in case there are pending sequences left
-            ## we reschedule the round robin in order to catch
-            ## up with their termination
-            #
-            #if {[llength $pending_sequences] > 0} {
-                #set multiple 1
-                #if {[llength $sequence_list] == 0} { set multiple 5 }
-                #my RescheduleRoundRobin $multiple
-            #}
-
             # we don't have anything to do here if there are no
             # active sequences on 'sequence_list'
 
@@ -201,10 +192,16 @@ namespace eval ::ngis {
                 set sequence_idx 0
             }
 
-            set seq [lindex $sequence_list $sequence_idx]
-            set batch -1
+            if {[string is false [$thread_master thread_is_available]]} {
+                syslog -ident snig -facility user info "\[JOB_CONTROLLER\] no threads available. Pausing the round-robin"
+                return
+            }
 
-            while {[$thread_master thread_is_available] && ([incr batch] < $::ngis::batch_num_jobs)} {
+            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] processing sequence with index $sequence_idx"
+            set seq [lindex $sequence_list $sequence_idx]
+            set batch 0
+
+            while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
                 # we must check whether a sequence is eligible to be scheduled
 
@@ -213,6 +210,7 @@ namespace eval ::ngis {
                     # This sequence is exceeding the dynamic (though flat)
                     # job quota value. We break out of the while loop
 
+                    syslog -ident snig -facility user info "\[JOB_CONTROLLER\] $seq reached job quota ([$seq running_jobs_count] / $jobs_quota)"
                     break
 
                 } else {
@@ -224,6 +222,10 @@ namespace eval ::ngis {
                         my move_thread_to_idle $thread_id
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+
+                        syslog -ident snig -facility user info "\[JOB_CONTROLLER\] sequence_list after removal of index $sequence_idx"
+                        syslog -ident snig -facility user info "\[JOB_CONTROLLER\] >$sequence_list<"
+
                         if {[$seq running_jobs_count] == 0} {
 
                             # the sequence has terminated its jobs. We don't
@@ -231,6 +233,7 @@ namespace eval ::ngis {
                             # shifts sequences on the list to the right of
                             # the current index sequence
 
+                            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] destroying seq $seq"
                             $seq destroy
 
                         } else {
@@ -240,14 +243,25 @@ namespace eval ::ngis {
                             # We move the sequence into the pending sequences list.
 
                             lappend pending_sequences $seq
+                            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] $seq moved to pending list"
 
                         }
-                        my RescheduleRoundRobin
                         my LoadBalancer
-                        return
+                        break
+                    } else {
+                        incr batch
                     }
                 }
             }
+
+            # there's no point to reschedule the round robin if no threads are available
+
+            if {[string is false [$thread_master thread_is_available]]} {
+                syslog -ident snig -facility user info "\[JOB_CONTROLLER\] thread pool exhausted"
+                return
+            }
+
+            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] launched $batch jobs for seq $seq"
             my RescheduleRoundRobin
             incr sequence_idx
         }
