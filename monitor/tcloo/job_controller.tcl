@@ -42,9 +42,13 @@ namespace eval ::ngis {
             $thread_master destroy
         }
 
+        method LogMessage {aMsg {method emit}} {
+            ::ngis::logger $method "\[JOB_CONTROLLER\] $aMsg"
+        }
+
         method RescheduleRoundRobin {{multiple 1}} {
             if {$round_robin_procedure == ""} {
-                ::ngis::logger debug "\[JOB_CONTROLLER\] rescheduling job sequences round robin with delay multiplicator = $multiple"
+                my LogMessage "rescheduling job sequences round robin with delay multiplicator = $multiple" debug
                 set round_robin_procedure [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
             }
         }
@@ -112,8 +116,8 @@ namespace eval ::ngis {
         method post_sequence {job_sequence} {
             ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
-            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] sequence_list after $job_sequence has been appended"
-            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] >$sequence_list<"
+            ::ngis::logger debug "\[JOB_CONTROLLER\] sequence_list after $job_sequence has been appended"
+            ::ngis::logger debug "\[JOB_CONTROLLER\] >$sequence_list<"
             my LoadBalancer
             my RescheduleRoundRobin 1
         }
@@ -162,9 +166,6 @@ namespace eval ::ngis {
 
             if {[llength $pending_sequences] > 0} {
 
-                # we copy 'pending_sequences' into the dumb variable
-                # 'ps' because by calling we modify this list
-
                 set ps $pending_sequences
                 set pending_sequences [lmap seq $ps {
                     if {[$seq running_jobs_count] == 0} {
@@ -177,27 +178,32 @@ namespace eval ::ngis {
             }
 
             # we don't have anything to do here if there are no
-            # active sequences on 'sequence_list'
+            # active job sequences on 'sequence_list'
 
             if {[llength $sequence_list] == 0} {
                 after 100 [list $::ngis_server sync_results $task_results_queue]
                 return 
             }
 
-            # the sequence_idx (index) had been incremented
+            # the sequence_idx (index) had in case been incremented
             # at the end of the previous run of sequence_roundrobin.
-            # We reset it in case we overran the sequence_list size
+            # We wrap it if the value overran the sequence_list size
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0
             }
 
+            # if there are no threads available we can return and wait for
+            # some worker thread be returned to idle threads queue
+
             if {[string is false [$thread_master thread_is_available]]} {
-                syslog -ident snig -facility user info "\[JOB_CONTROLLER\] no threads available. Pausing the round-robin"
+                my LogMessage "no threads available. Pausing the round-robin" debug
                 return
             }
 
-            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] processing sequence with index $sequence_idx"
+            # let's go ahead and process the sequence pointed by 'sequence_idx'
+
+            my LogMessage "processing sequence with index $sequence_idx" debug
             set seq [lindex $sequence_list $sequence_idx]
             set batch 0
 
@@ -210,7 +216,7 @@ namespace eval ::ngis {
                     # This sequence is exceeding the dynamic (though flat)
                     # job quota value. We break out of the while loop
 
-                    syslog -ident snig -facility user info "\[JOB_CONTROLLER\] $seq reached job quota ([$seq running_jobs_count] / $jobs_quota)"
+                    my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
                     break
 
                 } else {
@@ -223,8 +229,8 @@ namespace eval ::ngis {
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
 
-                        syslog -ident snig -facility user info "\[JOB_CONTROLLER\] sequence_list after removal of index $sequence_idx"
-                        syslog -ident snig -facility user info "\[JOB_CONTROLLER\] >$sequence_list<"
+                        my LogMessage "sequence_list after removal of index $sequence_idx" debug
+                        my LogMessage "$sequence_list" debug
 
                         if {[$seq running_jobs_count] == 0} {
 
@@ -233,7 +239,7 @@ namespace eval ::ngis {
                             # shifts sequences on the list to the right of
                             # the current index sequence
 
-                            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] destroying seq $seq"
+                            my LogMessage "destroying seq $seq" debug
                             $seq destroy
 
                         } else {
@@ -243,7 +249,7 @@ namespace eval ::ngis {
                             # We move the sequence into the pending sequences list.
 
                             lappend pending_sequences $seq
-                            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] $seq moved to pending list"
+                            my LogMessage "$seq moved to pending list" debug
 
                         }
                         my LoadBalancer
@@ -257,11 +263,11 @@ namespace eval ::ngis {
             # there's no point to reschedule the round robin if no threads are available
 
             if {[string is false [$thread_master thread_is_available]]} {
-                syslog -ident snig -facility user info "\[JOB_CONTROLLER\] thread pool exhausted"
+                my LogMessage "thread pool exhausted" debug
                 return
             }
 
-            syslog -ident snig -facility user info "\[JOB_CONTROLLER\] launched $batch jobs for seq $seq"
+            my LogMessage "launched $batch jobs for seq $seq" debug
             my RescheduleRoundRobin
             incr sequence_idx
         }
