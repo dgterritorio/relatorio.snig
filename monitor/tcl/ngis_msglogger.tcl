@@ -10,9 +10,9 @@ namespace eval ::ngis::logger {
         set mesg "[incr nmsg] - $mesg"
 
         if {[info exists ::tcl_interactive] && $::tcl_interactive} {
-            syslog -perror -ident snig_monitor -facility user info $mesg
+            syslog -perror -ident snig -facility user info $mesg
         } else {
-            syslog -ident snig_monitor -facility user info $mesg
+            syslog -ident snig -facility user info $mesg
         }
     }
 
