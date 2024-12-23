@@ -10,7 +10,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/main.css?v=$::ngis::cssprogressive"]] ?>
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<noscript><?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/noscript.css"]] ?></noscript>
 	</head>
 	<body class="is-preload">
 
@@ -19,7 +19,7 @@
 
 				<!-- Header -->
 					<header id="header">
-						<a href="index.html" class="logo"><strong>S.N.I.G.</strong></a>
+						<a href="<?= [::rivetweb::composeUrl] ?>" class="logo"><strong>S.N.I.G.</strong></a>
 						<nav>
 							<a href="#menu">Menu</a>
 						</nav>
@@ -46,17 +46,17 @@
 							<section id="one">
 								<div class="inner">
 									<header class="major">
-										<h1>Generic</h1>
+										<h1><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></h1>
 									</header>
 									<!-- span class="image main"><img src="images/pic11.jpg" alt="" /></span -->
-									<p></p>
+									<p><?= [$::rivetweb::current_page print_content $::rivetweb::language] ?></p>
 								</div>
 							</section>
-
 					</div>
 
 				<!-- Contact -->
-					<section id="contact">
+
+					<!-- section id="contact">
 						<div class="inner">
 							<section>
 								<form method="post" action="#">
@@ -106,7 +106,7 @@
 								</section>
 							</section>
 						</div>
-					</section>
+					</section -->
 
 				<!-- Footer -->
 					<footer id="footer">
@@ -126,14 +126,12 @@
 
 			</div>
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
-
+		    <!-- Scripts -->
+            <?
+                foreach jsscript [list "assets/js/jquery.min.js"  "assets/js/jquery.scrolly.min.js" "assets/js/jquery.scrollex.min.js" \
+                                       "assets/js/browser.min.js" "assets/js/breakpoints.min.js"    "assets/js/util.js" "assets/js/main.js"] {
+                    puts [::rivetweb::js [::rivetweb jscript_path $jsscript]]
+                }
+            ?>
 	</body>
 </html>
