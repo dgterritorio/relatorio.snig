@@ -10,7 +10,13 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/main.css?v=$::ngis::cssprogressive"]] ?>
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "../common.css"]] ?>
 		<noscript><?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/noscript.css"]] ?></noscript>
+        <script type="text/javascript" src="<?= $::ngis::jquery_url ?>"></script>
+        <script type="text/javascript"><?
+            catch { $::rivetweb::current_page js }
+        ?>
+        </script>
 	</head>
 	<body class="is-preload">
 
@@ -46,7 +52,7 @@
 							<section id="one">
 								<div class="inner">
 									<header class="major">
-										<h1><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></h1>
+										<h3><?= [::rivet::wrapline [$::rivetweb::current_page headline $::rivetweb::language] 80 -html] ?></h3>
 									</header>
 									<!-- span class="image main"><img src="images/pic11.jpg" alt="" /></span -->
 									<p><?= [$::rivetweb::current_page print_content $::rivetweb::language] ?></p>

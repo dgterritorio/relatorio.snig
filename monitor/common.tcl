@@ -137,6 +137,17 @@ namespace eval ::ngis {
 
             return [dict get $CodeMessages $code]
         }
+
+        proc c116legend {} {
+            return  [dict create   gid         gid \
+                                   description Description  \
+                                   entity_definition Entity \
+                                   uri         URL     \
+                                   uri_type    Type    \
+                                   version     Version \
+                                   uuid        uuid]
+        }
+
     }
 
     namespace eval Sequences {

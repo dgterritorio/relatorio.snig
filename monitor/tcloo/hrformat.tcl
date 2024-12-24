@@ -268,19 +268,11 @@ oo::define ::ngis::HRFormat {
     # service record
     # --------------------------------------------------------------
 
-    method c116legend {} {
-        return  [dict create   gid         gid \
-                               description Description  \
-                               entity_definition Entity \
-                               uri         URL     \
-                               uri_type    Type    \
-                               version     Version \
-                               uuid        uuid]
-    }
 
     method c116single {service_d} {
 
-        set legend_d [my c116legend]
+        set legend_d [::ngis::reports::c116legend]
+
         set service_fields_l {gid uuid description entity_definition uri uri_type version}
         set service_table_l [lmap f $service_fields_l {
             if {![dict exists $service_d $f]} {

@@ -7,21 +7,6 @@ body {
     margin-left: 2em;
 }
 
-.taskok {
-    color: black;
-    background-color: #00d787;
-}
-
-.taskerror {
-    background-color: red;
-    color: #0000d7;
-}
-
-.taskwarning {
-    background-color: #ffff00;
-    color: black;
-}
-
 div.container {
     /* width: 132em; */
     margin-left: 2em;

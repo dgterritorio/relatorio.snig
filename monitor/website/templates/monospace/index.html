@@ -2,6 +2,7 @@
     <head>
         <title><?= [$::rivetweb::current_page title $::rivetweb::language] ?></title>
         <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "monospace.css?v=$::ngis::cssprogressive"]] ?>
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "../common.css"]] ?>
         <script type="text/javascript" src="<?= $::ngis::jquery_url ?>"></script>
         <script type="text/javascript"><?
             catch { $::rivetweb::current_page js }
