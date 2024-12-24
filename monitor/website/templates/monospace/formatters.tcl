@@ -103,7 +103,7 @@ proc service_table {service_d} {
     return "${service_t}\n${task_t}"
 }
 
-proc navigation_bar {rowcount offset urls} {
+proc navigation_bar {rowcount urls} {
     variable snig_nav_bar
     variable snig_nav_matrix 
 
@@ -184,3 +184,8 @@ proc message_box {message_l} {
     $message_box_mat deserialize [list [llength $message_l] 2 $message_l]
     return [::rivet::xml [$message_box_rep printmatrix $message_box_mat] pre]
 }
+
+proc report_page {} {
+    return [join [list [::rivet::xml "" div [list pre id report]] [::rivet::xml "" div [list pre id response]]] "\n"]
+}
+

@@ -107,7 +107,7 @@ namespace eval ::rwpage {
                     lset urls 3 [::rivetweb::composeUrl eid $eid limit $srecs_limit offset [expr $offset + 2*$srecs_limit] rowcount $rowcount]
                 }
     
-                puts [${ns}::navigation_bar $rowcount $offset $urls]
+                puts [${ns}::navigation_bar $rowcount $urls]
             }
         }
     }

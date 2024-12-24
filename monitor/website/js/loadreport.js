@@ -6,7 +6,7 @@ $(window).on("load",function() {
         dataType:   'json',    // Expected response type
         success: function (response) {
             // Update the UI based on the response
-            $('#report').text(response.report);
+            $('#report').html(response.report);
             // $('#response').text(response.nconnections + ' active connections');
         },
         error: function (jqXHR, textStatus, errorThrown) {

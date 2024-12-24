@@ -28,8 +28,9 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
-            puts [::rivet::xml "" div [list pre id report]]
-            puts [::rivet::xml "" div [list pre id response]]
+            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+            set ns [$template_o formatters_ns]
+            puts [${ns}::report_page]
         }
     }
 
