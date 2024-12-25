@@ -31,18 +31,24 @@ puts "Protocol: [package present ngis::protocol]"
     variable ds_nseq
     variable start_time
 
+    # task results variables and structures
+    variable task_results_chore
+    variable task_results_queue
+
     constructor {} {
         set nseq    -1
         set ds_nseq -1
         set start_time [clock seconds]
         set current_connection ""
         set protocol [ngis::Protocol::mkprotocol]
+
+        set task_results_chore      ""
+        set task_results_queue      [::struct::queue ::ngis::task_results]
     }
 
     method RegisterConnection {con ctype} {
         puts "registering connection $con"
         dict set connections_db $con format   HR
-        #dict set connections_db $con protocol [ngis::Protocol::mkprotocol]
         dict set connections_db $con login    [clock seconds]
         dict set connections_db $con type     $ctype
         dict set connections_db $con ncmds    0
@@ -119,20 +125,37 @@ puts "Protocol: [package present ngis::protocol]"
         return $whos_l
     }
 
-    method sync_results {result_queue} {
-        if {[$result_queue size] == 0} { return }
-        ::ngis::logger emit "syncing [$result_queue size] results"
-        if {[$result_queue size] > 0} {
+    # -- task results procedures
+
+    method post_task_results {task_results} {
+        $task_results_queue put $task_results
+        if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
+            ($task_results_chore == "")} {
+            set task_results_chore [after 100 [list [self] sync_results]]
+        }
+    }
+
+    method post_task_results_cleanup {gid tasks_to_purge_l} {
+        after 100 [[self] remove_results $gid $tasks_to_purge_l]
+    }
+
+    method sync_results {} {
+        set task_results_chore ""
+        set results_queue   $task_results_queue
+
+        if {[$results_queue size] == 0} { return }
+        ::ngis::logger emit "syncing [$results_queue size] results"
+        if {[$results_queue size] > 0} {
 
             # hideous behavior of struct::queue. If it's
             # returning one element, but it's a list, it becomes
             # a flat list of elements not a 1 element list. 
             # It's documented, but still a despicable way Tcllib works
 
-            if {[$result_queue size] == 1} {
-                set results_l [list [$result_queue get]]
+            if {[$results_queue size] == 1} {
+                set results_l [list [$results_queue get]]
             } else {
-                set results_l [$result_queue get [$result_queue size]]
+                set results_l [$results_queue get [$results_queue size]]
             }
 
             if {[catch {

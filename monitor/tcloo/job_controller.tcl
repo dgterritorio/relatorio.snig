@@ -5,7 +5,6 @@
 package require ngis::msglogger
 package require ngis::job
 package require ngis::threads
-package require struct::queue
 
 catch {::oo::class destroy ::ngis::JobController }
 
@@ -19,8 +18,6 @@ namespace eval ::ngis {
         variable sequence_idx
         variable thread_master
         variable round_robin_procedure
-        variable task_results_chore
-        variable task_results_queue
         variable jobs_quota
         variable shutdown_counter
         variable shutdown_signal
@@ -31,9 +28,7 @@ namespace eval ::ngis {
             set thread_master           [::ngis::ThreadMaster create ::ngis::thread_master $max_workers_num]
             set pending_sequences       {}
             set round_robin_procedure   ""
-            set task_results_chore      ""
             set jobs_quota              $max_workers_num
-            set task_results_queue      [::struct::queue ::ngis::task_results]
             set shutdown_signal         false
             set stop_operations         false
         }
@@ -116,27 +111,13 @@ namespace eval ::ngis {
         method post_sequence {job_sequence} {
             ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
-            ::ngis::logger debug "\[JOB_CONTROLLER\] sequence_list after $job_sequence has been appended"
-            ::ngis::logger debug "\[JOB_CONTROLLER\] >$sequence_list<"
+            my LogMessage "Sequence_list after $job_sequence has been appended" debug
+            my LogMessage ">$sequence_list<" debug
             my LoadBalancer
             my RescheduleRoundRobin 1
         }
 
-        method post_task_results {task_results} {
-            #::ngis::logger emit "posting task result '$task_results'"
 
-            $task_results_queue put $task_results
-            if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
-                ($task_results_chore == "")} {
-                after 100 [list $::ngis_server sync_results $task_results_queue]
-            }
-
-            my RescheduleRoundRobin 1
-        }
-
-        method post_task_results_cleanup {gid tasks_to_purge_l} {
-            after 100 [$::ngis_server remove_results $gid $tasks_to_purge_l]
-        }
 
         method move_thread_to_idle {thread_id} {
             $thread_master move_to_idle $thread_id
@@ -181,7 +162,7 @@ namespace eval ::ngis {
             # active job sequences on 'sequence_list'
 
             if {[llength $sequence_list] == 0} {
-                after 100 [list $::ngis_server sync_results $task_results_queue]
+                after 100 [list $::ngis_server sync_results]
                 return 
             }
 
