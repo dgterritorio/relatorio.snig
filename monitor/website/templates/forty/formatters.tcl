@@ -147,7 +147,9 @@ proc display_report {report_n data_ld} {
             set jobs_l {}
             foreach job_d $data_ld {
                 dict with job_d {
-                    lappend jobs_l [list $gid $description $type $version $status $timestamp]
+                    set elapsed_time [::ngis::utils::delta_time_s [expr [clock seconds] - $timestamp]]
+                    set service_rec_link [::rivet::xml $description [list a href [::rivetweb::composeUrl service $gid]]]
+                    lappend jobs_l [list $gid $service_rec_link $type $version $status $elapsed_time]
                 }
             }
 
