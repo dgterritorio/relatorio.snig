@@ -1,4 +1,5 @@
 package require uri
+package require fileutil
 
 ::rivet::apache_log_error info "auto_path: $auto_path"
 
@@ -19,6 +20,8 @@ package require json
 ::rivetweb::init Marshal top -nopkg
 
 set snig_header [exec /usr/bin/figlet "S.N.I.G."]
+
+set ::rivetweb::handler_script [fileutil::cat [file join $rweb_root tcl before.tcl]]
 
 ::ngis::conf init
 
