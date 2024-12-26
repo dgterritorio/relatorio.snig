@@ -145,31 +145,30 @@ puts "Protocol: [package present ngis::protocol]"
 
         if {[$results_queue size] == 0} { return }
         ::ngis::logger emit "syncing [$results_queue size] results"
-        if {[$results_queue size] > 0} {
 
-            # hideous behavior of struct::queue. If it's
-            # returning one element, but it's a list, it becomes
-            # a flat list of elements not a 1 element list. 
-            # It's documented, but still a despicable way Tcllib works
+        # hideous behavior of struct::queue: if it's
+        # holding one element that can be represented as a list, 
+        # subcommand 'get' returns a flat list of elements,
+        # not a 1 element list.  It's documented, but nonetheless
+        # a despicable way Tcllib's struct::queue works
 
-            if {[$results_queue size] == 1} {
-                set results_l [list [$results_queue get]]
-            } else {
-                set results_l [$results_queue get [$results_queue size]]
-            }
+        if {[$results_queue size] == 1} {
+            set results_l [list [$results_queue get]]
+        } else {
+            set results_l [$results_queue get [$results_queue size]]
+        }
 
-            if {[catch {
-                puts "storing [llength $results_l] results"
-                set t1 [clock milliseconds]
-                ::ngis::service::update_task_results $results_l
-                set t2 [clock milliseconds]
+        if {[catch {
+            puts "storing [llength $results_l] results"
+            set t1 [clock milliseconds]
+            ::ngis::service::update_task_results $results_l
+            set t2 [clock milliseconds]
 
-                puts "[llength $results_l] results stored in [expr $t2 - $t1]ms"
-            } e einfo]} {
-                ::ngis::logger emit "error syncing results: $e"
-                ::ngis::logger emit "===== error_info ====="
-                foreach l [split $einfo "\n"] { ::ngis::logger emit $l }
-            }
+            puts "[llength $results_l] results stored in [expr $t2 - $t1]ms"
+        } e einfo]} {
+            ::ngis::logger emit "error syncing results: $e"
+            ::ngis::logger emit "===== error_info ====="
+            foreach l [split $einfo "\n"] { ::ngis::logger emit $l }
         }
     }
 
