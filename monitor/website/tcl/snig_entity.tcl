@@ -6,7 +6,6 @@
 package require ngis::page
 package require form
 package require uri
-package require ngis::dbresource
 
 namespace eval ::rwpage {
 
@@ -16,18 +15,15 @@ namespace eval ::rwpage {
         private variable eid
         private variable entity_recs
         private variable entity_d
-        private variable entity_o
 
         private variable limit
         private variable offset
         private variable rowcount
 
         constructor {key} {SnigPage::constructor $key} {
-            set entity_o [::ngis::Entity::mkobj]
         }
 
         destructor {
-            $entity_o destroy
         }
 
         public method entity_name {} {
@@ -77,7 +73,8 @@ namespace eval ::rwpage {
                 set er
             }]
 
-            set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
+            #set entity_d [$entity_o fetch [$this get_dbhandle] [list eid $eid]]
+            set entity_d [::ngis::service load_entity_record $eid]
             if {[dict size $entity_d]} {
                 $this title $language [dict get $entity_d description]
             } else {

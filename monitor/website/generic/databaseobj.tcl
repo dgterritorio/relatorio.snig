@@ -261,10 +261,8 @@ package require DIO
     
     set recvals {}
     foreach v $kf { lappend recvals $record_a($v) }
-    #::barbie::log "recvals -> $recvals"
 
     set cmd [list $dbhandle delete $recvals -table $table -keyfield $kf]
-    #::barbie::log "-->$cmd"
 
     return [eval $cmd]
 }

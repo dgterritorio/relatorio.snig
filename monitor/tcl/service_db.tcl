@@ -105,14 +105,14 @@ namespace eval ::ngis::service {
     proc load_entity_record {eid} {
         variable connector
 
+        set entity_d ""
+
         set query_result [exec_sql_query "SELECT * from $::ngis::ENTITY_TABLE_NAME WHERE eid=$eid"]
         if {[$query_result rowcount] > 0} {
             set result [$query_result nextdict entity_d]
-            $query_result close
-            return $entity_d
         }
         $query_result close
-        return ""
+        return $entity_d
     }
 
     namespace eval entity {

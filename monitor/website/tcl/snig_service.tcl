@@ -5,7 +5,6 @@ package require ngis::page
 package require ngis::servicedb
 package require form
 package require uri
-package require ngis::dbresource
 package require json
 
 namespace eval ::rwpage {
@@ -31,6 +30,7 @@ namespace eval ::rwpage {
         }
 
         public method prepare_page {language argsqs} {
+
             ### if we are here then the URL argument
             # 'service' was defined. We don't check it out
 
@@ -48,12 +48,15 @@ namespace eval ::rwpage {
             } else {
                 $::ngis::messagebox post_message "No service records found for gid '$service_id'" error
             }
+
         }
 
         public method service_gid {} {
+
             if {[dict exists $service_d gid]} {
                 return [dict get $service_d gid]
             }
+
         }
     
         public method entity { } {

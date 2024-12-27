@@ -77,7 +77,8 @@
                                     set development_footer [list [$::rivetweb::current_page key] \
                                                                  "template: $::rivetweb::template_key" \
                                                                  [$::rivetweb::current_page info class] \
-                                                                 $handler_db_link]
+                                                                 $handler_db_link \
+                                                                 "is_homepage: $::rivetweb::is_homepage"]
                                     puts [join $development_footer " | "]
                                 ?></pre><?
                             }

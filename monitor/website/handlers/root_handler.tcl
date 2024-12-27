@@ -97,11 +97,11 @@ namespace eval ::rwdatas {
 
         public method init {args} {
             chain {*}$args
-            $this key_class_map snig_homepage   ::rwpage::SnigHome    tcl/snig.tcl
-            $this key_class_map snig_entity     ::rwpage::SnigEntity  tcl/snigentity.tcl
-            $this key_class_map snig_service    ::rwpage::SnigService tcl/snig_service.tcl
-            $this key_class_map snig_server_cmd ::rwpage::SnigCommand tcl/snig_command.tcl
-            $this key_class_map snig_report_ws  ::rwpage::SnigReports tcl/reports.tcl
+            $this key_class_map snig_homepage   ::rwpage::SnigHome      tcl/snig.tcl
+            $this key_class_map snig_entity     ::rwpage::SnigEntity    tcl/snig_entity.tcl
+            $this key_class_map snig_service    ::rwpage::SnigService   tcl/snig_service.tcl
+            $this key_class_map snig_server_cmd ::rwpage::SnigCommand   tcl/snig_command.tcl
+            $this key_class_map snig_report_ws  ::rwpage::SnigReports   tcl/reports.tcl
             $this key_class_map snig_report     ::rwpage::DisplayReport tcl/snig_report.tcl
         }
 

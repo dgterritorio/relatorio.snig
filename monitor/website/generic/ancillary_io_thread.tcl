@@ -1,6 +1,9 @@
 # ancillary_thread.tcl --
 #
-# this is the code to be run within the ancillary I/O thread
+# this is the code to be run within the ancillary I/O thread.
+#
+# In the communication with the snig server we assume
+# answers are to be valid JSON messages.
 #
 #
 
@@ -56,7 +59,7 @@ namespace eval ::ngis::ancillary {
     }
 
     proc log_msg {s} {
-        syslog -perror -ident snig -facility user info $s
+        syslog -ident snig -facility user info $s
     }
 
     proc read_data {con} {
