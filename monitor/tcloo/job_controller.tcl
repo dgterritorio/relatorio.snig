@@ -117,8 +117,6 @@ namespace eval ::ngis {
             my RescheduleRoundRobin 1
         }
 
-
-
         method move_thread_to_idle {thread_id} {
             $thread_master move_to_idle $thread_id
             my RescheduleRoundRobin 1
@@ -188,11 +186,13 @@ namespace eval ::ngis {
             set seq [lindex $sequence_list $sequence_idx]
             set batch 0
 
+            my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+
             while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
                 # we must check whether a sequence is eligible to be scheduled
 
-                if {[$seq running_jobs_count] >= int(0.9*$jobs_quota)} {
+                if {[$seq running_jobs_count] >= max(1,int(0.9*$jobs_quota))} {
 
                     # This sequence is exceeding the dynamic (though flat)
                     # job quota value. We break out of the while loop
