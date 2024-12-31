@@ -22,10 +22,77 @@ namespace eval ::rwdatas {
         private variable banner_menu
         private variable connection_link
 
+        private common dbhandle
+        private common session_obj
+
+        private common error_page
+        private common dbuser
+        private common dbhost
+        private common dbname
+        private common dbpasswd
+        private common dbms_driver
+
+        public proc attempt_db_connect {} {
+            if {![info exists dbhandle]} {
+                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
+                set ::dbms      [eval $connectcmd]
+                set dbhandle    $::dbms
+            }
+            return $dbhandle
+        }
+
+        public proc close_db_connection {} {
+            if {[info exists dbhandle]} {
+                $dbhandle destroy
+                unset dbhandle
+            }
+        }
+
+        public proc get_session_obj {args} {
+
+            # the common variable 'session_obj' is used to
+            # determine if all common variables have to be
+            # initialized
+
+            if {![info exists session_obj]} {
+
+                foreach v {dbuser dbhost dbname dbpasswd} {
+                    ::ngis::conf::readconf $v $v
+                }
+                set error_page  ""
+                set dbms_driver [::ngis::conf::readconf dbms_driver]
+
+                set dbhandle [attempt_db_connect]
+                set session_obj [Session ::SESSION  -dioObject              $dbhandle \
+                                                    -debugMode              0       \
+                                                    -gcMaxLifetime          7200    \
+                                                    -sessionLifetime        3600    \
+                                                    -sessionRefreshInterval 1800    \
+                                                    -entropyFile            /dev/urandom \
+                                                    -entropyLength          10      \
+                                                    -gcProbability          2       \
+                                                    -sessionTable           "testsuite.rivet_session" \
+                                                    -sessionCacheTable      "testsuite.rivet_session_cache" \
+                                                    -scrambleCode           [clock format [clock seconds] -format "%S"]]
+
+            }
+
+            return $session_obj
+        }
+
+        public proc is_logged {} {
+            set session_obj [get_session_obj]
+            set login_d [$session_obj load status]
+            return [dict get $login_d logged]
+        }
+
+        # Instance methods
+
         public method init {args} {
             chain {*}$args
-
             set banner_menu ""
+
+            get_session_obj
         }
 
         # -- to_url
@@ -60,13 +127,6 @@ namespace eval ::rwdatas {
             $banner_menu add_link $home_link
 
             set lm $::rivetweb::linkmodel
-#           if {[$page key] == "snig_entity"} {
-#
-#                lassign [$page entity] eid entity_definition
-#                set linkobj [$lm create $this "" [dict create en $entity_definition]
-#                                                 [list eid $eid] ""]
-#                $banner_menu add_link $linkobj
-#            }
 
             if {[$page key] == "snig_service"} {
                 set entity [$page entity]
@@ -87,6 +147,13 @@ namespace eval ::rwdatas {
             set linkobj [$lm create $this "" [dict create en "Jobs"] \
                                              [list displayrep 114] ""]
             $banner_menu add_link $linkobj
+
+            if {[is_logged]} {
+                set linkobj [$lm create $this "" [dict create en "Logout"] \
+                                                 [list logout 1] ""]
+                $banner_menu add_link $linkobj
+            }
+
             return [dict create banner $banner_menu]
         }
     }

@@ -7,6 +7,7 @@ package require MessagePrinter
 package require ngis::logger
 package require ngis::configuration
 package require ngis::roothandler
+package require ngis::page
 package require Session
 package require ngis::protocol
 package require ngis::conf
