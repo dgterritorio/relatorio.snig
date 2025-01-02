@@ -64,9 +64,10 @@ namespace eval ::rwdatas {
 
                 set dbhandle [attempt_db_connect]
                 set session_obj [Session ::SESSION  -dioObject              $dbhandle \
-                                                    -debugMode              0       \
-                                                    -gcMaxLifetime          7200    \
-                                                    -sessionLifetime        3600    \
+                                                    -debugMode              1       \
+                                                    -debugFile              [open [file join /tmp "session-[pid].txt"] w+] \
+                                                    -gcMaxLifetime          [expr 7200 + 3600]    \
+                                                    -sessionLifetime        [expr 3600 + 3600]    \
                                                     -sessionRefreshInterval 1800    \
                                                     -entropyFile            /dev/urandom \
                                                     -entropyLength          10      \
@@ -114,14 +115,13 @@ namespace eval ::rwdatas {
         }
 
         public method menu_list {page} {
+
             if {$banner_menu != ""} {
                 $banner_menu destroy
             }
 
-            set home_link   [$::rivetweb::linkmodel create $this "" \
-                                                           [dict create en "Home" pt "Home"] \
-                                                           "" \
-                                                           [dict create en "SNIG Homepage"]]
+            set home_link [$::rivetweb::linkmodel create $this "" [dict create en "Home" pt "Home"] \
+                                                               "" [dict create en "SNIG Homepage"]]
             set banner_menu [::rwmenu::RWMenu ::rwmenu::#auto "banner" root normal]
             $banner_menu assign title "" ""
             $banner_menu add_link $home_link
@@ -135,7 +135,7 @@ namespace eval ::rwdatas {
                         set entity_definition [::ngis::utils::string_truncate $entity_definition 50]
 
                         set linkobj [$lm create $this "" [dict create en $entity_definition] \
-                                         [list eid $eid] ""]
+                                                         [list eid $eid] ""]
                         $banner_menu add_link $linkobj
                     }
                 }
@@ -195,6 +195,10 @@ namespace eval ::rwdatas {
                 return -code break -errorcode rw_ok
             }
             return -code continue -errorcode rw_continue
+        }
+
+        public method menu_list {page} {
+            return [dict create]
         }
     }
 }

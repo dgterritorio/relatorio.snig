@@ -25,50 +25,6 @@
     }
 
     ::try {
-
-        set session_obj [::rwdatas::NGIS::get_session_obj]
-
-        $session_obj activate
-        set newsession [$session_obj is_new_session]
-        if {$newsession} {
-            if {$::ngis::debugging} {
-                $session_obj store status logged    1
-                $session_obj stash login  [dict create user "snig-dev"]
-            } else {
-                $session_obj store status logged    0
-            }
-        }
-
-        if {[::rivet::var_qs exists login]} {
-
-            # this should simply send to the login form
-            # a development installation automatically logs in
-            # as administrative user
-
-            if {$development  && ![::rivet::var_qs exists ignoredev]} {
-                $session_obj store status logged  1
-                $session_obj stash login  $admin_d
-                ::rivet::redirect [::rivetweb::composeUrl display umr5229]
-            } else {
-                set key snig_login
-                return -code break -errorcode rw_ok
-            }
-
-        } else {
-
-            if {[::rwdatas::NGIS::is_logged] && [::rivet::var_qs exists logout]} {
-
-                $session_obj store status logged        0
-
-                $session_obj clear login
-                $session_obj store login  memberid      0
-                $session_obj store login  admin         0
-
-                ::rivet::redirect [::rivetweb::composeUrl]
-
-            }
-        }
-
         eval $::rivetweb::handler_script
     } trap {RIVET ABORTPAGE} {err opts} {
         ::Rivet::finish_request $::rivetweb::handler_script $err $opts AbortScript

@@ -1,0 +1,15 @@
+<div class="loginform"><?
+    set form_name [namespace current]::ent_select
+    catch {$form_name destroy}
+    set form [form $form_name -method POST -action [::rivetweb::composeUrl login 1]  -name snig_login]
+    $form start
+?><div>Login: <?
+    $form text username -size 20
+?></div><div>Password: <?
+    $form password password -size 20
+?></div><div><?
+    $form submit submit -value "Login"
+?></div><?
+    $form end
+    $form destroy
+?></div>

@@ -7,6 +7,7 @@ package require MessagePrinter
 package require ngis::logger
 package require ngis::configuration
 package require ngis::roothandler
+package require ngis::login
 package require ngis::page
 package require Session
 package require ngis::protocol
@@ -18,6 +19,7 @@ package require ngis::ancillary_io
 package require json
 
 ::rivetweb::init Marshal top -nopkg
+::rivetweb::init Login   top -nopkg
 
 set snig_header [exec /usr/bin/figlet "S.N.I.G."]
 

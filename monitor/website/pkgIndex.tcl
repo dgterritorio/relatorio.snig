@@ -4,6 +4,7 @@ package ifneeded ngis::dbresource         1.0 [list source [file join $dir gener
 package ifneeded safelock                 1.0 [list source [file join $dir generic safelock.tcl]]
 package ifneeded ngis::logger             0.1 [list source [file join $dir generic logger.tcl]]
 package ifneeded ngis::roothandler        1.0 [list source [file join $dir handlers root_handler.tcl]]
+package ifneeded ngis::login              1.0 [list source [file join $dir handlers login.tcl]]
 package ifneeded ngis::page               1.0 [list source [file join $dir tcl snigpage.tcl]]
 package ifneeded DIO                      2.0 [list source [file join $dir generic dio.tcl]]
 package ifneeded dio_Tdbc                 2.0 [list source [file join $dir generic dio_Tdbc.tcl]]

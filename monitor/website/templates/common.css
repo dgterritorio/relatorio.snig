@@ -17,3 +17,7 @@
     text-align: center;
 }
 
+div.loginform div input {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}

@@ -28,7 +28,7 @@ namespace eval ::rwpage {
                 set page $this
             } on error {e opts} {
 
-                if {[info command $error_page] != ""} {
+                if {[info command error_page] != ""} {
                     $error_page destroy
                 }
 

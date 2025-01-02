@@ -10,7 +10,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/main.css?v=$::ngis::cssprogressive"]] ?>
-        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "../common.css"]] ?>
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "../common.css?v=$::ngis::cssprogressive"]] ?>
 		<noscript><?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/noscript.css"]] ?></noscript>
         <script type="text/javascript" src="<?= $::ngis::jquery_url ?>"></script>
         <script type="text/javascript"><?
@@ -51,6 +51,17 @@
 							<li><a href="#" class="button fit">Log In</a></li>
 						</ul>
 					</nav -->
+					<div id="main" class="alt">
+
+						<!-- One -->
+                        <section id="one">
+                            <div class="inner">
+                                <header class="major"><?
+                                    #puts [::${ns}::message_box [$::ngis::messagebox pop_messages]]
+                                ?></header>
+                            </div>
+                        </section>
+					</div>
 
 				<!-- Main -->
 					<div id="main" class="alt">
@@ -78,7 +89,8 @@
                                                                  "template: $::rivetweb::template_key" \
                                                                  [$::rivetweb::current_page info class] \
                                                                  $handler_db_link \
-                                                                 "is_homepage: $::rivetweb::is_homepage"]
+                                                                 "is_homepage: $::rivetweb::is_homepage" \
+                                                                 "is logged: [::rwdatas::NGIS::is_logged]"]
                                     puts [join $development_footer " | "]
                                 ?></pre><?
                             }
