@@ -87,6 +87,10 @@ namespace eval ::rwdatas {
             return [dict get $login_d logged]
         }
 
+        public proc check_password {} {
+            ::ngis::conf::readconf users_table users_table
+        }
+
         # Instance methods
 
         public method init {args} {

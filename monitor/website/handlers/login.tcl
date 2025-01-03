@@ -1,5 +1,6 @@
-
-
+# ----
+#
+#
 package require UrlHandler
 package require ngis::roothandler
 
@@ -43,7 +44,14 @@ namespace eval ::rwdatas {
                     $session_obj store status logged  1
                 } else {
                     # there must be some user authentication here
-                    $session_obj store status logged  1
+
+                    set password [::rivet::var_qs get password nopwd]
+                    set numrows  [::rwdatas::NGIS::check_password $password]
+                    if {$numrows == 1} {
+                        $session_obj store status logged  1
+                    } else {
+                        $session_obj store status logged  0
+                    }
                 }
                 set key snig_homepage
                 return -code break -errorcode rw_ok
@@ -67,7 +75,6 @@ namespace eval ::rwdatas {
                 #$session_obj store status logged  1
                 #return -code continue -errorcode rw_continue
             }
-
 
             return -code continue -errorcode rw_continue
         }

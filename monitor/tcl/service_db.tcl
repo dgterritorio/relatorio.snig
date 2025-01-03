@@ -34,6 +34,10 @@ namespace eval ::ngis::service {
         return [$sql_st execute]
     }
 
+    proc check_password {pwd} {
+        return 1
+    }
+
     proc update_task_results {task_results_l} {
         set values_l {}
         foreach t $task_results_l {

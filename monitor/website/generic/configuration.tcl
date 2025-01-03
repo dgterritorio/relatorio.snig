@@ -23,9 +23,10 @@ namespace eval ::ngis::conf {
                 dbhost          {value "snig.naturalgis.pt" description "Backend database host" section dbauth} \
                 dbpasswd        {value "W8a1kCUOx0mupUAF" description "DB password" section dbauth} \
                 dbport          {value "5432" description "Backend database port" section dbauth} \
-                service_stautus {value "testsuite.service_status" description "Service Status Records" section database} \
+                service_status  {value "testsuite.service_status" description "Service Status Records" section database} \
                 entities_table  {value "testsuite.entities" description "Entities catalog table" section database} \
                 uris_table      {value "testsuite.uris_long" description "URIs catalog table" section database} \
+                users_table     {value "testsuite.snig_users" description "SNIG User Table" section database} \
                 dbms_driver     {value "Tdbc Postgresql" description "Database DIO Driver" section database} \
                 jquery_root     {value "http://ngis.rivetweb.org:8080" description "Root of the jQuery library" section jquery } \
                 jquery_uri      {value "jQuery/jquery.min.js" description "jQuery file name" section jquery } \
