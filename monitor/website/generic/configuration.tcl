@@ -122,9 +122,19 @@ namespace eval ::ngis::conf {
         variable section_order
         variable confnamespace
 
-        if {[llength $section_order] != [llength [sections]]} {
+        puts "section_order: $section_order"
+        puts "sections: [sections]"
+
+        set sections_filtered [lmap s [sections] {
+            if {$s == "removed"} {
+                continue
+            }
+            set s
+        }]
+
+        if {[llength $section_order] != [llength $sections_filtered]} {
             return -code error -error_code section_mismatch \
-                    "Section number mismatch in configuration ([llength $section_order] vs [llength [sections]])"
+                    "Section number mismatch in configuration ([llength $section_order] vs [llength $sections_filtered])"
         }
 
         set confts [clock format [clock seconds] -format "%d-%m-%Y %T"]

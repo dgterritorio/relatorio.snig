@@ -63,8 +63,8 @@ namespace eval ::rwdatas {
                 set dbms_driver [::ngis::conf::readconf dbms_driver]
 
                 set dbhandle [attempt_db_connect]
-                set session_obj [Session ::SESSION  -dioObject              $dbhandle \
-                                                    -debugMode              1       \
+                set session_obj [Session ::SESSION  -dioObject              $dbhandle   \
+                                                    -debugMode              1           \
                                                     -debugFile              [open [file join /tmp "session-[pid].txt"] w+] \
                                                     -gcMaxLifetime          [expr 7200 + 3600]    \
                                                     -sessionLifetime        [expr 3600 + 3600]    \
@@ -87,8 +87,13 @@ namespace eval ::rwdatas {
             return [dict get $login_d logged]
         }
 
-        public proc check_password {} {
+        public proc check_password {login password} {
             ::ngis::conf::readconf users_table users_table
+
+            set tdbc_res [::ngis::service::exec_sql_query \
+                "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+
+            return [$tdbc_res rowcount]
         }
 
         # Instance methods

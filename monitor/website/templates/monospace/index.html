@@ -41,10 +41,9 @@
     set development_footer [list [$::rivetweb::current_page key] \
                                  "template: $::rivetweb::template_key" \
                                  [$::rivetweb::current_page info class] \
-                                 $handler_db_link \
-                                 "is logged: [::rwdatas::NGIS::is_logged]" \
-                                 "pid: [pid]" \
-                                 [::SESSION id]]
+                                 $handler_db_link "is logged: [::rwdatas::NGIS::is_logged]" \
+                                 "pid: [pid]" [::SESSION id]]
+
     puts [join $development_footer " | "]
 ?></pre></footer>
 </body>

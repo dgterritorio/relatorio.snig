@@ -163,7 +163,28 @@ proc display_report {report_n data_ld} {
 
 }
 
-
 proc report_page {} {
     return [join [list [::rivet::xml "" [list div id report]] [::rivet::xml "" [list pre id response]]] "\n"]
 }
+
+proc message_box {message_l} {
+    if {[llength $message_l] > 0} {
+        set html_items [lmap m $message_l {
+            lassign $m msgtxt severity
+            switch $severity {
+                error {
+                    set cssclass "msgerror"
+                } 
+                default {
+                    set cssclass "msginfo"
+                }
+            }
+
+            ::rivet::xml $msgtxt [list li class $cssclass]
+        }]
+
+        return [::rivet::xml [join $html_items "\n"] ul]
+    }
+    return ""
+}
+
