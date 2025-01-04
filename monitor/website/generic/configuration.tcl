@@ -122,8 +122,8 @@ namespace eval ::ngis::conf {
         variable section_order
         variable confnamespace
 
-        puts "section_order: $section_order"
-        puts "sections: [sections]"
+        #puts "section_order: $section_order"
+        #puts "sections: [sections]"
 
         set sections_filtered [lmap s [sections] {
             if {$s == "removed"} {
