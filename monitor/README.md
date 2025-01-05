@@ -88,58 +88,62 @@ method sequence_roundrobin {} {
 
 	if {[llength $pending_sequences] > 0} {
 
-		# we copy 'pending_sequences' into the dumb variable
-		# 'ps' because by calling we modify this list
-
 		set ps $pending_sequences
-		set psidx 0
-		foreach seq $ps {
+		set pending_sequences [lmap seq $ps {
 			if {[$seq running_jobs_count] == 0} {
-				set pending_sequences [lreplace $pending_sequences $psidx $psidx]
 				$seq destroy
+				continue
+			} else {
+				set seq
 			}
-		}
-
-	}
-
-	# just in case there are pending sequences left
-	# we reschedule the round robin in order to catch
-	# up with their termination
-
-	if {[llength $pending_sequences] > 0} {
-		set multiple 1
-		if {[llength $sequence_list] == 0} { set multiple 5 }
-		my RescheduleRoundRobin $multiple
+		}]
 	}
 
 	# we don't have anything to do here if there are no
-	# active sequences on 'sequence_list'
+	# active job sequences on 'sequence_list'
 
 	if {[llength $sequence_list] == 0} {
-		after 100 [list $::ngis_server sync_results $task_results_queue]
+		after 100 [list $::ngis_server sync_results]
 		return 
 	}
 
-	# the sequence_idx (index) had been incremented
+	# the sequence_idx (index) had in case been incremented
 	# at the end of the previous run of sequence_roundrobin.
-	# We reset it in case we overran the sequence_list size
+	# We wrap it if the value overran the sequence_list size
+	# It's correct to wrap the 'sequence_idx' value *before*
+	# scheduling new jobs because new sequences may have been
+	# posted after the last sequence_roundrobin procedure execution
 
 	if {$sequence_idx >= [llength $sequence_list]} {
 		set sequence_idx 0
 	}
 
-	set seq [lindex $sequence_list $sequence_idx]
-	set batch -1
+	# if there are no threads available we can return and wait for
+	# some worker thread be returned to idle threads queue
 
-	while {[$thread_master thread_is_available] && ([incr batch] < $::ngis::batch_num_jobs)} {
+	if {[string is false [$thread_master thread_is_available]]} {
+		my LogMessage "no threads available. Pausing the round-robin" debug
+		return
+	}
+
+	# let's go ahead and process the sequence pointed by 'sequence_idx'
+
+	my LogMessage "processing sequence with index $sequence_idx" debug
+	set seq [lindex $sequence_list $sequence_idx]
+	set batch 0
+
+	my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+
+	while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
 		# we must check whether a sequence is eligible to be scheduled
 
-		if {[$seq running_jobs_count] >= int(0.9*$jobs_quota)} {
+		if {[$seq running_jobs_count] >= max($::ngis::batch_num_jobs,int(0.9*$jobs_quota))} {
 
 			# This sequence is exceeding the dynamic (though flat)
 			# job quota value. We break out of the while loop
 
+			my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
 			break
 
 		} else {
@@ -151,13 +155,18 @@ method sequence_roundrobin {} {
 				my move_thread_to_idle $thread_id
 
 				set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+
+				my LogMessage "sequence_list after removal of index $sequence_idx" debug
+				my LogMessage "$sequence_list" debug
+
 				if {[$seq running_jobs_count] == 0} {
 
 					# the sequence has terminated its jobs. We don't
 					# need to increment sequence_idx, since lreplace
-					# lets shifts sequences on the list to the right of
+					# shifts sequences on the list to the right of
 					# the current index sequence
 
+					my LogMessage "destroying seq $seq" debug
 					$seq destroy
 
 				} else {
@@ -167,15 +176,30 @@ method sequence_roundrobin {} {
 					# We move the sequence into the pending sequences list.
 
 					lappend pending_sequences $seq
+					my LogMessage "$seq moved to pending list" debug
 
 				}
-				my RescheduleRoundRobin
 				my LoadBalancer
-				return
+				break
+			} else {
+				incr batch
 			}
 		}
 	}
-	my RescheduleRoundRobin
+	my LogMessage "launched $batch jobs for seq $seq" debug
+
+	# there's no point to reschedule the round robin if no threads are available
+
+	if {[string is true [$thread_master thread_is_available]]} {
+		my RescheduleRoundRobin
+	} else {
+		my LogMessage "thread pool exhausted" debug
+	}
+
+	# if we got here it means at least one job was launched. Thus we
+	# move to the next sequence when the round robin procedure gets
+	# rescheduled
+
 	incr sequence_idx
 }
 ```

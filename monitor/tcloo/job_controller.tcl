@@ -167,6 +167,9 @@ namespace eval ::ngis {
             # the sequence_idx (index) had in case been incremented
             # at the end of the previous run of sequence_roundrobin.
             # We wrap it if the value overran the sequence_list size
+            # It's correct to wrap the 'sequence_idx' value *before*
+            # scheduling new jobs because new sequences may have been
+            # posted after the last sequence_roundrobin procedure execution
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0
@@ -192,7 +195,7 @@ namespace eval ::ngis {
 
                 # we must check whether a sequence is eligible to be scheduled
 
-                if {[$seq running_jobs_count] >= max(1,int(0.9*$jobs_quota))} {
+                if {[$seq running_jobs_count] >= max($::ngis::batch_num_jobs,int(0.9*$jobs_quota))} {
 
                     # This sequence is exceeding the dynamic (though flat)
                     # job quota value. We break out of the while loop
@@ -240,16 +243,20 @@ namespace eval ::ngis {
                     }
                 }
             }
+            my LogMessage "launched $batch jobs for seq $seq" debug
 
             # there's no point to reschedule the round robin if no threads are available
 
-            if {[string is false [$thread_master thread_is_available]]} {
+            if {[string is true [$thread_master thread_is_available]]} {
+                my RescheduleRoundRobin
+            } else {
                 my LogMessage "thread pool exhausted" debug
-                return
             }
 
-            my LogMessage "launched $batch jobs for seq $seq" debug
-            my RescheduleRoundRobin
+            # if we got here it means at least one job was launched. Thus we
+            # move to the next sequence when the round robin procedure gets
+            # rescheduled
+
             incr sequence_idx
         }
         
