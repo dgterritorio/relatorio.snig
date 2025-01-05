@@ -109,10 +109,9 @@ namespace eval ::ngis {
         }
 
         method post_sequence {job_sequence} {
-            ::ngis::logger emit "post sequence $job_sequence ([$job_sequence get_description])"
+            ::ngis::logger emit "posting new sequence $job_sequence ([$job_sequence get_description])"
             lappend sequence_list $job_sequence
-            my LogMessage "Sequence_list after $job_sequence has been appended" debug
-            my LogMessage ">$sequence_list<" debug
+            my LogMessage "Sequence list length: [llength $sequence_list]" debug
             my LoadBalancer
             my RescheduleRoundRobin 1
         }
@@ -161,6 +160,12 @@ namespace eval ::ngis {
 
             if {[llength $sequence_list] == 0} {
                 after 100 [list $::ngis_server sync_results]
+
+                if {[llength $pending_sequences] == 0} {
+                    foreach thread_id [$thread_master idle_threads true] {
+                        thread::release $thread_id
+                    }
+                }
                 return 
             }
 

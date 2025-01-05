@@ -86,8 +86,14 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method running_threads {} { return [array names running_threads] }
-    method idle_threads {} {  
-        return [$idle_thread_queue peek [$idle_thread_queue size]]
+    method idle_threads {{remove false}} {
+        if {$remove} {
+            set method get
+        } else {
+            set method peek
+        }
+
+        return [$idle_thread_queue $method [$idle_thread_queue size]]
     }
 
     method broadcast {cmd} {
