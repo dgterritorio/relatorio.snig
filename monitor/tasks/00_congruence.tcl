@@ -29,11 +29,6 @@
                     } else {
                         return [::ngis::tasks::make_error_result "undefined_uri" "" "Undefined uri for gid [dict get $job_d gid]"]
                     }
-
-
-                    if {!([dict exists $job_d $p] && ([dict get $job_d $p] != ""))} {
-                        return [::ngis::tasks::make_error_result "missing_url" "" "Undefined url for gid [dict get $job_d gid]"]
-                    }
                 }
             }
         }
