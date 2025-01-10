@@ -24,14 +24,14 @@
 
                     if {[dict exists $job_d $p]} {
                         if {[regexp $uri_re [dict get $job_d $p]] == 0} {
-                            return [::ngis::tasks::make_error_result "invalid_uri" "" "Invalid uri for gid [dict get $job_d gid]"]
+                            return [::ngis::tasks::make_error_result "invalid_uri" "Invalid URI"]
                         }
                     } else {
-                        return [::ngis::tasks::make_error_result "undefined_uri" "" "Undefined uri for gid [dict get $job_d gid]"]
+                        return [::ngis::tasks::make_error_result "undefined_uri" "Undefined URI"]
                     }
                 }
             }
         }
-        return [::ngis::tasks::make_ok_result "Record data congruence tested"]
+        return [::ngis::tasks::make_ok_result "Service Data congruence passed"]
     }
 
