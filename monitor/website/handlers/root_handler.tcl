@@ -64,8 +64,7 @@ namespace eval ::rwdatas {
 
                 set dbhandle [attempt_db_connect]
                 set session_obj [Session ::SESSION  -dioObject              $dbhandle   \
-                                                    -debugMode              1           \
-                                                    -debugFile              [open [file join /tmp "session-[pid].txt"] w+] \
+                                                    -debugMode              0           \
                                                     -gcMaxLifetime          [expr 7200 + 3600]    \
                                                     -sessionLifetime        [expr 3600 + 3600]    \
                                                     -sessionRefreshInterval 1800    \
@@ -84,7 +83,10 @@ namespace eval ::rwdatas {
         public proc is_logged {} {
             set session_obj [get_session_obj]
             set login_d [$session_obj load status]
-            return [dict get $login_d logged]
+            if {[dict exists $login_d logged]} {
+                return [dict get $login_d logged]
+            }
+            return 0
         }
 
         public proc check_password {login password} {

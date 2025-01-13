@@ -38,7 +38,7 @@ namespace eval ::rwdatas {
                 # a development installation automatically logs in
                 # as administrative user
 
-                if {$::ngis::debugging && false} {
+                if {$::ngis::debugging} {
                     $session_obj store status logged  1
                 } else {
                     # there must be some user authentication here
