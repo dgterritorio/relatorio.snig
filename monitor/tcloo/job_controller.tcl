@@ -162,19 +162,17 @@ namespace eval ::ngis {
                 after 100 [list $::ngis_server sync_results]
 
                 if {[llength $pending_sequences] == 0} {
-                    foreach thread_id [$thread_master idle_threads true] {
-                        thread::release $thread_id
-                    }
+                    $thread_master terminate_idle_threads
                 }
                 return 
             }
 
-            # the sequence_idx (index) had in case been incremented
+            # the sequence_idx (index) could have in case been incremented
             # at the end of the previous run of sequence_roundrobin.
-            # We wrap it if the value overran the sequence_list size
+            # We wrap it if the value has overrun the sequence_list size.
             # It's correct to wrap the 'sequence_idx' value *before*
             # scheduling new jobs because new sequences may have been
-            # posted after the last sequence_roundrobin procedure execution
+            # posted after sequence_roundrobin was last run
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0

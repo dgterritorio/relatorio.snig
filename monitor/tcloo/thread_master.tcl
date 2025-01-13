@@ -109,7 +109,7 @@ catch {::ngis::ThreadMaster destroy }
         return [llength $thread_list]
     }
 
-    method terminate_threads {} {
+    method terminate_idle_threads {} {
         while {[$idle_thread_queue size] > 0} {
             thread::release [$idle_thread_queue get]
         }
