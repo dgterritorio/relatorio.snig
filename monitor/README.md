@@ -80,127 +80,132 @@ Job sequences are scheduled in procedure `sequence_roundrobin`. This
 procedure processes a job sequence at a time and the it's rescheduled through
 the event loop for processing of other sequences
 
+
 ```
 method sequence_roundrobin {} {
-	set round_robin_procedure ""
+    set round_robin_procedure ""
 
-	if {[string is true $shutdown_signal]} { return }
+    if {[string is true $shutdown_signal]} { return }
 
-	if {[llength $pending_sequences] > 0} {
+    if {[llength $pending_sequences] > 0} {
 
-		set ps $pending_sequences
-		set pending_sequences [lmap seq $ps {
-			if {[$seq running_jobs_count] == 0} {
-				$seq destroy
-				continue
-			} else {
-				set seq
-			}
-		}]
-	}
+        set ps $pending_sequences
+        set pending_sequences [lmap seq $ps {
+            if {[$seq running_jobs_count] == 0} {
+                $seq destroy
+                continue
+            } else {
+                set seq
+            }
+        }]
+    }
 
-	# we don't have anything to do here if there are no
-	# active job sequences on 'sequence_list'
+    # we don't have anything to do here if there are no
+    # active job sequences on 'sequence_list'
 
-	if {[llength $sequence_list] == 0} {
-		after 100 [list $::ngis_server sync_results]
-		return 
-	}
+    if {[llength $sequence_list] == 0} {
+        after 100 [list $::ngis_server sync_results]
 
-	# the sequence_idx (index) had in case been incremented
-	# at the end of the previous run of sequence_roundrobin.
-	# We wrap it if the value overran the sequence_list size
-	# It's correct to wrap the 'sequence_idx' value *before*
-	# scheduling new jobs because new sequences may have been
-	# posted after the last sequence_roundrobin procedure execution
+        if {[llength $pending_sequences] == 0} {
+            $thread_master terminate_idle_threads
+        }
+        return 
+    }
 
-	if {$sequence_idx >= [llength $sequence_list]} {
-		set sequence_idx 0
-	}
+    # the sequence_idx (index) could have been incremented
+    # at the end of the previous run of sequence_roundrobin.
+    # We wrap it if the value has reached the sequence_list size.
+    # It's correct to wrap the 'sequence_idx' value *before*
+    # scheduling new jobs because new sequences could be
+    # posted after sequence_roundrobin returns control to
+    # the event loop
 
-	# if there are no threads available we can return and wait for
-	# some worker thread be returned to idle threads queue
+    if {$sequence_idx >= [llength $sequence_list]} {
+        set sequence_idx 0
+    }
 
-	if {[string is false [$thread_master thread_is_available]]} {
-		my LogMessage "no threads available. Pausing the round-robin" debug
-		return
-	}
+    # if there are no threads available we can return and wait for
+    # some worker thread be returned to idle threads queue
 
-	# let's go ahead and process the sequence pointed by 'sequence_idx'
+    if {[string is false [$thread_master thread_is_available]]} {
+        my LogMessage "no threads available. Pausing the round-robin" debug
+        return
+    }
 
-	my LogMessage "processing sequence with index $sequence_idx" debug
-	set seq [lindex $sequence_list $sequence_idx]
-	set batch 0
+    # let's go ahead and process the sequence pointed by 'sequence_idx'
 
-	my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+    my LogMessage "processing sequence with index $sequence_idx" debug
+    set seq [lindex $sequence_list $sequence_idx]
+    set batch 0
 
-	while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
+    my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
 
-		# we must check whether a sequence is eligible to be scheduled
+    while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
-		if {[$seq running_jobs_count] >= max($::ngis::batch_num_jobs,int(0.9*$jobs_quota))} {
+        # we must check whether a sequence is eligible to be scheduled
 
-			# This sequence is exceeding the dynamic (though flat)
-			# job quota value. We break out of the while loop
+        if {[$seq running_jobs_count] >= max($::ngis::batch_num_jobs,int(0.9*$jobs_quota))} {
 
-			my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
-			break
+            # This sequence is exceeding the dynamic (though flat)
+            # job quota value. We break out of the while loop
 
-		} else {
+            my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
+            break
 
-			set thread_id [$thread_master get_available_thread]
-			if {[string is false [$seq post_job $thread_id]]} {
+        } else {
 
-				# let's return the thread back to the idle threads pool
-				my move_thread_to_idle $thread_id
+            set thread_id [$thread_master get_available_thread]
+            if {[string is false [$seq post_job $thread_id]]} {
 
-				set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+                # let's return the thread back to the idle threads pool
+                my move_thread_to_idle $thread_id
 
-				my LogMessage "sequence_list after removal of index $sequence_idx" debug
-				my LogMessage "$sequence_list" debug
+                set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
 
-				if {[$seq running_jobs_count] == 0} {
+                my LogMessage "sequence_list after removal of index $sequence_idx" debug
+                my LogMessage "$sequence_list" debug
 
-					# the sequence has terminated its jobs. We don't
-					# need to increment sequence_idx, since lreplace
-					# shifts sequences on the list to the right of
-					# the current index sequence
+                if {[$seq running_jobs_count] == 0} {
 
-					my LogMessage "destroying seq $seq" debug
-					$seq destroy
+                    # the sequence has terminated its jobs. We don't
+                    # need to increment sequence_idx, since lreplace
+                    # shifts sequences on the list to the right of
+                    # the current index sequence
 
-				} else {
+                    my LogMessage "destroying seq $seq" debug
+                    $seq destroy
 
-					# the sequence turned down the just allocated thread
-					# and that means it has no more service records to be checked.
-					# We move the sequence into the pending sequences list.
+                } else {
 
-					lappend pending_sequences $seq
-					my LogMessage "$seq moved to pending list" debug
+                    # the sequence turned down the just allocated thread
+                    # and that means it has no more service records to be checked.
+                    # We move the sequence into the pending sequences list.
 
-				}
-				my LoadBalancer
-				break
-			} else {
-				incr batch
-			}
-		}
-	}
-	my LogMessage "launched $batch jobs for seq $seq" debug
+                    lappend pending_sequences $seq
+                    my LogMessage "$seq moved to pending list" debug
 
-	# there's no point to reschedule the round robin if no threads are available
+                }
+                my LoadBalancer
+                break
+            } else {
+                incr batch
+            }
+        }
+    }
+    my LogMessage "launched $batch jobs for seq $seq" debug
 
-	if {[string is true [$thread_master thread_is_available]]} {
-		my RescheduleRoundRobin
-	} else {
-		my LogMessage "thread pool exhausted" debug
-	}
+    # there's no point to reschedule the round robin if no threads are available
 
-	# if we got here it means at least one job was launched. Thus we
-	# move to the next sequence when the round robin procedure gets
-	# rescheduled
+    if {[string is true [$thread_master thread_is_available]]} {
+        my RescheduleRoundRobin
+    } else {
+        my LogMessage "thread pool exhausted" debug
+    }
 
-	incr sequence_idx
+    # if we got here it means at least one job was launched. Thus we
+    # move to the next sequence
+
+    incr sequence_idx
 }
 ```
 

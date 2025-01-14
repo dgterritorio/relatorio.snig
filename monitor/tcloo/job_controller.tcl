@@ -167,12 +167,13 @@ namespace eval ::ngis {
                 return 
             }
 
-            # the sequence_idx (index) could have in case been incremented
+            # the sequence_idx (index) could have been incremented
             # at the end of the previous run of sequence_roundrobin.
-            # We wrap it if the value has overrun the sequence_list size.
+            # We wrap it if the value has reached the sequence_list size.
             # It's correct to wrap the 'sequence_idx' value *before*
-            # scheduling new jobs because new sequences may have been
-            # posted after sequence_roundrobin was last run
+            # scheduling new jobs because new sequences could be
+            # posted after sequence_roundrobin returns control to
+            # the event loop
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0
@@ -257,8 +258,7 @@ namespace eval ::ngis {
             }
 
             # if we got here it means at least one job was launched. Thus we
-            # move to the next sequence when the round robin procedure gets
-            # rescheduled
+            # move to the next sequence 
 
             incr sequence_idx
         }
