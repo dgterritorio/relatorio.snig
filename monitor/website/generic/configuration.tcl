@@ -11,26 +11,32 @@ namespace eval ::ngis::conf {
     variable currentdefs     [file join . ngis_conf.tcl]
     variable currentdefs_sh  [file join . ngis_conf.sh]
     variable confnamespace   ngis::conf
-    variable section_order   [list website dbauth database jquery]
+    variable section_order   [list snig_server website dbauth database network jquery]
     variable dbconfiguration \
         [list   website         {value "http://snig.rivetweb.org:8080" description "Website Name" section website} \
                 encoding        {value "utf-8" description "Website default character encoding" section website } \
-                cssprogressive  {value "0" description "CSS progressive number to force reloads" section website} \
+                cssprogressive  {value "20241201" description "CSS progressive number to force reloads" section website} \
+                service_recs_limit {value 100 description "Size of the default view of an entity service records" section website } \
                 development     {value "true" description "Flag to enable development site specific parts" section website} \
                 dbuser          {value "dgt" description "Backend database user" section dbauth } \
                 dbname          {value "snig" description "Backend database" section dbauth } \
                 dbhost          {value "snig.naturalgis.pt" description "Backend database host" section dbauth} \
                 dbpasswd        {value "W8a1kCUOx0mupUAF" description "DB password" section dbauth} \
                 dbport          {value "5432" description "Backend database port" section dbauth} \
-                service_stautus  {value "testsuite.service_status" description "Service Status Records" section database} \
+                service_status  {value "testsuite.service_status" description "Service Status Records" section database} \
                 entities_table  {value "testsuite.entities" description "Entities catalog table" section database} \
                 uris_table      {value "testsuite.uris_long" description "URIs catalog table" section database} \
+                users_table     {value "testsuite.snig_users" description "SNIG User Table" section database} \
                 dbms_driver     {value "Tdbc Postgresql" description "Database DIO Driver" section database} \
-                jquery_root     {value "http://jquery.biol.unipr.it" description "Root of the jQuery library" section jquery } \
+                jquery_root     {value "http://ngis.rivetweb.org:8080" description "Root of the jQuery library" section jquery } \
+                jquery_uri      {value "jQuery/jquery.min.js" description "jQuery file name" section jquery } \
                 ckeditor_root   {value "http://jquery.biol.unipr.it" description "Root of the ckeditor code" section jquery } \
                 fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
-                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" description "jQuery timepicker" \
-                                                                                             section jquery}
+                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" \
+                                 description "jQuery timepicker" section jquery} \
+                server_ip       {value "127.0.0.1" description "SNIG Monitor Server" section network} \
+                server_port     {value "4422" description "SNIG Monitor Server Port" section network} \
+                snig_server_dir {value ".." description "SNIG Monitor Server Root Directory" section snig_server}
         ]
 
     proc sections {{s ""}} {
@@ -116,9 +122,19 @@ namespace eval ::ngis::conf {
         variable section_order
         variable confnamespace
 
-        if {[llength $section_order] != [llength [sections]]} {
+        #puts "section_order: $section_order"
+        #puts "sections: [sections]"
+
+        set sections_filtered [lmap s [sections] {
+            if {$s == "removed"} {
+                continue
+            }
+            set s
+        }]
+
+        if {[llength $section_order] != [llength $sections_filtered]} {
             return -code error -error_code section_mismatch \
-                    "Section number mismatch in configuration ([llength $section_order] vs [llength [sections]])"
+                    "Section number mismatch in configuration ([llength $section_order] vs [llength $sections_filtered])"
         }
 
         set confts [clock format [clock seconds] -format "%d-%m-%Y %T"]

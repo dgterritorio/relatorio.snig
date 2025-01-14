@@ -1,0 +1,3 @@
+[submodule "rivetweb"]
+	path = rivetweb
+	url = https://github.com/mxmanghi/rivetweb.git

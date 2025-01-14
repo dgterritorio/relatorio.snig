@@ -10,21 +10,25 @@
 . utils/shell_functions.sh
 identify $1 "all" url_status_codes "Check URL Status Codes" $2 $3
 
-status_code_and_time=$( TIMEFORMAT="%R"; { time curl -X GET --max-time $TIMEOUT -o /dev/null -Isw '%{http_code}\n' "$url"; } 2>&1 )
-status_code_and_time_single_line=$(echo "$status_code_and_time" | tr '\n' ' ')
-sc=$(echo $status_code_and_time_single_line | cut -d " " -f1)
-time=$(echo $status_code_and_time_single_line | cut -d " " -f2)
-time_dot=$(echo $time | sed 's/,/./')
+json_txt=$(curl -X GET --head --max-time $TIMEOUT -o /dev/null -s -w '%{json}' "$url")
 
-#echo $sc
-#echo $time_dot
-#record="$field1""$""$field7""$""$field52""$""${!url}""$""$sc""$""$time_dot"
-#echo "$record" >> snig_geonetwork_records_urls_status_codes.csv
+http_code=$(echo $json_txt | jq '.response_code')
 
-valid_code=$(echo $sc | grep -oP ${HTTP_VALID_CODES})
-if [ "$valid_code" == "" ]; then
-    echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $sc")
+if [ "$http_code" == "200" ]; then
+    echo $(make_ok_result "http_status_code: $http_code")
+elif [ $http_code == 301 ] || [ $http_code == 302 ] || [ $http_code == 303 ]; then
+
+    redirect_url=$(echo $json_txt | /usr/bin/jq -r '.redirect_url')
+    redir_http_code=$(curl -o /dev/null -s -w '%{response_code}' --location --max-redirs 5 "$redirect_url")
+
+    if [ $redir_http_code == 200 ]; then
+        echo $(make_warning_result "success_after_redirect" "$redir_http_code" "Success with http code $redir_http_code after redir ($http_code) was issued")
+    else
+        echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $http_code after redir" "$http_code")
+    fi
+
 else
-    echo $(make_ok_result "http_status_code: $sc ping_time: $time_dot")
+    echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $http_code" "$http_code")
 fi
+
 exit 0

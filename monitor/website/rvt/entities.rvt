@@ -7,8 +7,15 @@
                                                 -action   [::rivetweb::composeUrl] \
                                                 -name     display_entity]
 
-    set eids [lsort -integer [dict keys $entities]]
-    set eids_descr [lmap eid $eids { dict get $entities $eid }]
+    set eids {}
+    set eids_descr {}
+
+    foreach ent $entities {
+        lassign $ent eid e_descr
+
+        lappend eids        $eid
+        lappend eids_descr  $e_descr
+    }
 
     $form start
     $form select eid -values $eids -labels $eids_descr

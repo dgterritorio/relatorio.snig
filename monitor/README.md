@@ -6,23 +6,24 @@
            +-------------+      +------------+
            |    TCP/IP   | <... | Web Server |
            |  connection |      +------------+
-           +-------------+
-                  |        +--------------+        +------------------+
-                  |        |  Unix Socket |  <...  | Daily Job Client |
+           +-------------+                         +------------------+
+                  |        +--------------+  <...  | Daily Job Client |
+                  |        |  Unix Socket |        +------------------+
                   |        |  Connection  |  <...  | CLI Client       |
                   |        +--------------+        +------------------+
                   |               |
-    +-----------------------------------------+
-    |                                         |       +---------------+
-    |     ::ngis::Server (Event Queue,        | <---- | ThreadManager |
-    |          Network Callbacks)             |       +---------------+
-    |                                         |
-    +-----------------------------------------+
+                  v               v
+    +--------------------------------------+
+    |                                      |
+    |     ::ngis::Server (Event Queue,     |
+    |          Network Callbacks)          |
+    |                                      |
+    +--------------------------------------+
                         ^
                         |
-    +-----------------------------------------+
-    |         ::ngis::JobController           |
-    +-----------------------------------------+
+    +--------------------------------------+      +----------------------+
+    |        ::ngis::JobController         | <--- | ::ngis::ThreadMaster |
+    +--------------------------------------+      +----------------------+
          ^  ^  ^
          |  |  |                       < instances of ::ngis::Job >
          |  |  |     +-----------+    +-----+   +-----+       +-----+
@@ -74,38 +75,133 @@ manages 2 lists of `::ngis::JobSequences` instances
  1. `sequence_list`: the list of JobSequence instances posted for execution.
  2. `pending_list`: a list where JobSequence instances are placed when they run out
      of Jobs to be processed but still have other jobs running
+     
+Job sequences are scheduled in procedure `sequence_roundrobin`. This 
+procedure processes a job sequence at a time and the it's rescheduled through
+the event loop for processing of other sequences
 
 ```
-    method sequence_roundrobin {} {
-        set round_robin_procedure ""
+method sequence_roundrobin {} {
+	set round_robin_procedure ""
 
-        if {[string is true $shutdown_signal]} { return }
+	if {[string is true $shutdown_signal]} { return }
 
-        if {[llength $pending_sequences] > 0} {
-            set ps $pending_sequences
-            foreach seq $ps {
-                if {[$seq active_jobs_count] == 0} {
-                    my sequence_terminates $seq
-                } 
-            }
-        }
+	if {[llength $pending_sequences] > 0} {
 
-        if {[llength $sequence_list] == 0} { return }
+		set ps $pending_sequences
+		set pending_sequences [lmap seq $ps {
+			if {[$seq running_jobs_count] == 0} {
+				$seq destroy
+				continue
+			} else {
+				set seq
+			}
+		}]
+	}
 
-        if {[$thread_master thread_is_available]} {
-            if {$sequence_idx >= [llength $sequence_list]} {
-                set sequence_idx 0
-            }
+	# we don't have anything to do here if there are no
+	# active job sequences on 'sequence_list'
 
-            set seq [lindex $sequence_list $sequence_idx]
-            set thread_id [$thread_master get_available_thread] 
-            if {[string is false [$seq post_job $thread_id]]} {
-                my move_thread_to_idle $thread_id
-            }
-            incr sequence_idx
-            my RescheduleRoundRobin
-        }
-    }
+	if {[llength $sequence_list] == 0} {
+		after 100 [list $::ngis_server sync_results]
+		return 
+	}
+
+	# the sequence_idx (index) had in case been incremented
+	# at the end of the previous run of sequence_roundrobin.
+	# We wrap it if the value overran the sequence_list size
+	# It's correct to wrap the 'sequence_idx' value *before*
+	# scheduling new jobs because new sequences may have been
+	# posted after the last sequence_roundrobin procedure execution
+
+	if {$sequence_idx >= [llength $sequence_list]} {
+		set sequence_idx 0
+	}
+
+	# if there are no threads available we can return and wait for
+	# some worker thread be returned to idle threads queue
+
+	if {[string is false [$thread_master thread_is_available]]} {
+		my LogMessage "no threads available. Pausing the round-robin" debug
+		return
+	}
+
+	# let's go ahead and process the sequence pointed by 'sequence_idx'
+
+	my LogMessage "processing sequence with index $sequence_idx" debug
+	set seq [lindex $sequence_list $sequence_idx]
+	set batch 0
+
+	my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+
+	while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
+
+		# we must check whether a sequence is eligible to be scheduled
+
+		if {[$seq running_jobs_count] >= max($::ngis::batch_num_jobs,int(0.9*$jobs_quota))} {
+
+			# This sequence is exceeding the dynamic (though flat)
+			# job quota value. We break out of the while loop
+
+			my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
+			break
+
+		} else {
+
+			set thread_id [$thread_master get_available_thread]
+			if {[string is false [$seq post_job $thread_id]]} {
+
+				# let's return the thread back to the idle threads pool
+				my move_thread_to_idle $thread_id
+
+				set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+
+				my LogMessage "sequence_list after removal of index $sequence_idx" debug
+				my LogMessage "$sequence_list" debug
+
+				if {[$seq running_jobs_count] == 0} {
+
+					# the sequence has terminated its jobs. We don't
+					# need to increment sequence_idx, since lreplace
+					# shifts sequences on the list to the right of
+					# the current index sequence
+
+					my LogMessage "destroying seq $seq" debug
+					$seq destroy
+
+				} else {
+
+					# the sequence turned down the just allocated thread
+					# and that means it has no more service records to be checked.
+					# We move the sequence into the pending sequences list.
+
+					lappend pending_sequences $seq
+					my LogMessage "$seq moved to pending list" debug
+
+				}
+				my LoadBalancer
+				break
+			} else {
+				incr batch
+			}
+		}
+	}
+	my LogMessage "launched $batch jobs for seq $seq" debug
+
+	# there's no point to reschedule the round robin if no threads are available
+
+	if {[string is true [$thread_master thread_is_available]]} {
+		my RescheduleRoundRobin
+	} else {
+		my LogMessage "thread pool exhausted" debug
+	}
+
+	# if we got here it means at least one job was launched. Thus we
+	# move to the next sequence when the round robin procedure gets
+	# rescheduled
+
+	incr sequence_idx
+}
 ```
 
 The index `sequence_idx` points within this list to the next job sequence whose
@@ -166,27 +262,27 @@ queue and send it to the thread by calling procedure `do_task` in the recipient 
 
 ```
 method post_task {thread_id} {
-    if {[catch { set task_d [$tasks_q get] } e einfo]} {
+	if {$stop_signal || [catch { set task_d [$tasks_q get] } e einfo]} {
 
-        # the queue is empty, tasks are completed and
-        # the job sequence this job belongs to is notified
-        # that we are done with our tasks
+		# the queue is empty, tasks are completed and
+		# the job sequence this job belongs to is notified
+		# that we are done with our tasks
 
-        my notify_sequence $thread_id
-        return false
+		my notify_sequence $thread_id
+		return false
 
-    } else {
+	} else {
 
-        ::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
+		::ngis::logger emit "posting task '[dict get $task_d task]' for job [self]"
 
-        # Communications among threads need to know which thread is recipient
-        # of a command sent calling ::thread::send. That's why the last
-        # argument passed to do_task is the thread id of the caller (returned by ::thread::id)
+		# The last argument is the thread id of the caller (returned by ::thread::id)
+		# as the worker thread needs to know the thread id of the sender in order
+		# to send back the task results
 
-        thread::send -async $thread_id [list do_task $task_d [thread::id]]
-        return true
+		thread::send -async $thread_id [list do_task $task_d [thread::id]]
+		return true
 
-    }
+	}
 }
 ```
 procedure `do_task` is in `monitor/tcl/tasks_procedures.tcl`
@@ -200,10 +296,8 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
-    set job_o [dict get $task_d job jobname]
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 }
-
 ```
 `::ngis::Job` object asynchronously *sends* the tasks one at a time to the assigned
 worker thread. When the task is done the worker thread in turn will notify its job
@@ -212,35 +306,34 @@ with the results of the task by means of the main thread's event loop.
 Method `::ngis::Job::task_completed`
 ```
 method task_completed {thread_id task_d} {
-    set task_result ""
-    set job_controller [$::ngis_server get_job_controller]
-    dict with task_d {
-        ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
-        set task_result $status
+	set task_result ""
+	set job_controller [$::ngis_server get_job_controller]
+	dict with task_d {
+		::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
+		set task_result $status
 
-        lassign $task_result code
-        if {$code == "not_applicable"} { 
-            ::ngis::logger emit "task not applicable. Results not posted"
-        } else {
-            $job_controller post_task_results $task_d
+		lassign $task_result code
+		if {$code == "not_applicable"} { 
+			::ngis::logger emit "task not applicable. Results not posted"
+		} else {
+			$job_controller post_task_results $task_d
 
-            # on an error code we interrupt the job
+			# on an error code we interrupt the job
 
-            if {$code == "error"} {
-                my notify_sequence $thread_id
-                return 
-            }
-        }
+			if {$code == "error"} {
+				my notify_sequence $thread_id
+				return 
+			}
+		}
 
-        my post_task $thread_id
-    }
+		my post_task $thread_id
+	}
 }
-
 ```
 Even though it's possible to send multiple commands to a thread's event queue, a Job 
 waits for a task termination before assigning a new task to the thread it's holding,
 since a fatal error condition in one task causes the interruption of the whole job. After
-the last task in a Job has completed the Job notifies the sequence it belong to and
+the last task in a Job has completed the Job notifies the sequence it belongs to and
 tells the ThreadManager to move the thread into the idle thread queue.
 
 ### Batch of tasks results

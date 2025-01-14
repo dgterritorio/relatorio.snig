@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+        <title><?= [$::rivetweb::current_page title $::rivetweb::language] ?></title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/main.css?v=$::ngis::cssprogressive"]] ?>
+        <?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "../common.css?v=$::ngis::cssprogressive"]] ?>
+		<noscript><?= [::rivetweb::css [::rivetweb::csspath $::rivetweb::template_key "assets/css/noscript.css"]] ?></noscript>
+        <script type="text/javascript" src="<?= $::ngis::jquery_url ?>"></script>
+        <script type="text/javascript"><?
+            catch { $::rivetweb::current_page js }
+        ?></script>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<a href="<?= [::rivetweb::composeUrl] ?>" class="logo"><strong>S.N.I.G.</strong></a>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+                    <?
+                        set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+                        set ns [$template_o formatters_ns]
+                        if {[dict exists $::rivetweb::pagemenus banner]} {
+                            puts [${ns}::generate_banner $::rivetweb::language [dict get $::rivetweb::pagemenus banner]]
+                        }
+
+                    ?>
+					<!-- nav id="menu">
+						<ul class="links">
+							<li><a href="index.html">Home</a></li>
+							<li><a href="landing.html">Landing</a></li>
+							<li><a href="generic.html">Generic</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+						<ul class="actions stacked">
+							<li><a href="#" class="button primary fit">Get Started</a></li>
+							<li><a href="#" class="button fit">Log In</a></li>
+						</ul>
+					</nav -->
+					<div id="main" class="alt">
+
+						<!-- One -->
+                        <section id="one">
+                            <div class="inner">
+                                <header class="major"><?
+                                    puts [::${ns}::message_box [$::ngis::messagebox pop_messages]]
+                                ?></header>
+                            </div>
+                        </section>
+					</div>
+
+				<!-- Main -->
+					<div id="main" class="alt">
+
+						<!-- One -->
+                        <section id="one">
+                            <div class="inner">
+                                <header class="major">
+                                    <h4><?= [::rivet::wrapline [$::rivetweb::current_page headline $::rivetweb::language] 132 -html] ?></h4>
+                                </header>
+                                <!-- span class="image main"><img src="images/pic11.jpg" alt="" /></span -->
+                                <p><?= [$::rivetweb::current_page print_content $::rivetweb::language] ?></p>
+                            </div>
+                        </section>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+                        <?
+                            if {[string is true $::ngis::debugging]} {
+                                ?><pre><?
+                                    set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
+                                    set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
+                                    set development_footer [list [$::rivetweb::current_page key] \
+                                                                 "template: $::rivetweb::template_key" \
+                                                                 [$::rivetweb::current_page info class] \
+                                                                 $handler_db_link \
+                                                                 "is_homepage: $::rivetweb::is_homepage" \
+                                                                 "is logged: [::rwdatas::NGIS::is_logged]"]
+                                    puts [join $development_footer " | "]
+                                ?></pre><?
+                            }
+                        ?>
+					</footer>
+
+			</div>
+
+		    <!-- Scripts -->
+            <?
+                foreach jsscript [list "assets/js/jquery.min.js"  "assets/js/jquery.scrolly.min.js" "assets/js/jquery.scrollex.min.js" \
+                                       "assets/js/browser.min.js" "assets/js/breakpoints.min.js"    "assets/js/util.js" "assets/js/main.js"] {
+                    puts [::rivetweb::javascript [::rivetweb jscript_path $jsscript]]
+                }
+            ?>
+	</body>
+</html>

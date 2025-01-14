@@ -7,8 +7,17 @@ package require tls
 
 http::register https 443 [list ::tls::socket -tls1 true]
 
-lappend auto_path .
+set curr_dir [file join [file dirname [info script]] ".."]
+set curr_dir [file normalize $curr_dir]
 
+set dot [lsearch $auto_path $curr_dir]
+if {$dot < 0} {
+    set auto_path [concat $curr_dir $auto_path]
+} elseif {$dot > 0} {
+    set auto_path [concat $curr_dir [lreplace $auto_path $dot $dot]]
+}
+
+package require ngis::conf
 package require ngis::msglogger
 package require ngis::task
 package require ngis::job
@@ -42,6 +51,11 @@ proc do_task {task_d job_thread_id} {
         set status [::ngis::procedures::${procedure} $task_d]
     }
 
+    if {[string is true $::ngis::debugging]} {
+        after $::ngis::debug_task_delay
+    } else {
+        after $::ngis::task_delay
+    }
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
-}
 
+}

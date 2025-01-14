@@ -1,0 +1,65 @@
+<page id="estatisticas">
+    <ident>$Ident: Sun 05, 2025 at 15:32 +0100</ident>
+    <author>$Author: massimo.manghi $</author>
+    <date>$Date: 2016-05-11 11:01:21 +0200 (Wed, 11 May 2016) $</date>
+    <title>Conference Information</title>
+    <headline>Conference Information</headline>
+    <menu position="top">banner</menu>
+    <menu position="right">home</menu>
+    <content language="en">
+        <title>About Erice</title>
+        <headline>About Erice</headline>
+        <pagetext>
+            <section id="one">
+
+                <div class="inner">
+                    <header class="major">
+                        <h1>Elements</h1>
+                    </header>
+
+                        <p>
+                        According to a legend, Erice, son of Venus and Neptune, founded a small town on top of a 
+                        mountain (750 metres above sea level) more than three thousand years ago. The founder of 
+                        modern history-i.e. the recording of events in a methodic and chronological sequence as they 
+                        really happened without reference to mythical causes - the great Thucydides (500 B.C.), 
+                        writing about events connected with the conquest of Troy (1183 B.C.)  said:
+                        </p>
+                </div>
+            </section>
+            <blockquote>
+        	"After the fall of Troy some Trojans on their escape from the Achaei on the sea towards the West
+        	arrived in Sicily by boat and as they settled near the border with the Sicanians all together they
+        	were named Elymi: their towns were Segesta and Erice". 
+            </blockquote>
+            <p>
+        	This inspired Virgil to describe the arrival
+        	of the Troyan royal family in Erice and the burial of Anchise, by his son Enea, on the coast below
+        	Erice. Homer (1000 B.C.), Theocritus (300 B.C.), Polybius (200 B.C.), 
+        	Virgil (50 B.C.), Horace(20 B.C.), and others have celebrated this
+        	magnificent spot in Sicily in their poems. During seven centuries (XIII-XIX) the town of Erice
+        	was under the leadership of a local oligarchy, whose wisdom assured a long period of cultural
+        	development and economic prosperity which in turn gave rise to the many churches, monasteries
+        	and private palaces which you see today. In Erice you can admire the Castle of Venus, the
+        	Cyclopean Walls (800 B.C.) and the Gothic Cathedral (1300 A.D.).
+        	</p><p>
+        	Erice is at present a mixture of ancient and medieval architecture. 
+        	Other masterpieces of ancient civilization are to be found in the neighbourhood: at 
+        	Motya (Phoenician), Segesta (Elymian), and Selinunte (Greek). On the Aegadian Islands – theatre 
+        	of the decisive nav al battle of the first Punic War (264-241 B.C.) - suggestive 
+        	neolithic and paleolithic vestiges are still visible: the grottoes of Favignana, the carvings
+        	and murals of Levanzo. Splendid beaches are to be found at San Vito Lo Capo, Scopello and Comino.
+        	The rocky coast around Monte Cofano is another scenic place in Erice's surroundings: 
+                every spot is located at less than an hour's drive from Erice.
+            </p>
+            <h4>Climate</h4>
+            <p>
+        	As Erice is situated on top of a mountain at an altitude of 750 metres, it is much cooler than
+        	at sea level. Therefore, we would advise you to bring some warm clothing, and a windbreaker or 
+        	anorak; the weather is rather unpredictable in Erice and the temperature can suddenly change.
+            </p>
+            <!-- highslide inline="teatro-piccola.jpg" full="teatro-grande.jpg" class="inlinephoto" />
+        	<highslide inline="panorama-piccola.jpg" full="panorama-grande.jpg" class="inlinephoto" />
+		<highslide inline="castello-piccola.jpg" full="castello-grande.jpg" class="inlinephoto" / -->
+        </pagetext>
+    </content>
+ </page>

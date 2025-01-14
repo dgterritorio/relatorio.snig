@@ -62,6 +62,10 @@ namespace eval ::ngis::procedures {
         return [::ngis::tasks::make_ok_result "[string length $http_returned_data] characters returned"]
     }
     
+    proc format_elapsed_time {et} {
+        return [format "%.3f" [expr double($et)/1000.]]
+    }
+
     proc run_tcl {task_d} {
 
         set script [::ngis::tasks script $task_d]
@@ -77,7 +81,10 @@ namespace eval ::ngis::procedures {
         set uuid_space      [file join $::ngis::data_root data $uri_type $uuid]
         set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
         if {[ catch {
+            set t1 [clock milliseconds]
             set script_results [::ngis::tasks::${function} $task_d $tmpfile_root $uuid_space]
+            set t2 [clock milliseconds]
+            lappend script_results [format_elapsed_time [expr $t2 - $t1]]
         } e einfo] } {
             ::ngis::logger emit "Tcl script error: $e $einfo"
             return [::ngis::tasks::make_error_result $e $einfo ""]
@@ -87,51 +94,65 @@ namespace eval ::ngis::procedures {
     }
 
     proc bash_script_args {task_d} {
-        set url [::ngis::tasks url $task_d]
-        set script [::ngis::tasks function $task_d]
-
-        set uuid [::ngis::tasks uuid $task_d]
         set script_args [list   [::ngis::tasks gid $task_d]     \
                                 [::ngis::tasks url $task_d]     \
-                                $uuid                           \
+                                [::ngis::tasks uuid $task_d]    \
                                 [::ngis::tasks type $task_d]    \
                                 [::ngis::tasks version $task_d]]
-
-        set uri_type     [::ngis::tasks type $task_d]
-        set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
-        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
         set script_args [join $script_args |]
         return $script_args
     }
 
     proc run_bash {task_d} {
-        set url [::ngis::tasks url $task_d]
-        set script [::ngis::tasks function $task_d]
+        # The task arguments are composed into a "|" separated string
+        set script_args [bash_script_args $task_d]
 
-        set uuid [::ngis::tasks uuid $task_d]
-        set script_args [list   [::ngis::tasks gid $task_d]     \
-                                [::ngis::tasks url $task_d]     \
-                                $uuid                           \
-                                [::ngis::tasks type $task_d]    \
-                                [::ngis::tasks version $task_d]]
+        # determine the storage space for this task. The uuid_space and
+        # tmpfile_root directory are passed as arguments to the script.
 
+        set uuid         [::ngis::tasks uuid $task_d]
         set uri_type     [::ngis::tasks type $task_d]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
-        set script_args [join $script_args |]
-        set cmd "/bin/bash $script \"$script_args\" $tmpfile_root $uuid_space"
-        ::ngis::logger debug "running command: $cmd"
-        if {[catch {
+        set script [::ngis::tasks script $task_d]
+        set cmd [list /usr/bin/timeout "${::ngis::task_timeout}s" /bin/bash $script "$script_args" $tmpfile_root $uuid_space]
+        ::ngis::logger debug "running command: [join $cmd " "]"
+
+        try {
+
+            set t1 [clock milliseconds]
             set script_results [exec -ignorestderr {*}$cmd 2> /dev/null]
-        } e einfo]} {
-            ::ngis::logger emit "bash script error: $e $einfo"
-            return [::ngis::tasks::task_execution_error $e [dict get $einfo -errorcode] \
-                                                           [dict get $task_d task]]
+            set t2 [clock milliseconds]
+            lappend script_results [format_elapsed_time [expr $t2 - $t1]]
+
+        } trap CHILDSTATUS {results options} {
+            set status [lindex [dict get $options -errorcode] 2]
+            switch $status {
+                124 {
+                    set script_results [::ngis::tasks::make_error_result task_timeout \
+                                                "task execution times out after $::ngis::task_timeout secs" "task_timeout"]
+                    lappend script_results $::ngis::task_timeout
+                }
+                default {
+                    set script_results [::ngis::tasks::task_execution_error task_error \
+                                                "Task execution failed" [dict get $options -errorcode]]
+                    lappend script_results 0
+                }
+            }
+        } on error {e options} {
+            ::ngis::logger emit "bash script error: $e $options"
+            return -options $options -level 0 $e
         }
+
         return $script_results
     }
+
+    # append_http_data --
+    #
+    # Ancillary procedure of http_status. It provides a callback
+    # to tclcurl that stores in a buffer the data returned by the remote peer
 
     proc append_http_data {http_data} {
         append ::ngis::procedures::http_data $http_data

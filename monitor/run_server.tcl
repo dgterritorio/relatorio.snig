@@ -2,27 +2,35 @@
 
 package require syslog
 
-set current_dir [file normalize [file dirname [info script]]]
+set snig_monitor_dir [file normalize [file dirname [info script]]]
 
-cd $current_dir
+# this is important
 
-set current_dir_pos [lsearch $auto_path $current_dir]
-if {$current_dir_pos < 0} {
-    set auto_path [concat $current_dir $auto_path]
-} elseif {$current_dir_pos > 0} {
-    set auto_path [concat $current_dir [lreplace $auto_path $current_dir_pos $current_dir_pos]]
+cd $snig_monitor_dir
+
+set snig_monitor_dir_pos [lsearch $auto_path $snig_monitor_dir]
+if {$snig_monitor_dir_pos < 0} {
+    set auto_path [concat $snig_monitor_dir $auto_path]
+} elseif {$snig_monitor_dir_pos > 0} {
+    set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
 }
 
 package require ngis::common
 package require ngis::server
 package require ngis::task
-
+package require ngis::csprotomap
 
 set ::ngis_server [::ngis::Server create ::ngis_server]
 
+# load client server protocol 
+
+# temporarily we place the cs protocol map in the global namespace
+
+set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map $snig_monitor_dir -verbose true]
+
 # load the task database
 
-::ngis::tasks build_tasks_database [list [file join $current_dir tasks]]
+::ngis::tasks build_tasks_database [list [file join $snig_monitor_dir tasks]] -verbose
 
 # create data root
 
@@ -32,7 +40,6 @@ if {[file exists [file join $::ngis::data_root tmp]] == 0} {
 if {[file exists [file join $::ngis::data_root data]] == 0} {
     file mkdir [file join $::ngis::data_root data]
 }
-
 
 syslog -ident snig -facility user info "SNIG Monitor Start"
 

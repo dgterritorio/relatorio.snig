@@ -1,0 +1,23 @@
+
+.taskok {
+    color: black;
+    background-color: #00d787;
+    text-align: center;
+}
+
+.taskerror {
+    background-color: red;
+    color: #0000d7;
+    text-align: center;
+}
+
+.taskwarning {
+    background-color: #ffff00;
+    color: black;
+    text-align: center;
+}
+
+div.loginform div input {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}

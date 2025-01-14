@@ -5,60 +5,30 @@
 
 package require rwpage
 package require ngis::configuration
+package require DIO 2.0
+package require dio_Tdbc 2.0
 
 namespace eval ::rwpage {
 
     ::itcl::class SnigPage {
         inherit RWPage
 
-        private variable dbhandle
-
-        private variable error_page
-        private variable dbuser
-        private variable dbhost
-        private variable dbname
-        private variable dbpasswd
-        private variable dbms_driver
-
-        constructor {key} {RWPage::constructor $key} {
-            foreach v {dbuser dbhost dbname dbpasswd} {
-                ::ngis::conf::readconf $v $v
-            }
-            set error_page  ""
-            set dbhandle    ""
-            set dbms_driver [::ngis::conf::readconf dbms_driver]
-        }
+        constructor {key} {RWPage::constructor $key} { }
 
         public method refresh {timereference} { return false }
         public method get_dbhandle {} { return $dbhandle }
 
-        private method attempt_db_connect {} {
-            if {$dbhandle == ""} {
-                set connectcmd [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
-                set ::dbms [eval $connectcmd]
-                set dbhandle $::dbms
-            }
-            return $dbhandle
-        }
-
-        private method close_db_connection {} {
-            if {$dbhandle != ""} { 
-                $dbhandle destroy
-                set dbhandle ""
-            }
-        }
+        public method js {} { }
 
         public method prepare {language argsqs} {
             RWPage::prepare $language $argsqs
 
             ::try {
-                $this attempt_db_connect
-
                 $this prepare_page $language $argsqs
                 set page $this
             } on error {e opts} {
 
-                if {[info command $error_page] != ""} {
+                if {[info command error_page] != ""} {
                     $error_page destroy
                 }
 
@@ -75,7 +45,7 @@ namespace eval ::rwpage {
                 set error_page $pobj
                 set page       $pobj
             } finally {
-                $this close_db_connection
+                #close_db_connection
             }
             return $page
         }

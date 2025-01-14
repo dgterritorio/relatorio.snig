@@ -1,2 +1,4 @@
 monitor/ngis_monitor_conf.tcl
+monitor/website/ngis_conf.tcl
+monitor/website/ngis_conf.sh
 *.swp

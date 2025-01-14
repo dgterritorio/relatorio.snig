@@ -5,6 +5,7 @@
 
 package require ngis::page
 package require form
+package require ngis::servicedb
 
 namespace eval ::rwpage {
 
@@ -13,26 +14,26 @@ namespace eval ::rwpage {
 
         private variable entities
 
-
         constructor {key} {SnigPage::constructor $key} { 
-            set entities [dict create]
+            set entities [list]
+            $this title en "List of SNIG Entities" pt "List of SNIG Entities"
         }
 
         public method prepare_page {language argsqs} {
-            if {[dict size $entities] == 0} {
-                set dbhandle [$this get_dbhandle]
-                ::ngis::conf readconf entities_table
-                $dbhandle forall "SELECT * from $entities_table" e {
-                    dict set entities $e(eid) $e(description)
-                }
-            }
+
+            set entities [::ngis::service::list_entities "%"]
+            set entities [lmap e $entities {
+                lassign $e eid description count
+                list $eid [::rivet::xml $description [list a href [::rivetweb::composeUrl eid $eid]]] $count
+            }]
+
         }
 
         public method print_content {language args} {
-
-            ::rivet::parse rvt/entities.rvt
-
-
+            #::rivet::parse rvt/entities.rvt
+            set template_o  [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+            set ns [$template_o formatters_ns]
+            puts [${ns}::entities_table $entities]
         }
     }
 }

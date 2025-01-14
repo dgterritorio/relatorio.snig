@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | Set or get the current protol format
+% @CMD@(snig) Version 1.0 | Set or get the current protol format
 
 NAME
 ====

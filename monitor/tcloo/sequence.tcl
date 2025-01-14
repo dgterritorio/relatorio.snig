@@ -1,4 +1,4 @@
-# --
+# Sequence.tcl --
 #
 #
 
@@ -14,9 +14,9 @@ catch { ::ngis::JobSequence destroy }
 ::oo::class create ::ngis::JobSequence {
     variable data_source
     variable description
-    variable running_jobs
     variable stop_signal
-    variable completed_jobs
+    variable num_of_completed_jobs
+    variable running_jobs
     variable jobs_to_destroy
 
     constructor {ds {dscr ""}} {
@@ -24,7 +24,7 @@ catch { ::ngis::JobSequence destroy }
         set description     $dscr
         set stop_signal     false
         set current_job     ""
-        set completed_jobs  0
+        set num_of_completed_jobs  0
         set jobs_to_destroy {}
         set running_jobs    {}
     }
@@ -37,20 +37,19 @@ catch { ::ngis::JobSequence destroy }
 	method get_description {} { return $description }
     method active_jobs_count {} { return [my running_jobs_count] }
     method active_jobs {} { return $running_jobs }
-    method completed_jobs {} { return $completed_jobs }
-
-    method job_scheduling_completed {job_o} {
-        ::ngis::logger emit "$job_o scheduling has completed"
-        #if {[info exists running_jobs($thread_id)]} { unset running_jobs($thread_id) }
-    }
+    method completed_jobs {} { return $num_of_completed_jobs }
 
     method delete_jobs {} {
         ::ngis::logger emit "[self] cleaning up finished jobs"
         foreach j $jobs_to_destroy { $j destroy }
     }
 
+    # --job_completed
+    #
+    # callback from ::ngis::Job to signal that tasks are completed
+
     method job_completed {job_o} {
-        incr completed_jobs
+        incr num_of_completed_jobs
         lappend jobs_to_destroy $job_o
 
         set j [lsearch $running_jobs $job_o]
@@ -58,11 +57,8 @@ catch { ::ngis::JobSequence destroy }
             ::ngis::logger emit "\[ERROR\] internal ::ngis::Job class error: $job_o not registered"
             return
         }
-        set running_jobs [lreplace $running_jobs $j $j]
 
-        #if {[llength $running_jobs] == 0} {
-        #    my MarkForTermination
-        #}
+        set running_jobs [lreplace $running_jobs $j $j]
     }
 
     method running_jobs_count {} {
@@ -71,28 +67,17 @@ catch { ::ngis::JobSequence destroy }
 
     method njobs {} { return [$data_source njobs] }
 
-    method MarkForTermination {} {
-        if {[my running_jobs_count] > 0} {
-            ::the_job_controller move_to_pending [self]
-        } else {
-            ::the_job_controller sequence_terminates [self]
-        }
-    }
-
     method get_next_result {} { return [$data_source get_next] }
 
     method post_job {thread_id} {
         if {[string is true $stop_signal]} {
             ::ngis::logger emit "stop signal received: terminating [my running_jobs_count] running jobs"
-            MarkForTermination
             return false
         }
 
         set new_job [my get_next_result]
         if {$new_job == ""} {
 
-            ::ngis::logger emit "no more jobs to send, [my running_jobs_count] still running"
-            my MarkForTermination
             return false
 
         } else {
@@ -110,6 +95,7 @@ catch { ::ngis::JobSequence destroy }
 
     method stop_sequence {} {
         set stop_signal true
+        foreach j $running_jobs { $j stop_job }
     }
 }
 
@@ -125,8 +111,16 @@ catch { ::ngis::JobSequence destroy }
 
 ::oo::class create ::ngis::DataSource {
 
+    variable jobs_created
+
+    constructor {} {
+        set jobs_created 0
+    }
+
     method njobs {} { return 0 }
     method get_next {} { return "" }
+    method jobs_created {} { return $jobs_created }
+    method incr_jobs_created {} { incr jobs_created }
 
 }
 
@@ -153,7 +147,6 @@ catch { ::ngis::JobSequence destroy }
             ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
             set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $res_d [::ngis::tasks get_registered_tasks]]
-
             return $job_o
         }
         return ""
@@ -165,31 +158,28 @@ catch { ::ngis::JobSequence destroy }
     superclass ::ngis::DataSource
 
     variable service_l
-    variable service_idx
+    variable service_l_length
 
     constructor {sl} {
-
-        foreach service_d $sl {
-            set gid [dict get $service_d gid]
-            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_d [::ngis::tasks get_registered_tasks]]
-            lappend service_l $job_o
-        }
-
-        set service_idx -1
+        set service_l $sl
+        set service_l_length [llength $service_l]
     }
 
     destructor {
-        #foreach j $service_l { $j destroy }
+        ::ngis::logger debug "[self] returned [my jobs_created] job objects out of $service_l_length initial service records"
     }
 
-    method njobs {} { return [llength $service_l] }
+    method njobs {} { return $service_l_length }
 
     method get_next {} {
-        if {$service_idx < [llength $service_l]} {
-            return [lindex $service_l [incr service_idx]]
-        } else {
-            return ""
-        }
+        set service_l [lassign $service_l service_rec_d]
+        if { $service_rec_d == ""} { return "" }
+
+        set gid [dict get $service_rec_d gid]
+        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d [::ngis::tasks get_registered_tasks]]
+
+        my incr_jobs_created
+        return $job_o
     }
 
 }

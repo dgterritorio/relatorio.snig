@@ -1,4 +1,4 @@
-% @CMD@(1) Version 1.0 | Send custom messages to the server
+% @CMD@(snig) Version 1.0 | Send custom messages to the server
 
 NAME
 ====

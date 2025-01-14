@@ -1,0 +1,81 @@
+# reports.tcl --
+#
+# web service to return formatted reports from the server
+#
+package require ngis::webservice
+package require ngis::servicedb
+package require ngis::ancillary_io
+package require yajltcl
+
+namespace eval ::rwpage {
+    ::itcl::class SnigReports {
+        inherit SnigWebService
+
+        private variable json_o
+        private variable report_n
+        private variable data
+        private variable fmtns
+
+        constructor {key} {SnigWebService::constructor $key} {
+            set json_o [yajl create [namespace current]::json -beautify 1]
+            set fmtns [[::rivetweb::RWTemplate::template $::rivetweb::template_key] formatters_ns]
+        }
+
+        public method webservice {language argsqs} {
+            # if we're here the 'report' argument is defined
+            set report_n [dict get $argsqs report]
+            switch $report_n {
+                118 {
+                    set data [lindex [::ngis::service service_data [dict get $argsqs gid]] 0]
+                }
+                112 {
+                    set data [::ngis::ancillary::send_command_and_wait $::ngis::ancillary::thread_id "WHOS"]
+                }
+                114 {
+                    set data [::ngis::ancillary::send_command_and_wait $::ngis::ancillary::thread_id "JOBLIST"]
+                }
+                default {
+                    SnigWebService::webservice $language $argsqs
+                }
+            }
+        }
+
+        public method print_content {language args} {
+            $json_o reset 
+            switch $report_n {
+                118 {
+                    $json_o map_open string code string "618"
+                    $json_o string title string [dict get $data description]
+                    $json_o string message string "Data refreshed"
+                    $json_o string report string [${fmtns}::service_tasks $data]
+                    $json_o map_close
+                    puts [$json_o get]
+                }
+                112 {
+                    set data_d [::json::json2dict $data]
+                    set connections_l [dict get $data_d connections]
+
+                    $json_o map_open string code string "612"
+                    $json_o string nconnections integer [llength $connections_l]
+                    $json_o string title string [dict get $data_d title]
+                    $json_o string report string [${fmtns}::display_report $report_n $connections_l]
+                    $json_o map_close
+                    puts [$json_o get]
+                }
+                114 {
+                    set jobs_d [::json::json2dict $data]
+                    $json_o map_open string code string "614"
+                    $json_o string njobs  integer [dict get $jobs_d njobs]
+                    $json_o string title  string  [dict get $jobs_d message]
+                    if {[dict get $jobs_d njobs] > 0} {
+                        $json_o string report string [${fmtns}::display_report $report_n [dict get $jobs_d jobs]]
+                    } else {
+                        $json_o string report string [${fmtns}::display_report $report_n {}]
+                    }
+                    $json_o map_close
+                    puts [$json_o get]
+                }
+            }
+        }
+    }
+}

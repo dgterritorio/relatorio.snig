@@ -1,0 +1,40 @@
+body {
+}
+
+#headline {
+    text-align: center;
+    width: 80em;
+    margin-left: 2em;
+}
+
+div.container {
+    /* width: 132em; */
+    margin-left: 2em;
+    /* border: 1px solid black; */
+}
+
+div.bmessage {
+    /* border: 1px solid black; */
+    margin-left: 2em;
+    /* padding: 1em; */
+}
+
+div.navbar pre {
+    margin-left: 2em;
+}
+
+div.navbar pre a {
+    font-size: 200%;
+}
+
+div#banner {
+    margin-left: 2em;
+}
+.bmessage span {
+    font-family: Monospace;
+}
+
+span.task_highlight {
+    padding: 5px;
+    background-color: #eee;
+}

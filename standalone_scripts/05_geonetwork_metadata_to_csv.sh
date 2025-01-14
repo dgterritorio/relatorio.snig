@@ -1,0 +1,281 @@
+#!/bin/bash
+
+BASEFOLDER="/tmp"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
+[ -e "$BASEFOLDER/snig_geonetwork_records_csv.csv" ] && rm "$BASEFOLDER/snig_geonetwork_records_csv.csv"
+[ -e "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv" ] && rm "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
+
+find "$BASEFOLDER/SNIG_GEONETWORK_METADATA/" -type f -size 0 -exec rm -f {} +
+
+FILES="$BASEFOLDER/SNIG_GEONETWORK_METADATA/"*.xml
+for f in $FILES
+do
+
+    filename="$(basename -- $f)"
+    filename_no_ext="${filename%.*}"
+
+    echo "Processing $filename"
+
+xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isotc211.org/2005/gco -N gts=http://www.isotc211.org/2005/gts -N srv=http://www.isotc211.org/2005/srv -N gmx=http://www.isotc211.org/2005/gmx \
+ -T -t \
+ -m "//gmd:fileIdentifier" -v "gco:CharacterString" -o '$' \
+ -v "//gmd:MD_Metadata/gmd:language[1]/gmd:LanguageCode/@codeListValue" \
+ -v "//gmd:MD_Metadata/gmd:language/gco:CharacterString" \
+ -o '$' \
+ -v "//gmd:MD_Metadata/gmd:characterSet/gmd:MD_CharacterSetCode/@codeListValue" -o '$' \
+ -v "//gmd:hierarchyLevel/gmd:MD_ScopeCode/@codeListValue" -o '$' \
+ -v "//gmd:hierarchyLevelName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:contact[3]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:dateStamp/gco:Date" -o '$' \
+ -v "//gmd:metadataStandardName/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[1]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[1]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[2]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[2]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[3]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[3]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[4]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[4]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[5]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[5]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[6]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[6]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[2]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[2]/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[3]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[3]/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:presentationForm/gmd:CI_PresentationFormCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:purpose/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:credit[1]/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:credit[2]/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:credit[3]/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[2]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact[3]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceMaintenance/gmd:MD_MaintenanceInformation/gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[1]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[2]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[3]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[4]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[5]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -m "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:keyword/gco:CharacterString" -v "concat(.,'/')" -b -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:type/gmd:MD_KeywordTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:keyword/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:descriptiveKeywords[6]/gmd:MD_Keywords/gmd:thesaurusName/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints[1]/gmd:MD_LegalConstraints/gmd:accessConstraints/gmd:MD_RestrictionCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints[1]/gmd:MD_LegalConstraints/gmd:otherConstraints/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints[2]/gmd:MD_LegalConstraints/gmd:useConstraints/gmd:MD_RestrictionCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints[2]/gmd:MD_LegalConstraints/gmd:otherConstraints/gmx:Anchor" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:spatialRepresentationType/gmd:MD_SpatialRepresentationTypeCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:spatialResolution/gmd:MD_Resolution/gmd:equivalentScale/gmd:MD_RepresentativeFraction/gmd:denominator/gco:Integer" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:language/gmd:LanguageCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:topicCategory[1]/gmd:MD_TopicCategoryCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:topicCategory[2]/gmd:MD_TopicCategoryCode" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[1]/gmd:EX_GeographicBoundingBox/gmd:extentTypeCode/gco:Boolean" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[1]/gmd:EX_GeographicBoundingBox/gmd:westBoundLongitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[1]/gmd:EX_GeographicBoundingBox/gmd:eastBoundLongitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[1]/gmd:EX_GeographicBoundingBox/gmd:southBoundLatitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[1]/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[2]/gmd:EX_GeographicDescription/gmd:extentTypeCode/gco:Boolean" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[2]/gmd:EX_GeographicDescription/gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[3]/gmd:EX_GeographicBoundingBox/gmd:extentTypeCode/gco:Boolean" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[3]/gmd:EX_GeographicBoundingBox/gmd:westBoundLongitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[3]/gmd:EX_GeographicBoundingBox/gmd:eastBoundLongitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[3]/gmd:EX_GeographicBoundingBox/gmd:southBoundLatitude/gco:Decimal" -o '$' \
+ -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement[3]/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude/gco:Decimal" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[1]/gmd:MD_Format/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[1]/gmd:MD_Format/gmd:version/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[1]/gmd:MD_Format/gmd:specification/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[2]/gmd:MD_Format/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[2]/gmd:MD_Format/gmd:version/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[2]/gmd:MD_Format/gmd:specification/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[3]/gmd:MD_Format/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[3]/gmd:MD_Format/gmd:version/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[3]/gmd:MD_Format/gmd:specification/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[4]/gmd:MD_Format/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[4]/gmd:MD_Format/gmd:version/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:distributionFormat[4]/gmd:MD_Format/gmd:specification/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[4]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[5]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[6]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[7]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[8]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[9]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[1]/gmd:MD_DigitalTransferOptions/gmd:onLine[10]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[1]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[2]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:linkage/gmd:URL" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:function/gmd:CI_OnLineFunctionCode" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:name/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:description/gco:CharacterString" -o '$' \
+ -v "//gmd:distributionInfo/gmd:MD_Distribution/gmd:transferOptions[2]/gmd:MD_DigitalTransferOptions/gmd:onLine[3]/gmd:CI_OnlineResource/gmd:description/gmx:Anchor" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:scope/gmd:DQ_Scope/gmd:level/gmd:MD_ScopeCode" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:explanation/gco:CharacterString" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:report/gmd:DQ_DomainConsistency/gmd:result/gmd:DQ_ConformanceResult/gmd:pass/gco:Boolean" -o '$' \
+ -v "//gmd:dataQualityInfo/gmd:DQ_DataQuality/gmd:lineage/gmd:LI_Lineage/gmd:statement/gco:CharacterString" \
+ -n $f  | tr -d '\n' >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
+echo "" >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
+done
+
+awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
