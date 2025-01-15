@@ -47,7 +47,12 @@ package require ngis::csprotomap
             if {$n_idx == 0} {
                 return [list ERR "Command '$cli_cmd' not found"]
             } elseif {$n_idx == 1} {
-                return [list OK [lindex $cmds_list $list_idx] [dict get $cli_cmds [lindex $cmds_list $list_idx]]]
+                set cmd_found [lindex $cmds_list $list_idx]
+                if {[string length $cmd_found] >= [string length $cli_cmd]} {
+                    return [list OK $cmd_found [dict get $cli_cmds $cmd_found]]
+                } else {
+                    return [list ERR "Invalid $cli_cmd (should have been '${cmd_found}'?)"]
+                }
             } else {
                 incr nch
             }

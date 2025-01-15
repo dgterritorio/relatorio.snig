@@ -72,7 +72,8 @@ package require tclreadline
                 my send_to_server $con [list $cli_cmd {*}$cli_args]
             }
             ERR {
-                puts "Error: $cli_result ($cli_cmd $cli_args)"
+                set cmd_args [string trim "$cli_cmd $cli_args"]
+                puts "Error: $cli_result ($cmd_args)"
                 set scheduled_input [after 10 [namespace code [list my terminal_input $con]]]
             }
             EXIT {
