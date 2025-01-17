@@ -241,7 +241,11 @@ namespace eval ::ngis {
 
                         }
                         my LoadBalancer
-                        break
+                        if {[string is true [$thread_master thread_is_available]]} {
+                            my RescheduleRoundRobin
+                        }
+                        return
+
                     } else {
                         incr batch
                     }
