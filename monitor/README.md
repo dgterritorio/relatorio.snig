@@ -80,7 +80,6 @@ Job sequences are scheduled in procedure `sequence_roundrobin`. This
 procedure processes a job sequence at a time and the it's rescheduled through
 the event loop for processing of other sequences
 
-
 ```
 method sequence_roundrobin {} {
     set round_robin_procedure ""
@@ -186,7 +185,11 @@ method sequence_roundrobin {} {
 
                 }
                 my LoadBalancer
-                break
+                if {[string is true [$thread_master thread_is_available]]} {
+                    my RescheduleRoundRobin
+                }
+                return
+
             } else {
                 incr batch
             }
@@ -208,7 +211,6 @@ method sequence_roundrobin {} {
     incr sequence_idx
 }
 ```
-
 The index `sequence_idx` points within this list to the next job sequence whose
 jobs need a thread. The thread master is polled to know whether a thread is
 available and in case the thread id is fetch. This thread is therefore

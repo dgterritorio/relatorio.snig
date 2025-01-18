@@ -267,15 +267,17 @@ namespace eval ::ngis {
             incr sequence_idx
         }
         
-		# -- status
-		#
-		# returns two forms of data:
+        # -- status
+        #
+        # Returns two forms of data:
+        #
         #    + argument jobs (default): returns the list of current 
         #               running sequences, the total number of jobs and
         #               the list of pending_sequences
         #    + argument thread_master: returns the status of the
         #               monitor thread master
-		#
+        #
+
         method status {{argument "jobs"}} {
             if {$argument == "jobs"} {
                 return [list $sequence_list [my running_jobs_tot] $pending_sequences]
