@@ -144,7 +144,7 @@ systemctl enable snig-monitor
 * Start the service
 
 ```
-systemctl start snig-monitor`
+systemctl start snig-monitor
 ```
 
 The service will start anyway at boot time
@@ -162,12 +162,6 @@ session. The CLI keeps an history of commands that can be navigated with the arr
 keys or searched using the Ctrl-R sequence and then by entering 
 
 The CLI commands list is available with the command ```HELP``` (which has the ```?``` as an alias)
-and single informational pages can be printed typing the command name as argument to the ```HELP```
-command
-
-```
-snig [2]> HELP CHECK
-```
 
 ```
 snig [3]> ?
@@ -189,18 +183,59 @@ WHOS      : List Active Connections
 ZZ        : Send custom messages to the server
 ```
 
+Full informational pages are available as Unix-like manual pages. For example
+```
+snig [4]> HELP CHECK
+```
+
+Commands can be abbreviated as long as their non-ambigous. For example
+
+```
+snig [5]> W
+```
+is equivalent to `WHOS` but `S` is not accepted because there are 3 commands having
+the same initial letter.
+
 ## CLI Commands Categories
 
 The CLI commands fall in 4 categories 
 
- * Job management (CHECK, STOP, JOBLIST)
- * Protocol Control (FORMAT)
- * Service Records Database Information (ENTITIES,LSSERV,TASKRES)
- * Server Control
+ * Job management (`CHECK`, `STOP`, `JOBLIST`, `RUNSEQ`)
+ * Protocol Control (`FORMAT`)
+ * Service Records Database Information (`ENTITIES`, `LSSERV`, `SERVICE`, `TASKRES`)
+ * Server Control (`WHOS`,`SHUTDOWN`)
 
 ### Job Management
 
-## Anatomy of a script implementing a control task
+ * `CHECK`: starts a job sequence for the purpose of checking a set of service records. The command
+accepts a variable number of arguments with different forms. See the command man page by typing
+ `HELP CHECK` from the CLI
+ * `STOP`: stops all the job sequences. There is no implementation of session or job sequence ownership
+therefore `STOP` sends a termination signal to all of them, regardless the session they were started from.
+The stop signal does not perform a preemptive interruption of the running threads and in order to have a full
+stop of the job sequences the tasks running have to orderly terminate
+ * `JOBLIST`: displays a table of the running threads with the tasks names and their service record descriptions
+ * `RUNSEQ`: prints a table of the current running job sequences
+
+### Protocol Control
+
+The server can respond to a CLI in a *human readable* (HR) format or with *JSON* messages. By default the server
+responds with the *HR* format
+
+ * `FORMAT`: without arguments returns the current protocol format. Otherwise accepts either `HR` or `JSON`
+
+### Service Records Database
+
+ * `ENTITIES`: list the entities of registered service records. The table shows for each entity the integer key, definition and number of records
+ * `LSSERV`: displays a table of the service records belonging to an entity
+ * `SERVICE`: prints information about a specific record (some information are truncated for readability, use the *JSON* format to have the full version of data)
+ * `TASKRES`: prints results of tasks performed on a given resource record
+
+### Server Control
+
+ * `WHOS`: display a table with the current session connected to the server
+ * `SHUTDOWN`: Interrupts current running jobs. It subsequently causes the monitor server and the client to exit (see `HELP SHUTDOWN` for more information)
+ * `ZZ`: is a command meant for development only
 
 ## Create a crontab entry for the monitor
 From the shell of the user running the monitor type

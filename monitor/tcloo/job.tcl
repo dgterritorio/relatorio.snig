@@ -124,7 +124,7 @@ package require struct::queue
 
             # we don't need to change the job status here as we're not sending
             # deferred commands to the event loop before calling post_task (which
-            # determines the new status
+            # in turn determines the new status)
 
             my post_task $thread_id
         }
