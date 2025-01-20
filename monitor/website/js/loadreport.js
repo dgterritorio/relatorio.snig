@@ -11,7 +11,7 @@ $(window).on("load",function() {
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // Handle errors
-            $('#response').text('Error: ' + textStatus);
+            $('#response').text('Error: ' + textStatus + " (" + errorThrown + ")");
         },
         complete: function () {
         }

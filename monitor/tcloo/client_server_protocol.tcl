@@ -55,7 +55,7 @@ oo::define ngis::Protocol {
 
     method parse_exec_cmd {cmd_line} {
         set cmd_line [string trim $cmd_line]
-        puts "msg >$cmd_line< ([string length $cmd_line])"
+        ::ngis::logger debug "msg >$cmd_line< ([string length $cmd_line])"
         if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
             return "101: unrecognized or invalid command '$cmd_line'"
         } else {
@@ -78,7 +78,7 @@ oo::define ngis::Protocol {
                 return [eval $formatter $proto_msg]
             }
 
-            puts "arguments: '$arguments' (nargs: [llength $arguments])"
+            ::ngis::logger debug "arguments: '$arguments' (nargs: [llength $arguments])"
             switch $cmd {
                 NOOP {
                     return [$formatter c120]

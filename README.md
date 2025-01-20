@@ -144,12 +144,61 @@ systemctl enable snig-monitor
 * Start the service
 
 ```
- systemctl start snig-monitor`
+systemctl start snig-monitor`
 ```
 
 The service will start anyway at boot time
 
 ## CLI Usage:
+
+Assuming your working directory is <snig-monitor-root> (e.g. /home/naturalgis/snig-monitor)
+you can run the CLI client by typing
+
+```
+monitor/run_client.tcl
+```
+The client accepts commands from a prompt line that shown the number of commands entered during a
+session. The CLI keeps an history of commands that can be navigated with the arrow-up and arrow-down
+keys or searched using the Ctrl-R sequence and then by entering 
+
+The CLI commands list is available with the command ```HELP``` (which has the ```?``` as an alias)
+and single informational pages can be printed typing the command name as argument to the ```HELP```
+command
+
+```
+snig [2]> HELP CHECK
+```
+
+```
+snig [3]> ?
+CHECK     : Starts Monitoring Jobs
+ENTITIES  : List Entities
+EXIT      : Exit client
+FORMAT    : Set/Query message format
+HELP      : List CLI Commands
+JOBLIST   : List Running Jobs
+LSSERV    : List of service records for an Entity
+NOOP      : Noop command as a keep-alive of socket connections
+REGTASK   : List registered tasks
+RUNSEQ    : Query Sequence Execution Status
+SERVICE   : Query Service Data
+SHUTDOWN  : Immediate Client and Server termination
+STOP      : Stop Monitor Operations
+TASKRES   : Display Task results
+WHOS      : List Active Connections
+ZZ        : Send custom messages to the server
+```
+
+## CLI Commands Categories
+
+The CLI commands fall in 4 categories 
+
+ * Job management (CHECK, STOP, JOBLIST)
+ * Protocol Control (FORMAT)
+ * Service Records Database Information (ENTITIES,LSSERV,TASKRES)
+ * Server Control
+
+### Job Management
 
 ## Anatomy of a script implementing a control task
 

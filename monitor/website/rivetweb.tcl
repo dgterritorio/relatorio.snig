@@ -17,6 +17,7 @@ package require Thread
 package require ngis::ancillary_io_thread
 package require ngis::ancillary_io
 package require json
+package require ngis::common
 
 ::rivetweb::init Marshal top -nopkg
 ::rivetweb::init Login   top -nopkg

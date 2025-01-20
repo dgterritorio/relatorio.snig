@@ -20,7 +20,7 @@ package require ngis::utils
 
 ::oo::class create ::ngis::Server 
 
-puts "Protocol: [package present ngis::protocol]"
+#puts "Protocol: [package present ngis::protocol]"
 
 ::oo::define ::ngis::Server {
     variable connections_db [dict create]
@@ -47,7 +47,7 @@ puts "Protocol: [package present ngis::protocol]"
     }
 
     method RegisterConnection {con ctype} {
-        puts "registering connection $con"
+        ::ngis::logger emit "registering connection $con"
         dict set connections_db $con format   HR
         dict set connections_db $con login    [clock seconds]
         dict set connections_db $con type     $ctype
@@ -159,12 +159,12 @@ puts "Protocol: [package present ngis::protocol]"
         }
 
         if {[catch {
-            puts "storing [llength $results_l] results"
+            ::ngis::logger emit "storing [llength $results_l] results"
             set t1 [clock milliseconds]
             ::ngis::service::update_task_results $results_l
             set t2 [clock milliseconds]
 
-            puts "[llength $results_l] results stored in [expr $t2 - $t1]ms"
+            ::ngis::logger emit "[llength $results_l] results stored in [expr $t2 - $t1]ms"
         } e einfo]} {
             ::ngis::logger emit "error syncing results: $e"
             ::ngis::logger emit "===== error_info ====="
@@ -214,13 +214,12 @@ puts "Protocol: [package present ngis::protocol]"
 
                 my set_connection_format [dict get $connections_db $con format]
 
-                puts "read from socket: >$msg<"
+                #puts "read from socket: >$msg<"
 
                 if {[catch { set ret2client [$protocol parse_exec_cmd $msg] } e einfo]} {
-                    puts "error: $e"
-                    puts "einfo: $einfo"
+                    ::ngis::logger emit "error: $e"
+                    ::ngis::logger emit "einfo: $einfo"
 
-                    ::ngis::logger emit $e
                     my send_to_client $con [[$protocol current_formatter] c501 $e]
                 } else {
                     my send_to_client $con $ret2client

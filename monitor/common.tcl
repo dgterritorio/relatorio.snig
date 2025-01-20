@@ -48,7 +48,8 @@ namespace eval ::ngis {
                                             122     "Service Records"           \
                                             501     "Server internal error: %s" \
                                             502     "Stopping operations"       \
-                                            503     "Missing argument for code %d"]
+                                            503     "Missing argument for code %d" \
+                                            505     "Connection to Monitor Error" ]
 
         variable report_top
         set report_top [::report::report hr_report_top 1 style captionedtable]

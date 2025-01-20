@@ -41,10 +41,10 @@ namespace eval ::ngis {
             ::ngis::logger $method "\[JOB_CONTROLLER\] $aMsg"
         }
 
-        method RescheduleRoundRobin {{multiple 1}} {
+        method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
-                my LogMessage "rescheduling job sequences round robin with delay multiplicator = $multiple" debug
-                set round_robin_procedure [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
+                my LogMessage "rescheduling job sequences round robin" debug
+                set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
         }
 
@@ -74,7 +74,6 @@ namespace eval ::ngis {
         }
 
         method wait_for_operations_shutdown {} {
-
             set jc_sequence_number [my sequence_number_tot]
 
             if {([incr shutdown_counter -1] == 0) || ($jc_sequence_number == 0)} {
@@ -105,7 +104,8 @@ namespace eval ::ngis {
             }
             set sequence_list [list]
 
-            my RescheduleRoundRobin 1
+            my RescheduleRoundRobin
+
         }
 
         method post_sequence {job_sequence} {
@@ -113,12 +113,12 @@ namespace eval ::ngis {
             lappend sequence_list $job_sequence
             my LogMessage "Sequence list length: [llength $sequence_list]" debug
             my LoadBalancer
-            my RescheduleRoundRobin 1
+            my RescheduleRoundRobin
         }
 
         method move_thread_to_idle {thread_id} {
             $thread_master move_to_idle $thread_id
-            my RescheduleRoundRobin 1
+            my RescheduleRoundRobin
         }
 
         # -- running_jobs_tot
@@ -195,6 +195,7 @@ namespace eval ::ngis {
 
             my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
 
+            set sequence_has_terminated false
             while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
                 # we must check whether a sequence is eligible to be scheduled
@@ -216,36 +217,35 @@ namespace eval ::ngis {
                         my move_thread_to_idle $thread_id
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+                        set sequence_has_terminated true
 
                         my LogMessage "sequence_list after removal of index $sequence_idx" debug
                         my LogMessage "$sequence_list" debug
 
                         if {[$seq running_jobs_count] == 0} {
 
-                            # the sequence has terminated its jobs. We don't
-                            # need to increment sequence_idx, since lreplace
-                            # shifts sequences on the list to the right of
-                            # the current index sequence
+                            # we are done with this job sequence
 
                             my LogMessage "destroying seq $seq" debug
                             $seq destroy
 
                         } else {
 
-                            # the sequence turned down the just allocated thread
-                            # and that means it has no more service records to be checked.
-                            # We move the sequence into the pending sequences list.
+                            # There are still job running within the 
+                            # sequence therefore we move it into the
+                            # pending sequences list.
 
                             lappend pending_sequences $seq
                             my LogMessage "$seq moved to pending list" debug
 
                         }
-                        my LoadBalancer
-                        if {[string is true [$thread_master thread_is_available]]} {
-                            my RescheduleRoundRobin
-                        }
-                        return
 
+                        # sequence_list size has changed then we call the
+                        # load balancer to determine the new thread quota
+
+                        my LoadBalancer
+
+                        break
                     } else {
                         incr batch
                     }
@@ -261,10 +261,10 @@ namespace eval ::ngis {
                 my LogMessage "thread pool exhausted" debug
             }
 
-            # if we got here it means at least one job was launched. Thus we
-            # move to the next sequence 
+            # we don't need to increment sequence_idx if this run resulted
+            # in the job sequence being removed from sequence_list
 
-            incr sequence_idx
+            if {[string is false $sequence_has_terminated]} { incr sequence_idx }
         }
         
         # -- status
