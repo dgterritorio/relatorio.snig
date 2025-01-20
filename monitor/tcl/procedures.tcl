@@ -8,7 +8,7 @@ package require syslog
 package require uri
 package require ngis::msglogger
 package require ngis::task
-package require -exact TclCurl 7.22.1
+package require TclCurl
 package require ngis::taskmessages
 
 namespace eval ::ngis::procedures {
