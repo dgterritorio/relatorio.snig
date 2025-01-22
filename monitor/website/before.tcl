@@ -14,7 +14,7 @@ if {$::ngis::debugging} {
 
 }
 namespace eval ::ngis {
-    if {[string is true [::ngis::conf::readconf development]]} {
+    if {[string is true [::ngis::configuration readconf development]]} {
         set cssprogressive [clock seconds]
     }
     $::ngis::messagebox reset_message_queue

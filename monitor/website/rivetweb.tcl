@@ -3,15 +3,15 @@ package require fileutil
 
 ::rivet::apache_log_error info "auto_path: $auto_path"
 
+package require ngis::conf
+package require ngis::configuration
 package require MessagePrinter
 package require ngis::logger
-package require ngis::configuration
 package require ngis::roothandler
 package require ngis::login
 package require ngis::page
 package require Session
 package require ngis::protocol
-package require ngis::conf
 package require ngis::servicedb
 package require Thread
 package require ngis::ancillary_io_thread
@@ -26,8 +26,6 @@ set snig_header [exec /usr/bin/figlet "S.N.I.G."]
 
 set ::rivetweb::handler_script [fileutil::cat [file join $rweb_root tcl before.tcl]]
 
-::ngis::conf init
-
 namespace eval ::ngis {
     variable registered_tasks
     variable cssprogressive
@@ -35,15 +33,15 @@ namespace eval ::ngis {
     variable messagebox
     # define the web server jQuery path
 
-    set jquery_host [::ngis::conf::readconf jquery_root]
-    set jquery_uri  [::ngis::conf::readconf jquery_uri]
+    set jquery_host [::ngis::configuration readconf jquery_root]
+    set jquery_uri  [::ngis::configuration readconf jquery_uri]
     set jquery_url  [join [list $jquery_host $jquery_uri] "/"]
 
     ::rivet::apache_log_error info "jQuery path formed from '$jquery_host' and '$jquery_uri'"
     
     # defining the production system cssprogressive counter
 
-    set cssprogressive [::ngis::conf::readconf cssprogressive]
+    set cssprogressive [::ngis::configuration readconf cssprogressive]
 
     # starting the ancillary thread
 

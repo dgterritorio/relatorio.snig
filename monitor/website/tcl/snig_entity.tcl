@@ -41,7 +41,7 @@ namespace eval ::rwpage {
         public method prepare_page {language argsqs} {
             set entity_recs [dict create]
             set entity_d    [dict create]
-            set srecs_limit [::ngis::conf::readconf service_recs_limit]
+            set srecs_limit [::ngis::configuration readconf service_recs_limit]
 
             # if we're here there is an 'eid' url-encoded argument
 
@@ -87,7 +87,7 @@ namespace eval ::rwpage {
             set ns [$template_o formatters_ns]
             puts [${ns}::entity_service_recs $entity_recs [dict get $entity_d description]]
 
-            set srecs_limit [::ngis::conf::readconf service_recs_limit]
+            set srecs_limit [::ngis::configuration readconf service_recs_limit]
 
             if {$rowcount > $srecs_limit} {
                 set urls [lrepeat 4 {}] 

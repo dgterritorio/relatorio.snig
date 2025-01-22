@@ -28,12 +28,7 @@ namespace eval ::ngis::conf {
                 uris_table      {value "testsuite.uris_long" description "URIs catalog table" section database} \
                 users_table     {value "testsuite.snig_users" description "SNIG User Table" section database} \
                 dbms_driver     {value "Tdbc Postgresql" description "Database DIO Driver" section database} \
-                jquery_root     {value "http://ngis.rivetweb.org:8080" description "Root of the jQuery library" section jquery } \
-                jquery_uri      {value "jQuery/jquery.min.js" description "jQuery file name" section jquery } \
-                ckeditor_root   {value "http://jquery.biol.unipr.it" description "Root of the ckeditor code" section jquery } \
-                fullcal_root    {value "http://jquery.biol.unipr.it" description "Root of FullCalendar code" section jquery } \
-                jqtimepicker    {value "http://jquery.biol.unipr.it/jquery-timepicker-1.3.5" \
-                                 description "jQuery timepicker" section jquery} \
+                jquery_uri      {value "/jQuery/jquery.min.js" description "jQuery file name" section jquery } \
                 server_ip       {value "127.0.0.1" description "SNIG Monitor Server" section network} \
                 server_port     {value "4422" description "SNIG Monitor Server Port" section network} \
                 snig_server_dir {value ".." description "SNIG Monitor Server Root Directory" section snig_server}

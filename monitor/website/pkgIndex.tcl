@@ -1,6 +1,4 @@
-package ifneeded ngis::configuration      1.1 [list source [file join $dir ngis_conf.tcl]]
-package ifneeded ngis::conf::generator    1.0 [list source [file join $dir generic configuration.tcl]]
-package ifneeded ngis::dbresource         1.0 [list source [file join $dir generic dbresource.tcl]]
+package ifneeded ngis::configuration      2.0 [list source [file join $dir ngis_conf.tcl]]
 package ifneeded safelock                 1.0 [list source [file join $dir generic safelock.tcl]]
 package ifneeded ngis::logger             0.1 [list source [file join $dir generic logger.tcl]]
 package ifneeded ngis::roothandler        1.0 [list source [file join $dir handlers root_handler.tcl]]

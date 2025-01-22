@@ -13,10 +13,11 @@ package require json
 package require syslog
 
 namespace eval ::ngis::ancillary {
-    set connection ""
-    set connection_status idle
-    set data_buffer ""
-    set json_data ""
+    set connection          ""
+    set connection_status   idle
+    set data_buffer         ""
+    set json_data           ""
+    set socket_keepalive    10000; # socket keepalive rescheduling delay (msecs)
 
     proc socket_connect {} {
         global connection
@@ -37,6 +38,10 @@ namespace eval ::ngis::ancillary {
         set connection ""
     }
 
+    proc log_msg {s} {
+        syslog -ident snig -facility user info $s
+    }
+
     # ChatGPT provided procedure
 
     proc isValidJSON {inputString parsed_data_v} {
@@ -49,17 +54,10 @@ namespace eval ::ngis::ancillary {
             set parsed_json [::json::json2dict $inputString]
             set retvalue 1
         } e einfo]} {
-            #puts [string repeat "---" 20]
-            #puts $e
-            #puts [string repeat "---" 20]
             return 0
         }
 
         return $retvalue
-    }
-
-    proc log_msg {s} {
-        syslog -ident snig -facility user info $s
     }
 
     proc read_data {con} {
@@ -73,15 +71,11 @@ namespace eval ::ngis::ancillary {
 
     proc get_status {} {
         global connection_status
-        #log_msg "reading status '$connection_status'"
-
         return $connection_status
     }
 
     proc set_status {new_status} {
         global connection_status
-
-        #log_msg "setting status '$new_status'"
         set connection_status $new_status
     }
 
@@ -105,7 +99,6 @@ namespace eval ::ngis::ancillary {
         set cstatus [get_status]
         if {$cstatus != "wait" && $cstatus != "reading"} {
             chan gets $con l
-            #puts "unexpected data '$l' with status: $cstatus"
             return
         }
 

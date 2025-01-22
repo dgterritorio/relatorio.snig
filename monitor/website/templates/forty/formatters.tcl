@@ -116,8 +116,6 @@ proc generate_banner {language menu} {
 }
 
 proc navigation_bar {rowcount urls} {
-
-    #set block_size [::ngis::conf::readconf service_recs_limit]
     set links_l [lmap symb [list \u00ab \u2039 \u203A \u00bb] u $urls {
         if {$u == ""} {
             ::rivet::xml $symb td

@@ -10,8 +10,6 @@ package require rwpagebroker
 package require rwlogger
 package require rwmenu
 package require rwlink
-package require ngis::conf::generator
-package require ngis::configuration
 package require ngis::utils
 
 namespace eval ::rwdatas {
@@ -57,10 +55,10 @@ namespace eval ::rwdatas {
             if {![info exists session_obj]} {
 
                 foreach v {dbuser dbhost dbname dbpasswd} {
-                    ::ngis::conf::readconf $v $v
+                    ::ngis::configuration readconf $v $v
                 }
                 set error_page  ""
-                set dbms_driver [::ngis::conf::readconf dbms_driver]
+                set dbms_driver [::ngis::configuration readconf dbms_driver]
 
                 set dbhandle [attempt_db_connect]
                 set session_obj [Session ::SESSION  -dioObject              $dbhandle   \
@@ -90,7 +88,7 @@ namespace eval ::rwdatas {
         }
 
         public proc check_password {login password} {
-            ::ngis::conf::readconf users_table users_table
+            ::ngis::configuration readconf users_table users_table
 
             set tdbc_res [::ngis::service::exec_sql_query \
                 "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
