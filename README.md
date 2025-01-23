@@ -1,6 +1,6 @@
 # SNIG: Services Quality Report
 
-A collection of scripts to harvest and (health) check the services published at https://snigmonitor.dgterritorio.gov.pt/
+A collection of scripts to harvest and (health) check the services published at http://snigreport.dgterritorio.gov.pt/
 
 # Requirements:
  Ubuntu 24.10 or Debian trixie (or later)
