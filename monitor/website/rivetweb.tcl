@@ -3,7 +3,6 @@ package require fileutil
 
 ::rivet::apache_log_error info "auto_path: $auto_path"
 
-package require ngis::conf
 package require ngis::configuration
 package require MessagePrinter
 package require ngis::logger

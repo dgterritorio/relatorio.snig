@@ -113,6 +113,7 @@ catch {::ngis::ThreadMaster destroy }
         while {[$idle_thread_queue size] > 0} {
             thread::release [$idle_thread_queue get]
         }
+        ::ngis::logger debug "[$idle_thread_queue size] threads on the idle queue"
     }
 }
 package provide ngis::threads 1.0

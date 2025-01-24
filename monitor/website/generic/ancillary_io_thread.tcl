@@ -7,8 +7,7 @@
 #
 #
 
-lappend auto_path ".."
-package require ngis::conf
+package require ngis::configuration
 package require json
 package require syslog
 
@@ -22,7 +21,8 @@ namespace eval ::ngis::ancillary {
     proc socket_connect {} {
         global connection
 
-        set connection [socket $::ngis::tcpaddr $::ngis::tcpport]
+        set connection [socket [::ngis::configuration readconf server_ip] \
+                               [::ngis::configuration readconf server_port]]
         chan event $connection readable [list ::ngis::ancillary::read_from_chan $connection]
     }
 

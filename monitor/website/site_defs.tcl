@@ -8,7 +8,6 @@ foreach dot [list "." ".."] {
     }
 }
 
-package require ngis::conf
 package require ngis::configuration
 
 namespace eval ::rivetweb {

@@ -4,7 +4,7 @@ package require Thread
 
 set thread_id [::thread::create -joinable -preserved {
     lappend auto_path "."
-    package require ngis::conf
+    package require ngis::configuration
     package require json
     package require syslog
 
