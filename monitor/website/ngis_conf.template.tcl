@@ -4,8 +4,9 @@
 #
 #
 
+package require ngis::readconf
+
 namespace eval ::ngis::configuration {
-    variable confnamespace   [namespace current]
 
 # -- Section snig_server
 #
@@ -18,7 +19,7 @@ namespace eval ::ngis::configuration {
 	variable encoding                 "utf-8"                                  ;# Website default character encoding
 	variable service_recs_limit       100                                      ;# Size of the default view of an entity service records
 	variable website                  "http://snig.rivetweb.org:8080"          ;# Website Name
-    variable template                 "forty"
+    variable template                 "forty"				                   ;# Default Template
 
 # -- Section dbauth
 #
@@ -45,29 +46,5 @@ namespace eval ::ngis::configuration {
 #
 	variable jquery_root              "http://ngis.rivetweb.org:8080"          ;# Root of the jQuery library
 	variable jquery_uri               "jQuery/jquery.min.js"                   ;# jQuery file name
-
-
-    proc readconf {confpar {confparvar ""}} {
-        variable confnamespace
-
-        if {$confparvar != ""} {
-            upvar $confparvar v 
-        } else {
-            upvar $confpar v
-        }
-
-        set conf_varname "${confnamespace}::${confpar}"
-
-        if {[info exists $conf_varname]} {
-            set v [set $conf_varname]
-        } else {
-            return -code error -errocode conf_parameter_not_found "Configuration parameter '$confpar' not found"
-        }
-
-        return $v
-    }
-
-    namespace export readconf
-    namespace ensemble create
 }
-package provide ngis::configuration 2.0
+package provide ngis::configuration 2.1

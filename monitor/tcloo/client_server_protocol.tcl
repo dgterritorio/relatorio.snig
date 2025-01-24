@@ -22,11 +22,14 @@ oo::define ngis::Protocol {
     variable nseq
     variable hr_formatter
     variable json_formatter
+    variable cmd_history
+    variable cmd_entry_num
 
     constructor {} {
         set hr_formatter    [::ngis::HRFormat   create [::ngis::Formatters new_cmd hr]]
         set json_formatter  [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
-
+        set cmd_history     [dict create]
+        set cmd_entry_num   -1
         # setting the default
         set formatter $hr_formatter
     }
@@ -51,13 +54,25 @@ oo::define ngis::Protocol {
         }
     }
 
+    method AddToHistory {h_entry} {
+        dict set cmd_history [incr cmd_entry_num] $h_entry
+    }
+
+    method MakeHistoryEntry {cmd_string cmd_args} {
+        return [dict create cmd $cmd_string arguments $cmd_args ts [clock milliseconds]]
+    }
+
     method current_formatter {} { return $formatter }
 
     method parse_exec_cmd {cmd_line} {
         set cmd_line [string trim $cmd_line]
         ::ngis::logger debug "msg >$cmd_line< ([string length $cmd_line])"
-        if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
-            return "101: unrecognized or invalid command '$cmd_line'"
+
+        # we strictly require commands to be uppercase words made of latin
+        # alphabet characters. No spaces, tabs, special or punctuation characters
+
+        if {[regexp -nocase {^([A-Z0-9]+)\s*.*$} $cmd_line m cmd] == 0} {
+            return "101: Invalid command line '$cmd_line'"
         } else {
             
             # we require the protocol command to be strictly uppercase for
@@ -67,8 +82,10 @@ oo::define ngis::Protocol {
                 set arguments ""
             }
 
-            if {[dict exists $::cs_protocol $cmd]} {
-                set cmd_o [dict get $::cs_protocol $cmd]
+            my AddToHistory [my MakeHistoryEntry $cmd $arguments]
+
+            if {[dict exists $::ngis::ProtocolMap::cs_protocol $cmd]} {
+                set cmd_o [dict get $::ngis::ProtocolMap::cs_protocol $cmd]
 
                 # we can't write the following line in compact form
                 # as [eval $formatter [$cmd_o exec {*}$arguments]]
@@ -104,4 +121,4 @@ namespace eval ::ngis::Protocol {
     proc mkprotocol {} { return [::ngis::Protocol new] }
 }
 
-package provide ngis::protocol 2.0
+package provide ngis::protocol 2.1

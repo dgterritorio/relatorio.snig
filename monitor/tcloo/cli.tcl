@@ -74,9 +74,12 @@ package require ngis::csprotomap
             set cmd_args   ""
         } else {
             set parsed_cmd  [string range $cli_line 0 $first_space-1]
-            #set parsed_cmd  [string toupper [lindex $clicmd 0]
+            #set parsed_cmd [string toupper [lindex $clicmd 0]
             set cmd_args    [string range $cli_line $first_space+1 end]
         }
+
+        # it's here where commands are forced to be uppercase before further command analysis
+        # and eventual transmission to the server
 
         lassign [my SearchCommand [string toupper $parsed_cmd]] cmd_tree_result cmd_completed cmd_tree_result_value
         if {$cmd_tree_result == "OK"} {
@@ -120,9 +123,9 @@ package require ngis::csprotomap
 
                                     # sed command to substitute symbols in the man pages
 
-                                    set sed_cmd [list   "sed" "-e s/@CMD@/$cmd_completed/g" \
-                                                        "-e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g" \
-                                                        "-e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"]
+                                    set sed_cmd [list "sed" "-e s/@CMD@/$cmd_completed/g" \
+                                                      "-e s/@AUTHOR@/[string map [list " " "\\ "] ${::ngis::authorship}]/g" \
+                                                      "-e s%@BUG_REPORTS@%${::ngis::bug_reports}%g"]
                                     set sed_cmd [join $sed_cmd " "]
 
                                     # pulling everything together: cat -> sed -> pandoc (to nroff format) -> man (to print)

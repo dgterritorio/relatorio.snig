@@ -1,5 +1,5 @@
 
-if {$::ngis::debugging} {
+if {[::ngis::configuration readconf development]} {
     set template_o [::rivetweb::RWTemplate::template monospace]
 
     ### debug
@@ -13,6 +13,7 @@ if {$::ngis::debugging} {
     ::rivetweb::RWTemplate::read_formatters templates/forty $template_o
 
 }
+
 namespace eval ::ngis {
     if {[string is true [::ngis::configuration readconf development]]} {
         set cssprogressive [clock seconds]

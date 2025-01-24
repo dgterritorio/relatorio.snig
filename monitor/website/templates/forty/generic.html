@@ -81,22 +81,21 @@
 				<!-- Footer -->
 					<footer id="footer">
                         <?
-                            if {[string is true $::ngis::debugging]} {
+                            if {[string is true [::ngis::configuration readconf development]]} {
                                 ?><pre><?
                                     set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
                                     set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
-                                    set development_footer [list [$::rivetweb::current_page key] \
-                                                                 "template: $::rivetweb::template_key" \
-                                                                 [$::rivetweb::current_page info class] \
-                                                                 $handler_db_link \
-                                                                 "is_homepage: $::rivetweb::is_homepage" \
+                                    set development_footer [list [$::rivetweb::current_page key]            \
+                                                                 "template: $::rivetweb::template_key"      \
+                                                                 [$::rivetweb::current_page info class]     \
+                                                                 $handler_db_link                           \
+                                                                 "is_homepage: $::rivetweb::is_homepage"    \
                                                                  "is logged: [::rwdatas::NGIS::is_logged]"]
                                     puts [join $development_footer " | "]
                                 ?></pre><?
                             }
                         ?>
 					</footer>
-
 			</div>
 
 		    <!-- Scripts -->

@@ -10,7 +10,6 @@ package require ngis::roothandler
 package require ngis::login
 package require ngis::page
 package require Session
-package require ngis::protocol
 package require ngis::servicedb
 package require Thread
 package require ngis::ancillary_io_thread

@@ -151,6 +151,10 @@ namespace eval ::ngis {
 
     }
 
+    namespace eval ProtocolMap {
+        variable cs_protocol [dict create]
+    }
+
     namespace eval Sequences {
         variable seqn -1
         variable seq_cmd_root [namespace current]
