@@ -22,16 +22,11 @@ oo::define ngis::Protocol {
     variable nseq
     variable hr_formatter
     variable json_formatter
-    variable cmd_history
-    variable cmd_entry_num
 
     constructor {} {
         set hr_formatter    [::ngis::HRFormat   create [::ngis::Formatters new_cmd hr]]
         set json_formatter  [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
-        set cmd_history     [dict create]
-        set cmd_entry_num   -1
-        # setting the default
-        set formatter $hr_formatter
+        set formatter       $hr_formatter
     }
 
     destructor { }
@@ -54,14 +49,6 @@ oo::define ngis::Protocol {
         }
     }
 
-    method AddToHistory {h_entry} {
-        dict set cmd_history [incr cmd_entry_num] $h_entry
-    }
-
-    method MakeHistoryEntry {cmd_string cmd_args} {
-        return [dict create cmd $cmd_string arguments $cmd_args ts [clock milliseconds]]
-    }
-
     method current_formatter {} { return $formatter }
 
     method parse_exec_cmd {cmd_line} {
@@ -81,8 +68,6 @@ oo::define ngis::Protocol {
             if {[regexp {^([A-Z]+)\s+(.*)$} $cmd_line m cmd arguments] == 0} {
                 set arguments ""
             }
-
-            my AddToHistory [my MakeHistoryEntry $cmd $arguments]
 
             if {[dict exists $::ngis::ProtocolMap::cs_protocol $cmd]} {
                 set cmd_o [dict get $::ngis::ProtocolMap::cs_protocol $cmd]
