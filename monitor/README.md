@@ -262,7 +262,7 @@ registered task list is show in this table.
 | [110] 7 registered tasks                                                                               |
 +--------------------------------------------------------------------------------------------------------+
 ```
-This table is the output of command `LT` of the command line interface.
+This table is the output of command `REGTASK` of the command line interface.
 
 When a thread is assigned to a Job method `::ngis::Job::post_task` pulls the first available task from a 
 queue and send it to the thread by calling procedure `do_task` in the recipient thread context
