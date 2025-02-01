@@ -243,9 +243,9 @@ namespace eval ::ngis::service {
 
         set snig_entities {}
         $query_result foreach -as dicts e {
-            if {![dict exists $e description]} {
-                dict set e description "Undefined description"
-            }
+            #if {![dict exists $e description]} {
+            #    dict set e description "Undefined description"
+            #}
             lappend snig_entities $e
         }
         $query_result close
