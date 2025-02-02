@@ -43,13 +43,13 @@ proc entity_service_recs {rows_l entity_description} {
             set host    [dict get $uri_d host]
 
             if {![info exists version]} { set version "" }
+            if {![info exists description]} { set description "undefined description" }
             set r [list $gid $description $host $uri_type $version]
         }
         set r
     }]
     return [mk_table {*}$::ngis::reports::report_a(122.capts) $services_t "\[122\] $entity_description"]
 }
-
 
 proc service_info {service_d} {
 

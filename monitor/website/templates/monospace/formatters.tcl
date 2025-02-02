@@ -54,8 +54,14 @@ proc entity_service_recs {rows_l entity_description} {
 
 ###################################
 #
-# utility functions to manipulate 
+# utility functions to manipulate centering and
+# table indentation within a <pre>...</pre> element
 #
+
+# report_width
+#
+# returns the report width. Since an character table is
+# a rectangular table
 
 proc report_width {rep_t} {
     return [string length [lindex [split $rep_t "\n"] 0]]

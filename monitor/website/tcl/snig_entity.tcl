@@ -66,10 +66,13 @@ namespace eval ::rwpage {
             }
             set entity_recs [::ngis::service load_by_entity $eid -limit $limit -offset $offset]
             set entity_recs [lmap er $entity_recs {
-                dict with er {
-                    set href [::rivetweb::composeUrl service $gid]
-                    set description [::rivet::xml [dict get $er description] [list a href $href]]
+                set gid [dict get $er gid]
+                set href [::rivetweb::composeUrl service $gid]
+
+                if {![dict exists $er description]} {
+                    dict set er description "undefined description"
                 }
+                dict set er description [::rivet::xml [dict get $er description] [list a href $href]]
                 set er
             }]
 

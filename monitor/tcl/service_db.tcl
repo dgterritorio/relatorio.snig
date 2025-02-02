@@ -56,7 +56,8 @@ namespace eval ::ngis::service {
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
         append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info, "
         append sql "task_duration = EXCLUDED.task_duration"
-        puts $sql
+        ::ngis::logger emit "$sql"
+        #puts $sql
         set query_res [exec_sql_query $sql]
         $query_res close
 
