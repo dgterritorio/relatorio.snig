@@ -278,4 +278,4 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
 echo "" >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
 done
 
-awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
+awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/geonetwork_records_urls_wide.csv"
