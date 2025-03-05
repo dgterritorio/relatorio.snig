@@ -10,14 +10,14 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # STEP 1
 # Define file paths
-input_file="$BASEFOLDER/geonetwork_records_urls_long.csv"
+input_file="$BASEFOLDER/geonetwork_records_urls_wide.csv"
 output_file="$BASEFOLDER/step1.csv"
 
 # Create the output file (empty initially)
 > "$output_file"
 
 # Read the input file line by line
-while IFS='$' read -r col1 col2 col3 col4; do
+while IFS='$' read -r col1 col2 col3 col4 _; do
     # Skip the line if the last column is empty
     if [ -z "$col4" ]; then
         continue
