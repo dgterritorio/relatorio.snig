@@ -7,6 +7,8 @@ package require ngis::configuration
 package require MessagePrinter
 package require ngis::logger
 package require ngis::roothandler
+package require ngis::content_fence
+package require ngis::users
 package require ngis::login
 package require ngis::page
 package require Session
@@ -17,6 +19,8 @@ package require ngis::ancillary_io
 package require json
 package require ngis::common
 
+::rivetweb::init StaticContentFence top -nopkg
+::rivetweb::init Users   top -nopkg
 ::rivetweb::init Marshal top -nopkg
 ::rivetweb::init Login   top -nopkg
 

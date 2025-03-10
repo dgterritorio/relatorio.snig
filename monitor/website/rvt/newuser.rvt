@@ -1,0 +1,18 @@
+<div class="createuser"><?
+    package require form
+    set template_o  [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+    set ns [$template_o formatters_ns]
+    catch {$form_name destroy}
+    set form_name [namespace current]::new_user
+    set form [form $form_name -method POST -action [::rivetweb::composeUrl createuser 1] -name snig_user_create]
+    $form start
+?><div>Login:<?
+    $form text login -size 20
+?></div><div>Password: (<span class="legend">Min 8 chars</span>)<?
+    $form password password -size 20
+?></div><div><?
+    $form submit submit -value "Create"
+?></div><?
+    $form end
+    $form destroy
+?></div>

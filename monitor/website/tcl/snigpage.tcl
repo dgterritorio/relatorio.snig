@@ -13,10 +13,38 @@ namespace eval ::rwpage {
     ::itcl::class SnigPage {
         inherit RWPage
 
-        constructor {key} {RWPage::constructor $key} { }
+        private variable dbuser
+        private variable dbhost
+        private variable dbname
+        private variable dbpasswd
+        private variable dbms_driver
+
+        private variable dbhandle
+
+
+        constructor {key} {RWPage::constructor $key} {
+            foreach v {dbuser dbhost dbname dbpasswd dbms_driver} {
+                ::ngis::configuration readconf $v $v
+            }
+            set dbhandle ""
+        }
 
         public method refresh {timereference} { return false }
-        public method get_dbhandle {} { return $dbhandle }
+
+        public method get_dbhandle {} {
+            if {$dbhandle == "" } {
+                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
+                set dbhandle    [eval $connectcmd]
+            }
+            return $dbhandle
+        }
+
+
+        public method close_dbhandle {} {
+            $dbhandle close
+            set dbhandle ""
+        }
+
 
         public method js {} { }
 

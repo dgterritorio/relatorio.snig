@@ -150,14 +150,19 @@ namespace eval ::rwdatas {
                 }
             }
 
-            set linkobj [$lm create $this "" [dict create en "Connections"] \
-                                             [list displayrep 112] ""]
-            $banner_menu add_link $linkobj
-            set linkobj [$lm create $this "" [dict create en "Jobs"] \
-                                             [list displayrep 114] ""]
-            $banner_menu add_link $linkobj
-
             if {[is_logged]} {
+                set linkobj [$lm create $this "" [dict create en "Estatisticas"] \
+                                                 [list show estatisticas] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Connections"] \
+                                                 [list displayrep 112] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Jobs"] \
+                                                 [list displayrep 114] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Create User"] \
+                                                 [list newuser 1] ""]
+                $banner_menu add_link $linkobj
                 set linkobj [$lm create $this "" [dict create en "Logout"] \
                                                  [list logout 1] ""]
                 $banner_menu add_link $linkobj
@@ -182,7 +187,7 @@ namespace eval ::rwdatas {
         }
 
         public method willHandle {arglist keyvar} {
-            upvar $keyvar key 
+            upvar $keyvar key
 
             if {$::rivetweb::is_homepage} {
                 set key snig_homepage
