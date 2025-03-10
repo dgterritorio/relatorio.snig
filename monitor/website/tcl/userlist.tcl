@@ -22,7 +22,8 @@ namespace eval ::rwpage {
             set users_l {}
             $dbhandle forall $sql u {
                 lappend users_l [list $u(userid) $u(login) $u(ts) \
-                                      [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]]]
+                                      [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]] \
+                                      [::rivet::xml "delete" [list a href [::rivetweb::composeUrl deleteuser $u(userid)]]] ]
             }
 
             $this close_dbhandle
@@ -33,7 +34,7 @@ namespace eval ::rwpage {
             set ns [$template_o formatters_ns]
             puts [::rivet::xml "New User" [list div style "margin-bottom: 2em;"] [list a href [::rivetweb::composeUrl newuser 1]]]
 
-            puts [::${ns}::mk_table {"Userid" "Login" "Created" ""} $users_l]
+            puts [::${ns}::mk_table {"Userid" "Login" "Created" "" ""} $users_l]
         }
     }
 

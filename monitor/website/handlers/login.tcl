@@ -17,13 +17,14 @@ namespace eval ::rwdatas {
         public method willHandle {arglist keyvar} {
             upvar $keyvar key
 
-            set session_obj [::rwdatas::NGIS::get_session_obj]
+            set session_obj     [::rwdatas::NGIS::get_session_obj]
 
             $session_obj activate
-            set newsession [$session_obj is_new_session]
+            set newsession      [$session_obj is_new_session]
+            set development     [::ngis::configuration readconf development]
 
             if {$newsession} {
-                if {$::ngis::debugging} {
+                if {$development} {
                     #$session_obj store status logged    1
                     #$session_obj stash login  [dict create user "snig-dev"]
                     $session_obj store status logged    0
@@ -38,7 +39,7 @@ namespace eval ::rwdatas {
                 # a development installation automatically logs in
                 # as administrative user
 
-                if {$::ngis::debugging} {
+                if {$development} {
                     $session_obj store status logged  1
                 } else {
                     # there must be some user authentication here
@@ -49,6 +50,7 @@ namespace eval ::rwdatas {
 
                     if {$numrows == 1} {
                         $session_obj store status logged  1
+                        $session_obj store status login $login
                     } else {
                         $::ngis::messagebox post_message "Invalid user or password" error
                         $session_obj store status logged  0
@@ -62,7 +64,7 @@ namespace eval ::rwdatas {
             } elseif {[::rwdatas::NGIS::is_logged] && [::rivet::var_qs exists logout]} {
 
                 $session_obj store status logged        0
-                $session_obj clear login
+                $session_obj clear status login
 
                 #::rivet::redirect [::rivetweb::composeUrl]
                 set key snig_login

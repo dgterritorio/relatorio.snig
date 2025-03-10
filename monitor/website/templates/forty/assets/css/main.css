@@ -3950,3 +3950,9 @@ input, select, textarea {
 			opacity: 1;
 			visibility: visible;
 		}
+
+
+    li.msgerror {
+        border-left: 2px solid red;
+    }
+

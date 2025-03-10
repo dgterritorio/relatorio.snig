@@ -6,36 +6,157 @@ namespace eval ::rwpage {
         inherit SnigPage
 
         private variable rvt_template
+        private variable form_defaults
+        private variable post_url
+        private variable button_label
 
         constructor {key} {SnigPage::constructor $key} {
+            array set form_defaults {}
         }
 
         public method prepare_page {language argsqs} {
-            $this title $language "Create New User"
-            if {[dict exists $argsqs newuser]} { 
+            array unset form_defaults
+            set dbhandle [$this get_dbhandle]
+            set rvt_template ""
+            set button_label "Create"
+            set usertable [::ngis::configuration readconf users_table]
+
+            set session_obj [::rwdatas::NGIS::get_session_obj]
+            set current_login [$session_obj fetch status login]
+            set is_administrator [string equal $current_login "dgt"]
+
+            if {[dict exists $argsqs newuser]} {
+
+                if {!$is_administrator} {
+                    $ngis::messagebox post_message "Function requires administrative privileges"
+                    return
+                }
+
+                $this title $language "Create New User"
                 set rvt_template newuser.rvt
-            } elseif {[dict exists $argsqs createuser]} {
+                set post_url    [::rivetweb::composeUrl createuser 1]
+
+            } elseif {[dict exists $argsqs updateuser]} {
+
+                set userid      [dict get $argsqs updateuser]
                 set login       [string trim [::rivet::var_post get login]]
                 set password    [string trim [::rivet::var_post get password]]
-                set rvt_template ""
+
+                if {[$dbhandle fetch $current_login userrec -table $usertable -keyfield {login}]} {
+                    if {($userrec(userid) == $userid) || $is_administrator} {
+                        set sql "UPDATE $usertable SET (login,password) = ('$login',crypt('$password',gen_salt('md5')))"
+                        set sqlres [$dbhandle exec $sql]
+                        $sqlres destroy
+
+                        set message_t "Update login '$login' done"
+                        $ngis::messagebox post_message $message_t
+                        $this title $language $message_t
+                    } else {
+                        $ngis::messagebox post_message "Function requires administrative privileges"
+                        return
+                    }
+                }
+
+            } elseif {[dict exists $argsqs createuser]} {
+
+                if {!$is_administrator} {
+                    $ngis::messagebox post_message "Function requires administrative privileges"
+                    return
+                }
+                $this title $language "Create New User"
+                set login       [string trim [::rivet::var_post get login]]
+                set password    [string trim [::rivet::var_post get password]]
+
+                # in case of error we redirect to the create user form
+
+                set post_url    [::rivetweb::composeUrl createuser 1]
+                set form_defaults(login) $login
+                set button_label "Create"
                 if {[string length $login] < 5} {
-                    $ngis::messagebox post_message "Empty or invalid login"
+                    $ngis::messagebox post_message "Invalid login (login must be at least 5 characters long)"
                     set rvt_template newuser.rvt
                 }
                 if {[regexp -nocase {^[a-z][a-z0-9_]{8,}} $password] == 0} {
-                    $ngis::messagebox post_message "Invalid password"
+                    $ngis::messagebox post_message "Invalid password: must be at least 8 characters"
                     set rvt_template newuser.rvt
                 }
+
+                # not very elegant: we are using the rvt template name
+                # as variable to handle also the result status
+
+                if {$rvt_template == ""} {
+
+                    # if rvt_template is empty we attempt to store the data
+
+
+                    if {[llength [$dbhandle list "SELECT su.userid FROM $usertable su WHERE su.login='$login'"]] > 0} {
+                        $ngis::messagebox post_message "login '$login' already existing"
+                        set rvt_template newuser.rvt
+                        return
+                    }
+
+                    set sql "INSERT INTO $usertable (login,password) VALUES ('$login',crypt('$password',gen_salt('md5')))"
+                    #puts [::rivet::xml $sql pre]
+                    set sqlres [$dbhandle exec $sql]
+                    $sqlres destroy
+                    set userid [$dbhandle list "SELECT su.userid FROM $usertable su WHERE su.login='$login'"]
+                    if {$userid != ""} {
+                        $ngis::messagebox post_message "new login '$login' created with userid '$userid'"
+                    } else {
+                        $ngis::messagebox post_message "error creating login '$login'" error
+                    }
+                }
+
+            } elseif {[dict exists $argsqs edituser]} {
+
+                set userid   [dict get $argsqs edituser] 
+                set post_url [::rivetweb::composeUrl updateuser $userid]
+
+                if {[$dbhandle fetch $userid form_defaults -table $usertable -keyfield {userid}]} {
+                    if {($form_defaults(login) == $current_login) || $is_administrator} {
+                        unset form_defaults(password)
+                        $ngis::messagebox post_message "edit login '$form_defaults(login)' (userid '$userid')"
+                        $this title $language "login '$form_defaults(login)' (userid '$userid')"
+                        set rvt_template newuser.rvt
+                        set button_label "Update"
+                    } else {
+                        $ngis::messagebox post_message "Function requires administrative privileges"
+                        return
+                    }
+                } else {
+                    $ngis::messagebox post_message "invalid userid: $form_defaults(userid)" error
+                }
+
+            } elseif {[dict exists $argsqs deleteuser]} {
+
+                if {!$is_administrator} {
+                    $ngis::messagebox post_message "Function requires administrative privileges"
+                    return
+                }
+
+                set userid [dict get $argsqs deleteuser]
+                set nusers [$dbhandle list "SELECT count(userid) FROM $usertable"]
+
+                # assuming user 'dgt' has userid = 1
+                if {($nusers == 1) || ($userid == 1)} {
+                    $ngis::messagebox post_message "Can't delete the user: last user remaining" error
+                    $this title $language "Can't delete the user: last user remaining"
+                } elseif {[$dbhandle fetch $userid userrec -table $usertable -keyfield {userid}]} {
+                    $dbhandle delete $userid -table $usertable -keyfield {userid}
+                    $ngis::messagebox post_message "Login '$userrec(login)' with id '$userrec(userid)' deleted"
+                    $this title $language "Login '$userrec(login)' with id '$userrec(userid)' deleted"
+                }
+
             }
         }
 
         public method print_content {language} {
-            ::rivet::parse [file join rvt $rvt_template]
+            if {$rvt_template != ""} { 
+                ::rivet::parse [file join rvt $rvt_template]
+            }
         }
 
     }
-
-
 }
 
 

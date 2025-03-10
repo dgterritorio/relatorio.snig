@@ -163,6 +163,9 @@ namespace eval ::rwdatas {
                 set linkobj [$lm create $this "" [dict create en "Create User"] \
                                                  [list newuser 1] ""]
                 $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Users List"] \
+                                                 [list userlist 1] ""]
+                $banner_menu add_link $linkobj
                 set linkobj [$lm create $this "" [dict create en "Logout"] \
                                                  [list logout 1] ""]
                 $banner_menu add_link $linkobj

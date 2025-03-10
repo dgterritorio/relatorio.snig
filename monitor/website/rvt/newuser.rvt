@@ -4,14 +4,14 @@
     set ns [$template_o formatters_ns]
     catch {$form_name destroy}
     set form_name [namespace current]::new_user
-    set form [form $form_name -method POST -action [::rivetweb::composeUrl createuser 1] -name snig_user_create]
+    set form [form $form_name -method POST -action $post_url -name snig_user_create -defaults form_defaults]
     $form start
 ?><div>Login:<?
     $form text login -size 20
 ?></div><div>Password: (<span class="legend">Min 8 chars</span>)<?
     $form password password -size 20
 ?></div><div><?
-    $form submit submit -value "Create"
+    $form submit submit -value $button_label
 ?></div><?
     $form end
     $form destroy
