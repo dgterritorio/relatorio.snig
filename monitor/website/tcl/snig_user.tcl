@@ -21,14 +21,15 @@ namespace eval ::rwpage {
             set button_label "Create"
             set usertable [::ngis::configuration readconf users_table]
 
-            set session_obj [::rwdatas::NGIS::get_session_obj]
-            set current_login [$session_obj fetch status login]
-            set is_administrator [string equal $current_login "dgt"]
+            set session_obj      [::rwdatas::NGIS::get_session_obj]
+            set current_login    [$session_obj fetch status login]
+            set is_administrator [::rwdatas::NGIS::is_administrator $current_login]
 
             if {[dict exists $argsqs newuser]} {
 
                 if {!$is_administrator} {
-                    $ngis::messagebox post_message "Function requires administrative privileges"
+                    $ngis::messagebox post_message "Function requires administrative privileges" error
+                    $this title $language "Error: insufficient administrative privileges"
                     return
                 }
 
@@ -52,7 +53,8 @@ namespace eval ::rwpage {
                         $ngis::messagebox post_message $message_t
                         $this title $language $message_t
                     } else {
-                        $ngis::messagebox post_message "Function requires administrative privileges"
+                        $ngis::messagebox post_message "Function requires administrative privileges" error
+                    $this title $language "Error: insufficient administrative privileges"
                         return
                     }
                 }
@@ -60,12 +62,13 @@ namespace eval ::rwpage {
             } elseif {[dict exists $argsqs createuser]} {
 
                 if {!$is_administrator} {
-                    $ngis::messagebox post_message "Function requires administrative privileges"
+                    $ngis::messagebox post_message "Function requires administrative privileges" error
+                    $this title $language "Error: insufficient administrative privileges"
                     return
                 }
-                $this title $language "Create New User"
                 set login       [string trim [::rivet::var_post get login]]
                 set password    [string trim [::rivet::var_post get password]]
+                $this title $language "New user '$login' created"
 
                 # in case of error we redirect to the create user form
 
@@ -77,7 +80,8 @@ namespace eval ::rwpage {
                     set rvt_template newuser.rvt
                 }
                 if {[regexp -nocase {^[a-z][a-z0-9_]{8,}} $password] == 0} {
-                    $ngis::messagebox post_message "Invalid password: must be at least 8 characters"
+                    $ngis::messagebox post_message "Invalid password: must be at least 8 characters" error
+                    $this title $language "Error: insufficient administrative privileges"
                     set rvt_template newuser.rvt
                 }
 
@@ -88,9 +92,8 @@ namespace eval ::rwpage {
 
                     # if rvt_template is empty we attempt to store the data
 
-
                     if {[llength [$dbhandle list "SELECT su.userid FROM $usertable su WHERE su.login='$login'"]] > 0} {
-                        $ngis::messagebox post_message "login '$login' already existing"
+                        $ngis::messagebox post_message "login '$login' already existing" error
                         set rvt_template newuser.rvt
                         return
                     }
@@ -120,7 +123,8 @@ namespace eval ::rwpage {
                         set rvt_template newuser.rvt
                         set button_label "Update"
                     } else {
-                        $ngis::messagebox post_message "Function requires administrative privileges"
+                        $ngis::messagebox post_message "Function requires administrative privileges" error
+                        $this title $language "Error: insufficient administrative privileges"
                         return
                     }
                 } else {

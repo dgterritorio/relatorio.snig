@@ -24,13 +24,7 @@ namespace eval ::rwdatas {
             set development     [::ngis::configuration readconf development]
 
             if {$newsession} {
-                if {$development} {
-                    #$session_obj store status logged    1
-                    #$session_obj stash login  [dict create user "snig-dev"]
-                    $session_obj store status logged    0
-                } else {
-                    $session_obj store status logged    0
-                }
+                $session_obj store status logged 0
             }
 
             if {![::rwdatas::NGIS::is_logged] && [::rivet::var_qs exists login]} {
@@ -39,32 +33,30 @@ namespace eval ::rwdatas {
                 # a development installation automatically logs in
                 # as administrative user
 
-                if {$development} {
-                    $session_obj store status logged  1
+                # there must be some user authentication here
+
+                set password [::rivet::var_post get password nopwd]
+                set login    [::rivet::var_post get username dgt]
+                set numrows  [::rwdatas::NGIS::check_password $login $password userid]
+
+                if {$numrows == 1} {
+                    $session_obj store status logged 1
+                    $session_obj store status login  $login
+                    $session_obj store status userid $userid
                 } else {
-                    # there must be some user authentication here
-
-                    set password [::rivet::var_post get password nopwd]
-                    set login    [::rivet::var_post get username dgt]
-                    set numrows  [::rwdatas::NGIS::check_password $login $password]
-
-                    if {$numrows == 1} {
-                        $session_obj store status logged  1
-                        $session_obj store status login $login
-                    } else {
-                        $::ngis::messagebox post_message "Invalid user or password" error
-                        $session_obj store status logged  0
-                        set key snig_login
-                        return -code break -errorcode rw_ok
-                    }
+                    $::ngis::messagebox post_message "Invalid user or password" error
+                    $session_obj store status logged 0
+                    set key snig_login
+                    return -code break -errorcode rw_ok
                 }
                 set key snig_homepage
                 return -code break -errorcode rw_ok
 
             } elseif {[::rwdatas::NGIS::is_logged] && [::rivet::var_qs exists logout]} {
 
-                $session_obj store status logged        0
+                $session_obj store status logged 0
                 $session_obj clear status login
+                $session_obj clear status userid
 
                 #::rivet::redirect [::rivetweb::composeUrl]
                 set key snig_login

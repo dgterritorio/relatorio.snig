@@ -20,6 +20,7 @@ namespace eval ::ngis::configuration {
 	variable service_recs_limit       100                                      ;# Size of the default view of an entity service records
 	variable website                  "http://snig.rivetweb.org:8080"          ;# Website Name
     variable template                 "forty"				                   ;# Default Template
+    variable administrative_login     "dgt"                                    ;# Administrative login
 
 # -- Section dbauth
 #

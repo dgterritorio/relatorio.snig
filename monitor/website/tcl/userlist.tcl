@@ -20,10 +20,20 @@ namespace eval ::rwpage {
 
             set sql "SELECT userid,login,ts from testsuite.snig_users"
             set users_l {}
+            set session_obj      [::rwdatas::NGIS::get_session_obj]
+            set current_login    [$session_obj fetch status login]
+            set is_administrator [::rwdatas::NGIS::is_administrator $current_login]
+
             $dbhandle forall $sql u {
-                lappend users_l [list $u(userid) $u(login) $u(ts) \
-                                      [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]] \
-                                      [::rivet::xml "delete" [list a href [::rivetweb::composeUrl deleteuser $u(userid)]]] ]
+                set edituser_link [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]]
+                set deleteuser_link [::rivet::xml "delete" [list a href [::rivetweb::composeUrl deleteuser $u(userid)]]]
+
+                if {$u(userid) == 1} { set deleteuser_link "---" }
+                if {$is_administrator || ($u(login) == $current_login)} {
+                    lappend users_l [list $u(userid) $u(login) $u(ts) $edituser_link $deleteuser_link]
+                } else {
+                    lappend users_l [list $u(userid) $u(login) $u(ts) "" ""]
+                }
             }
 
             $this close_dbhandle
@@ -32,8 +42,9 @@ namespace eval ::rwpage {
         public method print_content {language args} {
             set template_o  [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set ns [$template_o formatters_ns]
+            set session_obj      [::rwdatas::NGIS::get_session_obj]
+            set current_login    [$session_obj fetch status login]
             puts [::rivet::xml "New User" [list div style "margin-bottom: 2em;"] [list a href [::rivetweb::composeUrl newuser 1]]]
-
             puts [::${ns}::mk_table {"Userid" "Login" "Created" "" ""} $users_l]
         }
     }

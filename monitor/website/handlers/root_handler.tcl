@@ -80,20 +80,33 @@ namespace eval ::rwdatas {
 
         public proc is_logged {} {
             set session_obj [get_session_obj]
-            set login_d [$session_obj load status]
+            set login_d     [$session_obj load status]
             if {[dict exists $login_d logged]} {
                 return [dict get $login_d logged]
             }
             return 0
         }
 
-        public proc check_password {login password} {
+        public proc is_administrator {current_login} {
+            set admin [::ngis::configuration readconf administrative_login]
+            return [string equal $current_login $admin]
+        }
+
+        public proc check_password {login password {userid_v userid}} {
+            upvar 1 $userid_v userid
             ::ngis::configuration readconf users_table users_table
 
-            set tdbc_res [::ngis::service::exec_sql_query \
-                "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+            #set tdbc_res [::ngis::service::exec_sql_query \
+            #    "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
 
-            return [$tdbc_res rowcount]
+            set dbhandle [attempt_db_connect]
+            set sqlres [$dbhandle exec "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+            set found  [expr [$sqlres numrows] == 1]
+            if {$found} {
+                set userid [$sqlres next -list]
+            }
+            $sqlres destroy
+            return $found
         }
 
         # Instance methods
@@ -101,6 +114,9 @@ namespace eval ::rwdatas {
         public method init {args} {
             chain {*}$args
             set banner_menu ""
+
+            # this call barely creates the session object when the first handler is
+            # initialized and is ineffective for any other subsequent call
 
             get_session_obj
         }

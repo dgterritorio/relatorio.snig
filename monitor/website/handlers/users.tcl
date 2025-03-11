@@ -18,7 +18,7 @@ namespace eval ::rwdatas {
             if {[dict exists $arglist userlist]} {
                 set key snig_userlist
                 return -code break -errorcode rw_ok
-            } elseif {[dict exists $arglist newuser] || [dict exists $arglist createuser] || \
+            } elseif {[dict exists $arglist newuser]  || [dict exists $arglist createuser] || \
                       [dict exists $arglist edituser] || [dict exists $arglist updateuser] || \
                       [dict exists $arglist deleteuser]} {
                 set key snig_user

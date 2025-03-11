@@ -51,9 +51,9 @@ namespace eval ::rwpage {
         public method prepare {language argsqs} {
             RWPage::prepare $language $argsqs
 
+            set page $this
             ::try {
                 $this prepare_page $language $argsqs
-                set page $this
             } on error {e opts} {
 
                 if {[info command error_page] != ""} {
@@ -72,6 +72,7 @@ namespace eval ::rwpage {
                 $pobj pagetext $::rivetweb::language $page_text "Error: $errorCode"
                 set error_page $pobj
                 set page       $pobj
+
             } finally {
                 #close_db_connection
             }

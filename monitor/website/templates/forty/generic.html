@@ -93,6 +93,11 @@
                                                                  "is logged: [::rwdatas::NGIS::is_logged]"]
                                     puts [join $development_footer " | "]
                                 ?></pre><?
+                            } else {
+                                if {[::rwdatas::NGIS::is_logged]} {
+                                    set session_obj [::rwdatas::NGIS::get_session_obj]
+                                    puts "logged as [::rivet::xml [$session_obj fetch status login] [list span class hl]]"
+                                }
                             }
                         ?>
 					</footer>

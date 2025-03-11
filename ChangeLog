@@ -1,11 +1,11 @@
 2024-10-17 Massimo Manghi <massimo.manghi@gmail.com>
-    * Fixed bug in sequence rescheduling
-    * Fixed issue#4 (unwanted files created by curl)
-    * Fixed issue#5 (missing warning reason)
+	* Fixed bug in sequence rescheduling
+	* Fixed issue#4 (unwanted files created by curl)
+	* Fixed issue#5 (missing warning reason)
 
 2024-10-04 Massimo Manghi <massimo.manghi@gmail.com>
-    * integration of standalone scripts within the 
-      monitor infrastructure
+	* integration of standalone scripts within the 
+	  monitor infrastructure
 
 2024-09-22 Giovanni Manghi <giovanni.manghi@naturalgis.pt>
 	* initial commits of standalone scripts
