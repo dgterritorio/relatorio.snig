@@ -45,17 +45,21 @@ namespace eval ::rwpage {
 
                 if {[$dbhandle fetch $current_login userrec -table $usertable -keyfield {login}]} {
                     if {($userrec(userid) == $userid) || $is_administrator} {
-                        set sql "UPDATE $usertable SET (login,password) = ('$login',crypt('$password',gen_salt('md5')))"
+
+                        set sql "UPDATE $usertable SET (login,password) = ('$login',crypt('$password',gen_salt('bf'))) WHERE userid=$userrec(userid)"
                         set sqlres [$dbhandle exec $sql]
                         $sqlres destroy
 
                         set message_t "Update login '$login' done"
                         $ngis::messagebox post_message $message_t
                         $this title $language $message_t
+
                     } else {
+
                         $ngis::messagebox post_message "Function requires administrative privileges" error
-                    $this title $language "Error: insufficient administrative privileges"
+                        $this title $language "Error: insufficient administrative privileges"
                         return
+
                     }
                 }
 
@@ -98,7 +102,7 @@ namespace eval ::rwpage {
                         return
                     }
 
-                    set sql "INSERT INTO $usertable (login,password) VALUES ('$login',crypt('$password',gen_salt('md5')))"
+                    set sql "INSERT INTO $usertable (login,password) VALUES ('$login',crypt('$password',gen_salt('bf')))"
                     #puts [::rivet::xml $sql pre]
                     set sqlres [$dbhandle exec $sql]
                     $sqlres destroy
