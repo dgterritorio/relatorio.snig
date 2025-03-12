@@ -2,7 +2,6 @@
 # -- ./ngis_conf.tcl
 #
 #
-#
 
 package require ngis::readconf
 
