@@ -101,7 +101,6 @@ append sql "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris
            "join testsuite.service_status ss on ss.gid=ul.gid where ss.exit_info like 'Invalid% 0' order by ul.gid"
 
 set resultset [::ngis::service exec_sql_query $sql]
-#return
 # setting up the random number generator
 
 while {[$resultset nextdict service_d]} {
@@ -111,7 +110,7 @@ while {[$resultset nextdict service_d]} {
         vwait ::next_entity
 
 #
-        lassign $protocol_status proto_status_code
+        lassign $protocol_status protocol_status_code
         if {$protocol_status_code != "OK"} {
             syslog -perror -ident snig -facility user info "Error sending 'CHECK $gid' ($protocol_status)"
             break
@@ -120,12 +119,13 @@ while {[$resultset nextdict service_d]} {
         while {$njobs > 0} {
             send_to_server $con "JOBLIST" 114 1000
             vwait ::next_entity
-            lassign $protocol_status proto_status_code
+            lassign $protocol_status protocol_status_code
             if {$protocol_status_code != "OK"} {
                 syslog -perror -ident snig -facility user info "Unrecoverable error"
                 exit
             }
             set njobs [dict get $returned_message_d njobs]
+            after 1000
         }
     }
 
