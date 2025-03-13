@@ -20,7 +20,7 @@
                 }
                 uri_original -
                 uri {
-                    # hypersimple URL matching regexp provided by ChatGPT (to be refined though)
+                    # regexp simplified to avoid to check case sensitive cases
                     set uri_re {^(((ht|f)tp(s?))\:\/\/)((\d+\.\d+\.\d+\.\d+)|([a-z0-9\-]+\.)*[a-z]+)(\:[0-9]+)*(\/($|[a-z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$}
                     if {[dict exists $job_d $p]} {
                         if {[regexp -nocase $uri_re [dict get $job_d $p]] == 0} {
