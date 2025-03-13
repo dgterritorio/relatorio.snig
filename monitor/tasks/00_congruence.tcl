@@ -20,10 +20,10 @@
                 }
                 uri_original -
                 uri {
-                    set uri_re {^(((ht|f)tp(s?))\://)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.([a-zA-z]*)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$}
-
+                    # hypersimple URL matching regexp provided by ChatGPT (to be refined though)
+                    set uri_re {^(((ht|f)tp(s?))\:\/\/)((\d+\.\d+\.\d+\.\d+)|([a-z0-9\-]+\.)*[a-z]+)(\:[0-9]+)*(\/($|[a-z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$}
                     if {[dict exists $job_d $p]} {
-                        if {[regexp $uri_re [dict get $job_d $p]] == 0} {
+                        if {[regexp -nocase $uri_re [dict get $job_d $p]] == 0} {
                             return [::ngis::tasks::make_error_result "invalid_uri" "Invalid URI"]
                         }
                     } else {

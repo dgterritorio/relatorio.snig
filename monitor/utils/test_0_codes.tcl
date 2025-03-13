@@ -23,109 +23,81 @@ package require tdbc
 package require tdbc::postgres
 package require ngis::servicedb
 package require ngis::conf
-
+package require ngis::clientio
 
 # drawing on Tclx too for its random number generator
 #
 package require Tclx
 
-# basic stuff used by the asynchronous I/O procedures
-
-set next_entity         0
-set json_txt            ""
-set expected_code       0
-set protocol_status     OK
-set returned_message_d  ""
-
-proc reset_proto {code} {
-    global json_txt
-    global expected_code
-
-    set expected_code $code
-    set json_txt ""
-}
-
-proc socket_readable {con} {
-    global expected_code
-    global protocol_status
-    global json_txt
-    global returned_message_d
-
-    if {[chan eof $con]} {
-        puts "eof detected"
-        chan close $con
-        return
-    }
-
-    append json_txt [chan gets $con]
-
-    if {[catch { set returned_message_d [::json::json2dict $json_txt] }]} {
-        set protocol_status READING
-        return
-    }
-
-    puts "returned code: [dict get $returned_message_d] (expected $expected_code)"
-
-    if {[dict get $returned_message_d code] == $expected_code} {
-        set protocol_status OK
-    } else {
-        set protocol_status [list [dict get $returned_message_d code] "protocol error"]
-    }
-    incr ::next_entity
-}
-
-proc send_to_server {connection client_message expcode {waittime 400}} {
-    reset_proto $expcode
-    chan puts $connection $client_message
-    chan flush $connection
-    after $waittime
-}
-
 random seed [clock seconds]
 
-set con [unix_sockets::connect $::ngis::unix_socket_name]
-chan event $con readable [namespace code [list socket_readable $con]]
+set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
+::ngis::clientio query_server $con "FORMAT JSON" 104
+puts "protocol format set as JSON"
 
-send_to_server $con "FORMAT JSON" 104
+append http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+                 "join testsuite.service_status ss on ss.gid=ul.gid where ss.exit_info like 'Invalid% 0'" 
+                 "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ul.gid"}
 
-vwait ::next_entity
-lassign $protocol_status proto_status_code
-if {$proto_status_code != "OK"} {
-    syslog -perror -ident snig -facility user info "Protocol error $protocol_status"
-    return
-} else {
-    puts "protocol format set as JSON"
+append newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+		              "left join testsuite.service_status ss on ss.gid=ul.gid where ss.gid is null"}
+
+set sql $http0_sql
+set limit 20
+set max_jobs_n 0
+set nhours 24
+if {$argc > 0} {
+    set arguments $argv
+    while {[llength $arguments]} {
+        set arguments [lassign $arguments a]
+
+        switch -nocase -- $a {
+            -newrecs {
+                syslog -perror -ident snig -facility user info "Check new records"
+                set sql $newservice_sql
+            }
+            -nhours {
+                set arguments [lassign $arguments nhours]
+                syslog -perror -ident snig -facility user info "Checking HTTP 0 recors older than $nhours hours"
+            }
+            -http0 {
+                set sql $http0_sql
+            }
+            -limit {
+                set arguments [lassign $arguments limit]
+                syslog -perror -ident snig -facility user info "Limit to $limit results"
+            }
+            -max-jobs {
+                set arguments [lassign $arguments max_jobs_n]
+                syslog -perror -ident snig -facility user info "set maximum concurrent jobs as $max_jobs_n"
+            }
+            default {
+                syslog -perror -ident snig -facility user info "Unrecognized argument '$a'"
+            }
+        }
+
+    }
 }
 
-append sql "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" " " \
-           "join testsuite.service_status ss on ss.gid=ul.gid where ss.exit_info like 'Invalid% 0' order by ul.gid"
+set sql [join [subst $sql] " "]
+
+if {$limit != 0} { append sql " LIMIT $limit" }
+syslog -perror -ident snig -facility user info "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
 # setting up the random number generator
 
 while {[$resultset nextdict service_d]} {
     dict with service_d {
+        if {![info exists description]} { set description "" }
         syslog -perror -ident snig -facility user info "check service with gid $gid ($description)"
-        send_to_server $con "CHECK $gid" 102
-        vwait ::next_entity
+        ::ngis::clientio query_server $con "CHECK $gid" 102
 
-#
-        lassign $protocol_status protocol_status_code
-        if {$protocol_status_code != "OK"} {
-            syslog -perror -ident snig -facility user info "Error sending 'CHECK $gid' ($protocol_status)"
-            break
-        }
         set njobs 1
-        while {$njobs > 0} {
-            send_to_server $con "JOBLIST" 114 1000
-            vwait ::next_entity
-            lassign $protocol_status protocol_status_code
-            if {$protocol_status_code != "OK"} {
-                syslog -perror -ident snig -facility user info "Unrecoverable error"
-                exit
-            }
+        while {$njobs > $max_jobs_n} {
+            set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
             set njobs [dict get $returned_message_d njobs]
-            after 1000
+            after 2000
         }
     }
 
@@ -135,5 +107,5 @@ while {[$resultset nextdict service_d]} {
 }
 $resultset close
 chan close $con
-syslog -perror -ident snig -facility user info "Terminating task of controlling HTTP 0 status records"
+syslog -perror -ident snig -facility user info "Concluding task with args: $argv"
 

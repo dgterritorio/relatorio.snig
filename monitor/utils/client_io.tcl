@@ -1,21 +1,8 @@
-# client_io.tcl
+# client_io.tcl --
 #
 # base procedure for implementing client operations
 
 package require json
-
-# assuming the monitor configuration is in the parent directory
-set current_dir [file normalize [file join [file dirname [info script]] ..]]
-
-cd $current_dir
-
-set curr_dir_pos [lsearch $auto_path $current_dir]
-if {$curr_dir_pos < 0} {
-    set auto_path [concat $current_dir $auto_path]
-} elseif {$current_dir_pos > 0} {
-    set auto_path [concat $current_dir [lreplace $auto_path $current_dir_pos $current_dir_pos]]
-}
-
 package require syslog
 package require unix_sockets
 package require ngis::conf

@@ -78,7 +78,6 @@ set resultset [::ngis::service exec_sql_query $sql]
 set con [unix_sockets::connect $::ngis::unix_socket_name]
 chan event $con readable [namespace code [list socket_readable $con]]
 
-
 send_to_server $con "FORMAT JSON" 104
 
 vwait ::next_entity
