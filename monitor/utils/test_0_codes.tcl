@@ -37,39 +37,63 @@ puts "protocol format set as JSON"
 
 append http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
                  "join testsuite.service_status ss on ss.gid=ul.gid where ss.exit_info like 'Invalid% 0'" 
-                 "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ul.gid"}
+                 "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ss.ts"}
 
 append newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
 		              "left join testsuite.service_status ss on ss.gid=ul.gid where ss.gid is null"}
 
+
+append stalerecs_sql {"select ul.uri,ul.gid,ul.description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+		              "join testsuite.service_status ss on ss.gid=ul.gid where ss.task='congruence'" 
+                      "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ss.ts"}
+
 set sql $http0_sql
-set limit 20
-set max_jobs_n 0
-set nhours 24
+set limit       20
+set max_jobs_n  0
+set nhours      24
+set ndays       0
+set min_wait    100
+set max_wait    4000
+
 if {$argc > 0} {
     set arguments $argv
     while {[llength $arguments]} {
         set arguments [lassign $arguments a]
 
         switch -nocase -- $a {
-            -newrecs {
-                syslog -perror -ident snig -facility user info "Check new records"
+            --stalerecs {
+                set sql $stalerecs_sql
+                syslog -perror -ident snig -facility user info "Check for stale records"
+            }
+            --newrecs {
                 set sql $newservice_sql
+                syslog -perror -ident snig -facility user info "Check new records"
             }
-            -nhours {
+            --nhours {
                 set arguments [lassign $arguments nhours]
-                syslog -perror -ident snig -facility user info "Checking HTTP 0 recors older than $nhours hours"
+                syslog -perror -ident snig -facility user info "Checking records older than $nhours hours"
             }
-            -http0 {
+            --ndays {
+                set arguments [lassign $arguments ndays]
+                syslog -perror -ident snig -facility user info "Checking records older than $ndays days"
+            }
+            --http0 {
                 set sql $http0_sql
+                syslog -perror -ident snig -facility user info "Checking HTTP 0 status records last checked more than $nhours hours ago"
             }
-            -limit {
+            --limit {
                 set arguments [lassign $arguments limit]
                 syslog -perror -ident snig -facility user info "Limit to $limit results"
             }
-            -max-jobs {
+            --max-jobs {
                 set arguments [lassign $arguments max_jobs_n]
                 syslog -perror -ident snig -facility user info "set maximum concurrent jobs as $max_jobs_n"
+            }
+            --min-wait {
+                set arguments [lassign $arguments min_wait]
+            }
+            --max-wait {
+                set arguments [lassign $arguments max_wait]
             }
             default {
                 syslog -perror -ident snig -facility user info "Unrecognized argument '$a'"
@@ -79,6 +103,16 @@ if {$argc > 0} {
     }
 }
 
+syslog -perror -ident snig -facility user info "Random wait time limits: $min_wait, $max_wait "
+
+# allowing to specify both --ndays and --nhours. If --nhours argument is >= 24
+# we disabled it since it's meant to specify a time lapse in hours within a single day
+
+if {$ndays > 0} { 
+    if {$nhours >= 24} { set nhours 0 }
+    set nhours [expr $ndays*24 + $nhours] 
+}
+
 set sql [join [subst $sql] " "]
 
 if {$limit != 0} { append sql " LIMIT $limit" }
@@ -86,6 +120,8 @@ syslog -perror -ident snig -facility user info "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
 # setting up the random number generator
+
+set delta_t [expr $max_wait - $min_wait]
 
 while {[$resultset nextdict service_d]} {
     dict with service_d {
@@ -103,7 +139,7 @@ while {[$resultset nextdict service_d]} {
 
     # wait for min 100 ms, max 4 secs
 
-    after [expr 100 + [random 1900]]
+    after [expr $min_wait + [random $delta_t]]
 }
 $resultset close
 chan close $con
