@@ -47,7 +47,8 @@ append stalerecs_sql {"select ul.uri,ul.gid,ul.description,ss.exit_info,ss.ts fr
 		              "join testsuite.service_status ss on ss.gid=ul.gid where ss.task='congruence'" 
                       "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ss.ts"}
 
-set sql $http0_sql
+set fun         http0recs
+set sql         $http0_sql
 set limit       20
 set max_jobs_n  0
 set nhours      24
@@ -62,10 +63,12 @@ if {$argc > 0} {
 
         switch -nocase -- $a {
             --stalerecs {
+                set fun stalerecs
                 set sql $stalerecs_sql
                 syslog -perror -ident snig -facility user info "Check for stale records"
             }
             --newrecs {
+                set fun newrecs
                 set sql $newservice_sql
                 syslog -perror -ident snig -facility user info "Check new records"
             }
@@ -78,6 +81,7 @@ if {$argc > 0} {
                 syslog -perror -ident snig -facility user info "Checking records older than $ndays days"
             }
             --http0 {
+                set fun http0recs
                 set sql $http0_sql
                 syslog -perror -ident snig -facility user info "Checking HTTP 0 status records last checked more than $nhours hours ago"
             }
@@ -115,6 +119,8 @@ if {$ndays > 0} {
 
 set sql [join [subst $sql] " "]
 
+puts $sql
+
 if {$limit != 0} { append sql " LIMIT $limit" }
 syslog -perror -ident snig -facility user info "sql: $sql"
 
@@ -122,7 +128,7 @@ set resultset [::ngis::service exec_sql_query $sql]
 # setting up the random number generator
 
 set delta_t [expr $max_wait - $min_wait]
-
+set nrecs 0
 while {[$resultset nextdict service_d]} {
     dict with service_d {
         if {![info exists description]} { set description "" }
@@ -136,11 +142,13 @@ while {[$resultset nextdict service_d]} {
             after 2000
         }
     }
-
-    # wait for min 100 ms, max 4 secs
+    incr nrecs
 
     after [expr $min_wait + [random $delta_t]]
 }
+
+syslog -perror -ident snig -facility user info "$nrecs records processed for function $fun"
+
 $resultset close
 chan close $con
 syslog -perror -ident snig -facility user info "Concluding task with args: $argv"
