@@ -1,4 +1,3 @@
-  GNU nano 8.1                                                                                                                                                                                                                                                                                             D_http_status_codes_by_domain.php
 <?php
 // Get the folder where the script is saved
 $script_dir = dirname(__FILE__);
