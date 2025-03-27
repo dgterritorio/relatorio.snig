@@ -111,6 +111,7 @@ if {$argc > 0} {
 ::ngis::out "Random wait time limits: $min_wait, $max_wait "
 
 
+
 # allowing to specify both --ndays and --nhours. If --nhours argument is >= 24
 # we disabled it since it's meant to specify a time lapse in hours within a single day
 
@@ -129,8 +130,6 @@ if {$limit != 0} { lappend sql "LIMIT $limit" }
 
 set sql [join [subst $sql] " "]
 
-::ngis::out $sql
-
 ::ngis::out "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
@@ -144,17 +143,17 @@ while {[$resultset nextdict service_d]} {
         ::ngis::out "check service with gid $gid ($description)"
         ::ngis::clientio query_server $con "CHECK $gid" 102
 
-	set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
-	set njobs [dict get $returned_message_d njobs]
+        set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
+        set njobs [dict get $returned_message_d njobs]
         while {$njobs > $max_jobs_n} {
-	    if {[catch {
-		after 2000
-		set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
-		set njobs [dict get $returned_message_d njobs]
-		#::ngis::out "$njobs current jobs"
-	    } e einfo]} {
-		::ngis::out "error $e in JOBLIST server command"
-	    }
+            if {[catch {
+                after 2000
+                set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
+                set njobs [dict get $returned_message_d njobs]
+                #::ngis::out "$njobs current jobs"
+            } e einfo]} {
+                ::ngis::out "error $e in JOBLIST server command"
+            }
         }
     }
     incr nrecs
