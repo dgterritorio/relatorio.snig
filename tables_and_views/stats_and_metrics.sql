@@ -283,3 +283,59 @@ CREATE OR REPLACE VIEW stats_and_metrics._04_group_by_http_status_code_and_domai
     ping_average
    FROM temp
   ORDER BY uri_domain, count DESC;
+
+
+-- Count the URLs by they WMS and WFS Capabilities document validity 
+CREATE OR REPLACE VIEW stats_and_metrics._05_group_by_wms_capabilities_validity_global
+ AS
+ WITH a AS (
+         SELECT
+			service_status.exit_info AS status_code,
+			service_status.exit_status,
+            count(*) AS count,
+			avg(service_status.task_duration) AS ping_average
+          FROM testsuite.service_status
+          WHERE service_status.task::text = 'wms_capabilities'::text
+          GROUP BY service_status.exit_info, service_status.exit_status 
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY count desc;
+
+CREATE OR REPLACE VIEW stats_and_metrics._06_group_by_wfs_capabilities_validity_global
+ AS
+ WITH a AS (
+         SELECT
+			service_status.exit_info AS status_code,
+			service_status.exit_status,
+            count(*) AS count,
+			avg(service_status.task_duration) AS ping_average
+          FROM testsuite.service_status
+          WHERE service_status.task::text = 'wfs_capabilities'::text
+          GROUP BY service_status.exit_info, service_status.exit_status 
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY count desc;
