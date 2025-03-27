@@ -109,20 +109,21 @@ namespace eval ::ngis::clientio {
     }
     namespace export read_result
 
-    proc query_server {connection client_message expected_code {max_wait 20}} {
+    proc query_server {connection client_message expected_code {max_wait 40}} {
         variable wait_v
 
         send_to_server $connection $client_message $expected_code
         set proto_status [read_protocol_status]
 
-        while {($proto_status == "READING") && ([incr nwait_t] < $max_wait)} { 
+	    set nwait_t [clock seconds]
+        while {($proto_status == "READING") && ([expr [clock seconds] - $nwait_t] < $max_wait)} {
             #puts $proto_status
             vwait [namespace current]::wait_v 
             set proto_status [read_protocol_status]
         }
         
-        if {$nwait_t >= $max_wait} {
-            return -code error -errorcode timeout_error "Timeout while reading from socket"
+        if {$proto_status == "READING"} {
+            return -code error -errorcode max_wait_timeout_error "Max $max_wait seconds timeout while reading from socket"
         }
 
         return [read_result]

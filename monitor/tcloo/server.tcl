@@ -98,9 +98,13 @@ package require ngis::utils
     }
 
     method send_to_client {con msg} {
-        chan puts $con $msg
-        #chan puts $con $::ngis::end_of_answer
-        chan flush $con
+        try {
+            chan puts $con $msg
+            #chan puts $con $::ngis::end_of_answer
+            chan flush $con
+        } on error {e einfo} {
+            ::ngis::logger emit "error responding to client ($e, $einfo)"
+        }
     }
 
     method whos {} {
@@ -144,7 +148,6 @@ package require ngis::utils
         set results_queue   $task_results_queue
 
         if {[$results_queue size] == 0} { return }
-        ::ngis::logger emit "syncing [$results_queue size] results"
 
         # hideous behavior of struct::queue: if it's
         # holding one element that can be represented as a list, 

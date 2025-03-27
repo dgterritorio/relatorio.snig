@@ -25,6 +25,10 @@ package require ngis::servicedb
 package require ngis::conf
 package require ngis::clientio
 
+proc ::ngis::out {m} {
+    syslog -perror -ident snig -facility user info $m
+}
+
 # drawing on Tclx too for its random number generator
 #
 package require Tclx
@@ -33,19 +37,16 @@ random seed [clock seconds]
 
 set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
 ::ngis::clientio query_server $con "FORMAT JSON" 104
-puts "protocol format set as JSON"
 
-append http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-                 "join testsuite.service_status ss on ss.gid=ul.gid where ss.exit_info like 'Invalid% 0'" 
-                 "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ss.ts"}
+set http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+               "join testsuite.service_status ss on ss.gid = ul.gid where ss.exit_info like 'Invalid% 0'"}
 
-append newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-		              "left join testsuite.service_status ss on ss.gid=ul.gid where ss.gid is null"}
+set newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+		            "left join testsuite.service_status ss on ss.gid = ul.gid where ss.gid is null"}
 
-
-append stalerecs_sql {"select ul.uri,ul.gid,ul.description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-		              "join testsuite.service_status ss on ss.gid=ul.gid where ss.task='congruence'" 
-                      "and ss.ts < NOW() - INTERVAL '$nhours hours' order by ss.ts"}
+set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul" 
+                    "left join testsuite.service_status ss on ss.gid=ul.gid"
+		            "where ss.task = 'url_status_codes' and ss.exit_info != 'Invalid% 0'"}
 
 set fun         http0recs
 set sql         $http0_sql
@@ -65,33 +66,33 @@ if {$argc > 0} {
             --stalerecs {
                 set fun stalerecs
                 set sql $stalerecs_sql
-                syslog -perror -ident snig -facility user info "Check for stale records"
+                ::ngis::out "Check for stale records"
             }
             --newrecs {
                 set fun newrecs
                 set sql $newservice_sql
-                syslog -perror -ident snig -facility user info "Check new records"
+                ::ngis::out "Check new records"
             }
             --nhours {
                 set arguments [lassign $arguments nhours]
-                syslog -perror -ident snig -facility user info "Checking records older than $nhours hours"
+                ::ngis::out "Checking records older than $nhours hours"
             }
             --ndays {
                 set arguments [lassign $arguments ndays]
-                syslog -perror -ident snig -facility user info "Checking records older than $ndays days"
+                ::ngis::out "Checking records older than $ndays days"
             }
             --http0 {
                 set fun http0recs
                 set sql $http0_sql
-                syslog -perror -ident snig -facility user info "Checking HTTP 0 status records last checked more than $nhours hours ago"
+                ::ngis::out "Checking HTTP 0 status records last checked more than $nhours hours ago"
             }
             --limit {
                 set arguments [lassign $arguments limit]
-                syslog -perror -ident snig -facility user info "Limit to $limit results"
+                ::ngis::out "Limit to $limit results"
             }
             --max-jobs {
                 set arguments [lassign $arguments max_jobs_n]
-                syslog -perror -ident snig -facility user info "set maximum concurrent jobs as $max_jobs_n"
+                ::ngis::out "set maximum concurrent jobs as $max_jobs_n"
             }
             --min-wait {
                 set arguments [lassign $arguments min_wait]
@@ -100,14 +101,15 @@ if {$argc > 0} {
                 set arguments [lassign $arguments max_wait]
             }
             default {
-                syslog -perror -ident snig -facility user info "Unrecognized argument '$a'"
+                ::ngis::out "Unrecognized argument '$a'"
             }
         }
 
     }
 }
 
-syslog -perror -ident snig -facility user info "Random wait time limits: $min_wait, $max_wait "
+::ngis::out "Random wait time limits: $min_wait, $max_wait "
+
 
 # allowing to specify both --ndays and --nhours. If --nhours argument is >= 24
 # we disabled it since it's meant to specify a time lapse in hours within a single day
@@ -117,12 +119,19 @@ if {$ndays > 0} {
     set nhours [expr $ndays*24 + $nhours] 
 }
 
+if {($fun == "stalerecs") || ($fun == "http0recs")} {
+    if {$nhours > 0} {
+	    lappend sql "and ss.ts < NOW() - INTERVAL '$nhours hours'"
+	}
+    lappend sql "order by ss.ts"
+}
+if {$limit != 0} { lappend sql "LIMIT $limit" }
+
 set sql [join [subst $sql] " "]
 
-puts $sql
+::ngis::out $sql
 
-if {$limit != 0} { append sql " LIMIT $limit" }
-syslog -perror -ident snig -facility user info "sql: $sql"
+::ngis::out "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
 # setting up the random number generator
@@ -132,14 +141,20 @@ set nrecs 0
 while {[$resultset nextdict service_d]} {
     dict with service_d {
         if {![info exists description]} { set description "" }
-        syslog -perror -ident snig -facility user info "check service with gid $gid ($description)"
+        ::ngis::out "check service with gid $gid ($description)"
         ::ngis::clientio query_server $con "CHECK $gid" 102
 
-        set njobs 1
+	set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
+	set njobs [dict get $returned_message_d njobs]
         while {$njobs > $max_jobs_n} {
-            set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
-            set njobs [dict get $returned_message_d njobs]
-            after 2000
+	    if {[catch {
+		after 2000
+		set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
+		set njobs [dict get $returned_message_d njobs]
+		#::ngis::out "$njobs current jobs"
+	    } e einfo]} {
+		::ngis::out "error $e in JOBLIST server command"
+	    }
         }
     }
     incr nrecs
@@ -147,9 +162,9 @@ while {[$resultset nextdict service_d]} {
     after [expr $min_wait + [random $delta_t]]
 }
 
-syslog -perror -ident snig -facility user info "$nrecs records processed for function $fun"
+::ngis::out "$nrecs records processed for function $fun"
 
 $resultset close
 chan close $con
-syslog -perror -ident snig -facility user info "Concluding task with args: $argv"
+::ngis::out "Concluding task with args: $argv"
 

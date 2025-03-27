@@ -1,3 +1,8 @@
+# ngis_msglogger.tcl --
+#
+#
+#
+
 package require syslog
 package require ngis::conf
 
