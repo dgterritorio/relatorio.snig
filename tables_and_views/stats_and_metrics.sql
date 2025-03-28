@@ -403,3 +403,57 @@ CREATE OR REPLACE VIEW stats_and_metrics._08_group_by_wfs_capabilities_validity_
     ping_average
    FROM temp
   ORDER BY entity, count desc;
+
+
+-- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity 
+CREATE OR REPLACE VIEW stats_and_metrics._11_group_by_wms_gdal_info_validity_global
+ AS
+ WITH a AS (
+         SELECT service_status.exit_info AS status_code,
+            service_status.exit_status,
+            count(*) AS count,
+            avg(service_status.task_duration) AS ping_average
+           FROM testsuite.service_status
+          WHERE service_status.task::text = 'wms_gdal_info'::text
+          GROUP BY service_status.exit_info, service_status.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY count DESC;
+
+CREATE OR REPLACE VIEW stats_and_metrics._12_group_by_wfs_ogr_info_validity_global
+ AS
+ WITH a AS (
+         SELECT service_status.exit_info AS status_code,
+            service_status.exit_status,
+            count(*) AS count,
+            avg(service_status.task_duration) AS ping_average
+           FROM testsuite.service_status
+          WHERE service_status.task::text = 'wfs_ogr_info'::text
+          GROUP BY service_status.exit_info, service_status.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY count DESC;
