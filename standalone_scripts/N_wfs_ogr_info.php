@@ -31,7 +31,7 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;"><a href="/pages/_12_group_by_wfs_ogr_info_validity_global.csv">WFS OGR_INFO RESPONSE</a>
+<b style="font-size: 24px;"><a href="/pages/_12_group_by_wfs_ogr_info_validity_global.csv">WFS OGR_INFO RESPONSE</a></b>
 <br/><br/>
 <table>
     <tr>
