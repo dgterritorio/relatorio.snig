@@ -31,9 +31,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">WFS CAPABILITIES DOCUMENT VALIDITY by Domain</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_10_group_by_wfs_capabilities_validity_and_domain.csv">WFS CAPABILITIES DOCUMENT VALIDITY by Domain</a>
+<br/><br/>
+<table>
     <tr>
         <th>Entity</th>
         <th>Status Code</th>
