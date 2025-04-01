@@ -31,9 +31,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">HTTP STATUS CODES by Domain</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_04_group_by_http_status_code_and_domain.csv">HTTP STATUS CODES by Domain</a></b>
+<br/><br/>
+<table>
     <tr>
         <th>Domain</th>
         <th>Status Code</th>
