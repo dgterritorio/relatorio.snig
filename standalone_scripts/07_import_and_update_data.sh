@@ -144,8 +144,6 @@ AND b.description IS NULL;"
 # the results apply to all UUIDs of the catalog where it was added. So if it does not work, once fixed,
 # all are fixed.
 
-#ADD HERE QUERY TO REMOVE DUPLICATES FROM testsuite.uris_long BY USING uri values
-
 psql -U $USERNAME -d $DB_NAME -h $HOST -c "WITH duplicates AS ( \
     SELECT ctid, ROW_NUMBER() OVER (PARTITION BY uri ORDER BY ctid) AS rn \
     FROM testsuite.uris_long \
@@ -156,3 +154,6 @@ WHERE ctid IN ( \
     FROM duplicates \
     WHERE rn > 1 \
     );"
+
+# Remove from testsuite.service_status the records corresponding to URLs that have disappeared after a new harvest
+psql -U $USERNAME -d $DB_NAME -h $HOST -c "DELETE FROM testsuite.service_status WHERE gid NOT IN (SELECT DISTINCT gid FROM testsuite.uris_long);"
