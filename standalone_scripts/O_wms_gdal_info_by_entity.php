@@ -31,7 +31,7 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;"><a href="/pages/_13_group_by_wms_gdal_info_validity_and_entity.csv">WMS GDAL_INFO RESPONSE by Entity</a>
+<b style="font-size: 24px;"><a href="/pages/_13_group_by_wms_gdal_info_validity_and_entity.csv">WMS GDAL_INFO RESPONSE by Entity</a></b>
 <br/><br/>
 <table>
     <tr>
