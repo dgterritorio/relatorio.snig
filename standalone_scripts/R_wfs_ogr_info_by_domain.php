@@ -32,9 +32,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">WFS OGR_INFO RESPONSE by Domain</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_16_group_by_wfs_ogr_info_validity_and_domain.csv">WFS OGR_INFO RESPONSE by Domain</a>
+<br/><br/>
+<table>
     <tr>
         <th>Entity</th>
         <th>Status Code</th>
