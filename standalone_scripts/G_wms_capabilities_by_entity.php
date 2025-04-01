@@ -31,9 +31,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_07_group_by_wms_capabilities_validity_and_entity.csv">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</a>
+<br/><br/>
+<table>
     <tr>
         <th>Entity</th>
         <th>Status Code</th>
