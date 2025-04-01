@@ -13,3 +13,6 @@ $SCRIPT_DIR/07_import_and_update_data.sh
 
 # Generate HTML code with statistics
 $SCRIPT_DIR/08_generate_html_tables.sh
+
+# Export statistics to CSV
+$SCRIPT_DIR/09_export_metrics_to_csv.sh
