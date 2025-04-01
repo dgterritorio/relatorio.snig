@@ -30,7 +30,7 @@ if (!$result) {
 // Render the HTML body
 ?>
 
-<b style="font-size: 24px;">HTTP vs HTTPS</b>
+<b style="font-size: 24px;"><a href="/pages/_01_group_urls_by_http_protocol.csv">HTTP vs HTTPS</a></b>
 
 <table>
     <tr>
