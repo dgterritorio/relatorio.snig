@@ -18,8 +18,18 @@ for php_file in "$script_dir"/[A-Z]*_*.php; do
 done
 
 echo "All files merged into $output"
-
 cp "$script_dir/../monitor/website/pages/template.xml" "$script_dir/../monitor/website/pages/estatisticas.xml"
-awk -v new_content="$(<"$output")" '{gsub(/PLACEHOLDER/, new_content)}1' "$script_dir/../monitor/website/pages/estatisticas.xml" > "$script_dir/../monitor/website/pages/estatisticas.xml.tmp"
+
+# Use awk to replace PLACEHOLDER by reading the file content directly
+awk '
+    BEGIN {
+        while ((getline line < "'$output'") > 0)
+            new_content = new_content line "\n";
+        close("'$output'");
+    }
+    { gsub(/PLACEHOLDER/, new_content) }
+    1
+' "$script_dir/../monitor/website/pages/estatisticas.xml" > "$script_dir/../monitor/website/pages/estatisticas.xml.tmp"
+
 mv "$script_dir/../monitor/website/pages/estatisticas.xml.tmp" "$script_dir/../monitor/website/pages/estatisticas.xml"
 echo "PLACEHOLDER replaced in estatisticas.xml"
