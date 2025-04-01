@@ -31,9 +31,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">WMS GDAL_INFO RESPONSE</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_11_group_by_wms_gdal_info_validity_global.csv">WMS GDAL_INFO RESPONSE</a>                             
+<br/><br/>
+<table>
     <tr>
         <th>Validity</th>
         <th>Result</th>
