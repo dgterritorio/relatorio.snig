@@ -31,9 +31,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">HTTP STATUS CODES</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_02_group_by_http_status_code_global.csv">HTTP STATUS CODES</a></b>
+<br/><br/>
+<table>
     <tr>
         <th>Status Code</th>
         <th>Definition</th>
