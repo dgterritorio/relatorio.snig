@@ -31,7 +31,7 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;"><a href="/pages/_08_group_by_wfs_capabilities_validity_and_entity.csv">WFS CAPABILITIES DOCUMENT VALIDITY by Entity</a>
+<b style="font-size: 24px;"><a href="/pages/_08_group_by_wfs_capabilities_validity_and_entity.csv">WFS CAPABILITIES DOCUMENT VALIDITY by Entity</a></b>
 <br/><br/>
 <table>
     <tr>
