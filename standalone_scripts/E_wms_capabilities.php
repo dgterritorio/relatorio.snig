@@ -30,9 +30,9 @@ if (!$result) {
 header('Content-Type: text/html');
 ?>
 
-<b style="font-size: 24px;">WMS CAPABILITIES DOCUMENT VALIDITY</b>
-
-<table border="1" cellpadding="5" cellspacing="0">
+<b style="font-size: 24px;"><a href="/pages/_05_group_by_wms_capabilities_validity_global.csv">WMS CAPABILITIES DOCUMENT VALIDITY</a></b>
+<br/><br/>
+<table>
     <tr>
         <th>Validity</th>
         <th>Result</th>
