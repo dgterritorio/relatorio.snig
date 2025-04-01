@@ -581,3 +581,65 @@ CREATE OR REPLACE VIEW stats_and_metrics._14_group_by_wfs_ogr_info_validity_and_
     ping_average
    FROM temp
   ORDER BY entity, count DESC;
+
+
+-- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by domain
+CREATE OR REPLACE VIEW stats_and_metrics._15_group_by_wms_gdal_info_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wms_gdal_info'::text
+          GROUP BY (lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))), b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
+
+CREATE OR REPLACE VIEW stats_and_metrics._16_group_by_wfs_ogr_info_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wfs_ogr_info'::text
+          GROUP BY (lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))), b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT gid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
