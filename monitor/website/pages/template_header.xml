@@ -1,0 +1,12 @@
+<page id="estatisticas">
+    <ident>$Ident: Wed 26 Mar, 2025 at 18:00 +0100</ident>
+    <author>$Author: massimo.manghi $</author>
+    <date>$Date: 2025-03-26 18:00:32 +0\00 (Wed, 26 Mar 2025) $</date>
+    <title>Estatisticas</title>
+    <headline>Estatisticas</headline>
+    <menu position="top">banner</menu>
+    <menu position="right">home</menu>
+    <content language="en">
+        <title>Estatisticas</title>
+        <headline>Estatisticas</headline>
+        <pagetext>
