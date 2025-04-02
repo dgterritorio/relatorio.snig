@@ -1,3 +1,10 @@
+-- Ungrouped results
+CREATE OR REPLACE VIEW stats_and_metrics._00_ungrouped_results AS
+SELECT b.entity,b.uri,a.task,a.exit_status,a.task_duration FROM testsuite.service_status a 
+JOIN testsuite.uris_long b ON a.gid = b.gid
+ORDER BY entity,uri,task
+
+
 -- Count the URLs by they http protocol (http vs https vs other)
 CREATE OR REPLACE VIEW stats_and_metrics._01_group_urls_by_http_protocol AS
 WITH temp AS 
