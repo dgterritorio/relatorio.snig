@@ -2,30 +2,30 @@
     <ident>$Ident: Wed 26 Mar, 2025 at 18:00 +0100</ident>
     <author>$Author: massimo.manghi $</author>
     <date>$Date: 2025-03-26 18:00:32 +0\00 (Wed, 26 Mar 2025) $</date>
-    <title>Estatisticas</title>
-    <headline>Estatisticas</headline>
+    <title>Statistics</title>
+    <headline>Statistics</headline>
     <menu position="top">banner</menu>
     <menu position="right">home</menu>
     <content language="en">
-        <title>Estatisticas</title>
-        <headline>Estatisticas</headline>
+        <title>Statistics</title>
+        <headline>Statistics</headline>
         <pagetext>
             <ul>
-                <li>HTTP vs HTTPS</li>
-                <li>HTTP STATUS CODES</li>
-                <li>HTTP STATUS CODES by Entity</li>
-                <li>HTTP STATUS CODES by Domain</li>
-                <li>WMS CAPABILITIES DOCUMENT VALIDITY</li>
-                <li>WFS CAPABILITIES DOCUMENT VALIDITY</li>
-                <li>WMS CAPABILITIES DOCUMENT VALIDITY by Entity</li>
-                <li>WFS CAPABILITIES DOCUMENT VALIDITY by Entity</li>
-                <li>WMS CAPABILITIES DOCUMENT VALIDITY by Domain</li>
-                <li>WFS CAPABILITIES DOCUMENT VALIDITY by Domain</li>
-                <li>WMS GDAL_INFO RESPONSE</li>
-                <li>WFS OGR_INFO RESPONSE</li>
-                <li>WMS GDAL_INFO RESPONSE by Entity</li>
-                <li>WFS OGR_INFO RESPONSE by Entity</li>
-                <li>WMS GDAL_INFO RESPONSE by Domain</li>
-                <li>WFS OGR_INFO RESPONSE by Domain</li>
-                <li>Ungrouped results</li>
+                <li><sitereference href="estatisticas#A">HTTP vs HTTPS</sitereference></li>
+                <li><sitereference href="estatisticas#B">HTTP STATUS CODES</sitereference></li>
+                <li><sitereference href="estatisticas#C">HTTP STATUS CODES by Entity</sitereference></li>
+                <li><sitereference href="estatisticas#D">HTTP STATUS CODES by Domain</sitereference></li>
+                <li><sitereference href="estatisticas#E">WMS CAPABILITIES DOCUMENT VALIDITY</sitereference></li>
+                <li><sitereference href="estatisticas#F">WFS CAPABILITIES DOCUMENT VALIDITY</sitereference></li>
+                <li><sitereference href="estatisticas#G">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</sitereference></li>
+                <li><sitereference href="estatisticas#H">WFS CAPABILITIES DOCUMENT VALIDITY by Entity</sitereference></li>
+                <li><sitereference href="estatisticas#I">WMS CAPABILITIES DOCUMENT VALIDITY by Domain</sitereference></li>
+                <li><sitereference href="estatisticas#L">WFS CAPABILITIES DOCUMENT VALIDITY by Domain</sitereference></li>
+                <li><sitereference href="estatisticas#M">WMS GDAL_INFO RESPONSE</sitereference></li>
+                <li><sitereference href="estatisticas#N">WFS OGR_INFO RESPONSE</sitereference></li>
+                <li><sitereference href="estatisticas#O">WMS GDAL_INFO RESPONSE by Entity</sitereference></li>
+                <li><sitereference href="estatisticas#P">WFS OGR_INFO RESPONSE by Entity</sitereference></li>
+                <li><sitereference href="estatisticas#Q">WMS GDAL_INFO RESPONSE by Domain</sitereference></li>
+                <li><sitereference href="estatisticas#R">WFS OGR_INFO RESPONSE by Domain</sitereference></li>
+                <li><sitereference href="estatisticas#S">Ungrouped results</sitereference></li>
             </ul>
