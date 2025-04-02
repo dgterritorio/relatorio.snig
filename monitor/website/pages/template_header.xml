@@ -25,7 +25,7 @@
                 <li>WFS OGR_INFO RESPONSE</li>
                 <li>WMS GDAL_INFO RESPONSE by Entity</li>
                 <li>WFS OGR_INFO RESPONSE by Entity</li>
-                <li>WMS GDAL_INFO RESPONSE by Entity</li>
-                <li>WFS OGR_INFO RESPONSE by Entity</li>
+                <li>WMS GDAL_INFO RESPONSE by Domain</li>
+                <li>WFS OGR_INFO RESPONSE by Domain</li>
                 <li>Ungrouped results</li>
             </ul>
