@@ -10,3 +10,22 @@
         <title>Estatisticas</title>
         <headline>Estatisticas</headline>
         <pagetext>
+            <ul>
+                <li>HTTP vs HTTPS</li>
+                <li>HTTP STATUS CODES</li>
+                <li>HTTP STATUS CODES by Entity</li>
+                <li>HTTP STATUS CODES by Domain</li>
+                <li>WMS CAPABILITIES DOCUMENT VALIDITY</li>
+                <li>WFS CAPABILITIES DOCUMENT VALIDITY</li>
+                <li>WMS CAPABILITIES DOCUMENT VALIDITY by Entity</li>
+                <li>WFS CAPABILITIES DOCUMENT VALIDITY by Entity</li>
+                <li>WMS CAPABILITIES DOCUMENT VALIDITY by Domain</li>
+                <li>WFS CAPABILITIES DOCUMENT VALIDITY by Domain</li>
+                <li>WMS GDAL_INFO RESPONSE</li>
+                <li>WFS OGR_INFO RESPONSE</li>
+                <li>WMS GDAL_INFO RESPONSE by Entity</li>
+                <li>WFS OGR_INFO RESPONSE by Entity</li>
+                <li>WMS GDAL_INFO RESPONSE by Entity</li>
+                <li>WFS OGR_INFO RESPONSE by Entity</li>
+                <li>Ungrouped results</li>
+            </ul>
