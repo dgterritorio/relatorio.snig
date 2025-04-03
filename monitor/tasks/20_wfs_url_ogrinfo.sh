@@ -26,20 +26,33 @@ error_detected=0
 while IFS= read -r line; do
     if [[ "$line" =~ using\ driver\ .WFS.\ successful ]]; then
         maybe_successful=1
-    elif [[ "$line" =~ ERROR\ ([0-9]+):\ (.*)\ \(([0-9]+)\) ]]; then
-        ERROR_LEVEL="${BASH_REMATCH[1]}"
-        ERROR_MESSAGE="${BASH_REMATCH[2]}"
-        ERROR_CODE="${BASH_REMATCH[3]}"
-        error_detected=1
-    elif [[ "$line" =~ ERROR\ ([0-9]+):\ (.*) ]]; then
-        ERROR_LEVEL="${BASH_REMATCH[1]}"
-        ERROR_MESSAGE="${BASH_REMATCH[2]}"
-        error_detected=2
+    fi
+
+    if [[ $error_detected -eq 0 ]]; then
+        if [[ "$line" =~ ERROR\ ([0-9]+):\ (.*)\ \(([0-9]+)\) ]]; then
+            ERROR_LEVEL="${BASH_REMATCH[1]}"
+            ERROR_MESSAGE="${BASH_REMATCH[2]}"
+            ERROR_CODE="${BASH_REMATCH[3]}"
+            error_detected=1
+        elif [[ "$line" =~ ERROR\ ([0-9]+):\ (.*) ]]; then
+            ERROR_LEVEL="${BASH_REMATCH[1]}"
+            ERROR_MESSAGE="${BASH_REMATCH[2]}"
+            ERROR_CODE=""
+            error_detected=2
+	elif [[ "$line" =~ ServiceExceptionReport || "$line" =~ error ]]; then
+            ERROR_LEVEL="1"
+            ERROR_MESSAGE="Service Exception Report"
+            ERROR_CODE=""
+            error_detected=3
+        fi
+    fi
+
+    if [[ ($error_detected -gt 0) && ($maybe_successful -gt 0) ]]; then
+        break
     fi
 done < "$ogrinfo_fn"
 
-
-if [[ $maybe_successful -eq 1 ]]; then 
+if [[ $maybe_successful -eq 1 ]]; then
     case $error_detected in
         0)
             echo $(make_ok_result "valid WFS OGR info response (version $version)") ;;
@@ -49,6 +62,10 @@ if [[ $maybe_successful -eq 1 ]]; then
                                        "Valid WFS OGR info with warning or not fatal error") ;;
         2)
             echo $(make_warning_result "Service exception or error" \
+                                       "Service exception or error ($ERROR_MESSAGE)" \
+				                        "Service exception or error ($ERROR_MESSAGE)") ;;
+        3)
+            echo $(make_warning_result "$ERROR_MESSAGE" \
                                        "Service exception or error ($ERROR_MESSAGE)" \
                                        "Valid WFS OGR info with warning or not fatal error") ;;
     esac
@@ -61,9 +78,13 @@ else
                                      "Fatal error ($ERROR_MESSAGE) with code $ERROR_CODE" \
                                      "Invalid WFS OGR info: $ERROR_MESSAGE (code $ERROR_CODE)") ;;
         2)
-            echo $(make_warning_result "WFS OGR error" \
-                                       "Service exception or error ($ERROR_MESSAGE)" \
-                                       "Invalid WFS OGR info: $ERROR_MESSAGE (code $ERROR_CODE)") ;;
+            echo $(make_error_result "WFS OGR error" \
+                                       "Service exception or error" \
+                                       "Invalid WFS OGR info") ;;
+        3)
+            echo $(make_error_result "WFS OGR error" \
+                                       "Service exception or error" \
+                                       "Invalid WFS OGR info") ;;
     esac
 fi
 
