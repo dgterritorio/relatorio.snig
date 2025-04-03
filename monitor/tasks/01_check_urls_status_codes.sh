@@ -16,34 +16,39 @@ curl_code="$?"
 
 if [[ "$curl_code" != "0" ]]; then
 
-    case $curl_code in
-        6)
-            echo $(make_error_result "non resolvable host" "Error resolving the URL host name" "$curl_code")
-            ;;
+	case $curl_code in
+		6)
+			echo $(make_error_result "non resolvable host" "Error resolving the URL host name" "$curl_code")
+			;;
         7)
-            echo $(make_error_result "connection failure" "Failed to connect to host" "$curl_code")
-            ;;      
-        28)
-            echo $(make_error_result "timeout error" "URL status code check failed on a $TIMEOUT secs timeout error" "$curl_code")
+		    echo $(make_error_result "connection failure" "Failed to connect to host" "$curl_code")
             ;;
-        56)
-            echo $(make_error_result "failed to receive data" "Failure in receiving network data" "$curl_code")
-            ;;
-        60)
-            echo $(make_error_result "Certificate authentication error" "Peer certificate cannot be authenticated with known CA certificates" "$curl_code")
-            ;;
-        *)
-            echo $(make_error_result "unrecognized error code" "Unrecognized CURL error code: $curl_code" "$curl_code")
-            ;;
-    esac
-    exit 0
+		28)
+			echo $(make_error_result "timeout error" "URL status code check failed on a $TIMEOUT secs timeout error" "$curl_code")
+			;;
+		52)
+			echo $(make_error_result "Nothing was returned by the server" "Curl got nothing from the server" "$curl_code")
+			;;
+		56)
+			echo $(make_error_result "failed to receive data" "Failure in receiving network data" "$curl_code")
+			;;
+		60)
+			echo $(make_error_result "Certificate authentication error" "Peer certificate cannot be authenticated with known CA certificates" "$curl_code")
+			;;
+		*)
+			echo $(make_error_result "unrecognized error code" "Unrecognized CURL error code: $curl_code" "$curl_code")
+			;;
+	esac
+	exit 0
 
 fi
 
 http_code=$(echo $json_txt | jq '.response_code')
 
 if [ "$http_code" == "200" ]; then
+
     echo $(make_ok_result "http_status_code: $http_code")
+
 elif [ $http_code == 301 ] || [ $http_code == 302 ] || [ $http_code == 303 ]; then
 
     redirect_url=$(echo $json_txt | /usr/bin/jq -r '.redirect_url')
@@ -56,7 +61,9 @@ elif [ $http_code == 301 ] || [ $http_code == 302 ] || [ $http_code == 303 ]; th
     fi
 
 else
+
     echo $(make_error_result "invalid_http_code" "Invalid HTTP status code $http_code" "$http_code")
+
 fi
 
 exit 0
