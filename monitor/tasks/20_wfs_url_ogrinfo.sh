@@ -44,25 +44,25 @@ if [[ $maybe_successful -eq 1 ]]; then
         0)
             echo $(make_ok_result "valid WFS OGR info response (version $version)") ;;
         1)
-            echo $(make_warning_result "service_exception_or_error" \
+            echo $(make_warning_result "Service exception or error" \
                                        "Non fatal error ($ERROR_MESSAGE) with code $ERROR_CODE" \
-                                       "valid WFS OGR info with warning or not fatal error") ;;
+                                       "Valid WFS OGR info with warning or not fatal error") ;;
         2)
-            echo $(make_warning_result "service_exception_or_error" \
-                                       "service_exception_or_error with severity $ERROR_LEVEL ($ERROR_MESSAGE)" \
-                                       "valid WFS OGR info with warning or not fatal error") ;;
+            echo $(make_warning_result "Service exception or error" \
+                                       "Service exception or error ($ERROR_MESSAGE)" \
+                                       "Valid WFS OGR info with warning or not fatal error") ;;
     esac
 else
     case $error_detected in
         0)
-            echo $(make_error_result "invalid_ogrinfo" "Invalid OGR info response") ;;
+            echo $(make_error_result "Invalid ogrinfo response" "Invalid OGR info response") ;;
         1)
             echo $(make_error_result "WFS OGR error" \
                                      "Fatal error ($ERROR_MESSAGE) with code $ERROR_CODE" \
                                      "Invalid WFS OGR info: $ERROR_MESSAGE (code $ERROR_CODE)") ;;
         2)
             echo $(make_warning_result "WFS OGR error" \
-                                       "service_exception_or_error with severity $ERROR_LEVEL ($ERROR_MESSAGE)" \
+                                       "Service exception or error ($ERROR_MESSAGE)" \
                                        "Invalid WFS OGR info: $ERROR_MESSAGE (code $ERROR_CODE)") ;;
     esac
 fi
