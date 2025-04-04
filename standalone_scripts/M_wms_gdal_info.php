@@ -30,7 +30,7 @@ if (!$result) {
 // Render the body HTML
 header('Content-Type: text/html');
 ?>
-
+<div id="M"></div>
 <b style="font-size: 24px;"><a href="/pages/_11_group_by_wms_gdal_info_validity_global.csv">WMS GDAL_INFO RESPONSE</a></b>                             
 <br/><br/>
 <table>
