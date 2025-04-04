@@ -30,7 +30,7 @@ if (!$result) {
 // Render the body HTML
 header('Content-Type: text/html');
 ?>
-
+<div id="D"></div>
 <b style="font-size: 24px;"><a href="/pages/_04_group_by_http_status_code_and_domain.csv">HTTP STATUS CODES by Domain</a></b>
 <br/><br/>
 <table>
