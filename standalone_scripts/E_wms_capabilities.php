@@ -1,3 +1,4 @@
+<?php
 // Get the folder where the script is saved
 $script_dir = dirname(__FILE__);
 $params_file = $script_dir . '/connection_parameters.txt';
