@@ -1,4 +1,3 @@
-  GNU nano 8.1                                                                                                                                                         R_wfs_ogr_info_by_domain.php
 <?php
 // Get the folder where the script is saved
 $script_dir = dirname(__FILE__);
