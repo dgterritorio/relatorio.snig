@@ -167,8 +167,8 @@ namespace eval ::rwdatas {
             }
 
             if {[is_logged]} {
-                set linkobj [$lm create $this "" [dict create en "Estatisticas"] \
-                                                 [list show estatisticas] ""]
+                set linkobj [$lm create $this "" [dict create en "Statistics" pt "Estatisticas"] \
+                                                 [list show statistics] ""]
                 $banner_menu add_link $linkobj
                 set linkobj [$lm create $this "" [dict create en "Connections"] \
                                                  [list displayrep 112] ""]

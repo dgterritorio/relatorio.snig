@@ -47,6 +47,11 @@ namespace eval ::ngis::service {
             set uuid   [dict get $t job uuid]
             if {$status == ""} { break }
             lassign $status exit_status exit_info exit_trace exit_info timestamp task_duration
+
+            # escaping single quotes in exit_info
+
+            set exit_info [string map [list "'" "''"] $exit_info]
+
             lappend values_l "($gid,timezone('$::ngis::TIMEZONE',to_timestamp($timestamp)),'$task','$exit_status','$exit_info','$uuid',$task_duration)"
         }
 
