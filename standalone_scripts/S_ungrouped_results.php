@@ -29,7 +29,7 @@ if (!$result) {
 
 // Render the HTML body
 ?>
-
+<div id="S"></div>
 <b style="font-size: 24px;"><a href="/pages/_00_ungrouped_results.csv">Ungrouped results</a></b>
 <br/><br/>
 <table>
