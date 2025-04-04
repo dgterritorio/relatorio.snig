@@ -30,7 +30,7 @@ if (!$result) {
 // Render the body HTML
 header('Content-Type: text/html');
 ?>
-
+<div id="G"></div>
 <b style="font-size: 24px;"><a href="/pages/_07_group_by_wms_capabilities_validity_and_entity.csv">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</a></b>
 <br/><br/>
 <table>
