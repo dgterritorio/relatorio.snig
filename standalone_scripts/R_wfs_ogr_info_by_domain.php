@@ -30,7 +30,7 @@ if (!$result) {
 // Render the body HTML
 header('Content-Type: text/html');
 ?>
-
+<div id="R"></div>
 <b style="font-size: 24px;"><a href="/pages/_16_group_by_wfs_ogr_info_validity_and_domain.csv">WFS OGR_INFO RESPONSE by Domain</a></b>
 <br/><br/>
 <table>
