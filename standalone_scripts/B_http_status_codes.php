@@ -41,12 +41,40 @@ header('Content-Type: text/html');
         <th>Ping Average</th>
     </tr>
 
+<?php
+$bgColorDefinition = '';
+$bgColorPing = '';
+$definition = '';
+$ping_average = '';
+?>
+
     <?php while ($row = pg_fetch_assoc($result)): ?>
+    
+<?php
+if (str_starts_with(htmlspecialchars($row['definition']), "OK")) {
+    $bgColorDefinition = 'green';
+} else {
+    $bgColorDefinition = 'red';
+}
+    
+if ((str_starts_with(htmlspecialchars($row['definition']), "OK")) && (htmlspecialchars($row['ping_average']) < 1)) {
+    $bgColorPing = 'green';
+}
+ elseif ((str_starts_with(htmlspecialchars($row['definition']), "OK")) && (htmlspecialchars($row['ping_average']) >= 1) && (htmlspecialchars($row['ping_average']) < 2)) {
+    $bgColorPing = 'orange';
+}
+elseif ((str_starts_with(htmlspecialchars($row['definition']), "OK")) && (htmlspecialchars($row['ping_average']) >= 2)) {
+    $bgColorPing = 'red';
+}
+else {
+    $bgColorPing = '';
+}
+?>
         <tr>
             <td><?php echo htmlspecialchars($row['status_code']); ?></td>
-            <td><?php echo htmlspecialchars($row['definition']); ?></td>
+            <td style="background-color: <?php echo $bgColorDefinition; ?>;"><?php echo htmlspecialchars($row['definition']); ?></td>
             <td><?php echo htmlspecialchars($row['count']); ?></td>
-            <td><?php echo htmlspecialchars(number_format((float)$row['ping_average'], 2)); ?></td>
+            <td style="background-color: <?php echo $bgColorPing; ?>;"><?php echo htmlspecialchars(number_format((float)$row['ping_average'], 2)); ?></td>
         </tr>
     <?php endwhile; ?>
 </table>
