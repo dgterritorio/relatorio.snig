@@ -11,21 +11,21 @@
         <headline>Statistics</headline>
         <pagetext>
             <ul>
-                <li><sitereference href="estatisticas#A">HTTP vs HTTPS</sitereference></li>
-                <li><sitereference href="estatisticas#B">HTTP STATUS CODES</sitereference></li>
-                <li><sitereference href="estatisticas#C">HTTP STATUS CODES by Entity</sitereference></li>
-                <li><sitereference href="estatisticas#D">HTTP STATUS CODES by Domain</sitereference></li>
-                <li><sitereference href="estatisticas#E">WMS CAPABILITIES DOCUMENT VALIDITY</sitereference></li>
-                <li><sitereference href="estatisticas#F">WFS CAPABILITIES DOCUMENT VALIDITY</sitereference></li>
-                <li><sitereference href="estatisticas#G">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</sitereference></li>
-                <li><sitereference href="estatisticas#H">WFS CAPABILITIES DOCUMENT VALIDITY by Entity</sitereference></li>
-                <li><sitereference href="estatisticas#I">WMS CAPABILITIES DOCUMENT VALIDITY by Domain</sitereference></li>
-                <li><sitereference href="estatisticas#L">WFS CAPABILITIES DOCUMENT VALIDITY by Domain</sitereference></li>
-                <li><sitereference href="estatisticas#M">WMS GDAL_INFO RESPONSE</sitereference></li>
-                <li><sitereference href="estatisticas#N">WFS OGR_INFO RESPONSE</sitereference></li>
-                <li><sitereference href="estatisticas#O">WMS GDAL_INFO RESPONSE by Entity</sitereference></li>
-                <li><sitereference href="estatisticas#P">WFS OGR_INFO RESPONSE by Entity</sitereference></li>
-                <li><sitereference href="estatisticas#Q">WMS GDAL_INFO RESPONSE by Domain</sitereference></li>
-                <li><sitereference href="estatisticas#R">WFS OGR_INFO RESPONSE by Domain</sitereference></li>
-                <li><sitereference href="estatisticas#S">Ungrouped results</sitereference></li>
+                <li><a href="index.rvt?show=estatisticas#A">HTTP vs HTTPS</a></li>
+                <li><a href="index.rvt?show=estatisticas#B">HTTP STATUS CODES</a></li>
+                <li><a href="index.rvt?show=estatisticas#C">HTTP STATUS CODES by Entity</a></li>
+                <li><a href="index.rvt?show=estatisticas#D">HTTP STATUS CODES by Domain</a></li>
+                <li><a href="index.rvt?show=estatisticas#E">WMS CAPABILITIES DOCUMENT VALIDITY</a></li>
+                <li><a href="index.rvt?show=estatisticas#F">WFS CAPABILITIES DOCUMENT VALIDITY</a></li>
+                <li><a href="index.rvt?show=estatisticas#G">WMS CAPABILITIES DOCUMENT VALIDITY by Entity</a></li>
+                <li><a href="index.rvt?show=estatisticas#H">WFS CAPABILITIES DOCUMENT VALIDITY by Entity</a></li>
+                <li><a href="index.rvt?show=estatisticas#I">WMS CAPABILITIES DOCUMENT VALIDITY by Domain</a></li>
+                <li><a href="index.rvt?show=estatisticas#L">WFS CAPABILITIES DOCUMENT VALIDITY by Domain</a></li>
+                <li><a href="index.rvt?show=estatisticas#M">WMS GDAL_INFO RESPONSE</a></li>
+                <li><a href="index.rvt?show=estatisticas#N">WFS OGR_INFO RESPONSE</a></li>
+                <li><a href="index.rvt?show=estatisticas#O">WMS GDAL_INFO RESPONSE by Entity</a></li>
+                <li><a href="index.rvt?show=estatisticas#P">WFS OGR_INFO RESPONSE by Entity</a></li>
+                <li><a href="index.rvt?show=estatisticas#Q">WMS GDAL_INFO RESPONSE by Domain</a></li>
+                <li><a href="index.rvt?show=estatisticas#R">WFS OGR_INFO RESPONSE by Domain</a></li>
+                <li><a href="index.rvt?show=estatisticas#S">Ungrouped results</a></li>
             </ul>
