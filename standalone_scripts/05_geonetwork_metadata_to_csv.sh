@@ -17,6 +17,16 @@ do
 
     echo "Processing $filename"
 
+
+if xmlstarlet sel -N gmd="http://www.isotc211.org/2005/gmd" \
+                  -N srv="http://www.isotc211.org/2005/srv" \
+                  -t -v "//gmd:identificationInfo/srv:SV_ServiceIdentification" $f 2>/dev/null | grep -q .; then
+    title_xpath="//gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString"
+else
+    title_xpath="//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString"
+fi
+
+
 xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isotc211.org/2005/gco -N gts=http://www.isotc211.org/2005/gts -N srv=http://www.isotc211.org/2005/srv -N gmx=http://www.isotc211.org/2005/gmx \
  -T -t \
  -m "//gmd:fileIdentifier" -v "gco:CharacterString" -o '$' \
@@ -72,7 +82,7 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
  -v "//gmd:referenceSystemInfo[6]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
  -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
  -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
- -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "$title_xpath" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[2]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
