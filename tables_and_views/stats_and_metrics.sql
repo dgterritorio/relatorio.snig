@@ -504,13 +504,30 @@ CREATE OR REPLACE VIEW stats_and_metrics._11_group_by_wms_gdal_info_validity_glo
 CREATE OR REPLACE VIEW stats_and_metrics._12_group_by_wfs_ogr_info_validity_global
  AS
  WITH a AS (
-         SELECT service_status.exit_info AS status_code,
+         SELECT 
+                CASE
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 1.0.0)'::text THEN 'valid WFS OGR info response (version 1.0.0)'::text
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 1.1.0)'::text THEN 'valid WFS OGR info response (version 1.1.0)'::text
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 2.0.0)'::text THEN 'valid WFS OGR info response (version 2.0.0)'::text
+                    WHEN service_status.exit_info = 'Service exception or error'::text THEN 'Service exception or error'::text
+                    WHEN service_status.exit_info ~~ 'Service exception or error (%'::text THEN 'Non fatal exception/error'::text
+                    ELSE service_status.exit_info
+                END AS status_code,		 		 
             service_status.exit_status,
             count(*) AS count,
             avg(service_status.task_duration) AS ping_average
            FROM testsuite.service_status
           WHERE service_status.task::text = 'wfs_ogr_info'::text
-          GROUP BY service_status.exit_info, service_status.exit_status
+          GROUP BY 
+                CASE
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 1.0.0)'::text THEN 'valid WFS OGR info response (version 1.0.0)'::text
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 1.1.0)'::text THEN 'valid WFS OGR info response (version 1.1.0)'::text
+                    WHEN service_status.exit_info = 'valid WFS OGR info response (version 2.0.0)'::text THEN 'valid WFS OGR info response (version 2.0.0)'::text
+                    WHEN service_status.exit_info = 'Service exception or error'::text THEN 'Service exception or error'::text
+                    WHEN service_status.exit_info ~~ 'Service exception or error (%'::text THEN 'Non fatal exception/error'::text
+                    ELSE service_status.exit_info
+                END, 
+		  service_status.exit_status
         ), temp AS (
          SELECT row_number() OVER () AS gid,
             a.status_code,
