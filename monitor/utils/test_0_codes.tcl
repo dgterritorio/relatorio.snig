@@ -24,14 +24,16 @@ package require tdbc::postgres
 package require ngis::servicedb
 package require ngis::conf
 package require ngis::clientio
+# importing Tclx too for its random number generator
+package require Tclx
+package require fileutil
 
 proc ::ngis::out {m} {
     syslog -perror -ident snig -facility user info $m
 }
 
-# drawing on Tclx too for its random number generator
-#
-package require Tclx
+
+# let's seed the random numbers generator
 
 random seed [clock seconds]
 
@@ -46,7 +48,7 @@ set newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from tests
 
 set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul" 
                     "left join testsuite.service_status ss on ss.gid=ul.gid"
-		            "where ss.task = 'url_status_codes' and ss.exit_info != 'Invalid% 0'"}
+		            "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
 
 set fun         http0recs
 set sql         $http0_sql
@@ -56,6 +58,9 @@ set nhours      24
 set ndays       0
 set min_wait    100
 set max_wait    4000
+set script_name [file tail [info script]]
+set lock_file   [file join /tmp ${script_name}.lock]
+set lock_owned  false
 
 if {$argc > 0} {
     set arguments $argv
@@ -67,6 +72,15 @@ if {$argc > 0} {
                 set fun stalerecs
                 set sql $stalerecs_sql
                 ::ngis::out "Check for stale records"
+
+                # attempt a basic lock mechanism to avoid races between overlapping jobs
+
+                if {[file exists $lock_file]} {
+                    ::ngis::out "detected lock file created at [::fileutil::cat $lock_file]. We postpone execution"
+                    exit
+                }
+		        ::fileutil::writeFile $lock_file [clock format [clock seconds]]
+                set lock_owned  true
             }
             --newrecs {
                 set fun newrecs
@@ -108,9 +122,7 @@ if {$argc > 0} {
     }
 }
 
-::ngis::out "Random wait time limits: $min_wait, $max_wait "
-
-
+::ngis::out "Random wait time limits: $min_wait, $max_wait"
 
 # allowing to specify both --ndays and --nhours. If --nhours argument is >= 24
 # we disabled it since it's meant to specify a time lapse in hours within a single day
@@ -167,3 +179,7 @@ $resultset close
 chan close $con
 ::ngis::out "Concluding task with args: $argv"
 
+if {$lock_owned && [file exists $lock_file]} {
+    ::ngis::out "Removing lock file $lock_file"
+    file delete $lock_file
+}

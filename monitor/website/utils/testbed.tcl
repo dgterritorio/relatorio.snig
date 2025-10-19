@@ -10,7 +10,7 @@ package require ngis::configuration
 package require DIO 
 package require dio_Tdbc
 
-source "/home/manghi/apache2/lib/rivet3/rivet-tcl/lempty.tcl"
+source "/usr/lib/tcltk/rivet3/rivet-tcl/lempty.tcl"
 
 ::ngis::configuration readconf dbuser
 ::ngis::configuration readconf dbhost

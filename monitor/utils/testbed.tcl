@@ -25,7 +25,7 @@ package require ngis::procedures
 package require ngis::hrformat
 
 set arguments $argv
-set gid 9000
+set gid 212032
 set eid ""
 while {[llength $arguments]} {
 

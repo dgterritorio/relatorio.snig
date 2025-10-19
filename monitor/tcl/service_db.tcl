@@ -27,7 +27,7 @@ namespace eval ::ngis::service {
     proc exec_sql_query {sql} {
         variable connector
 
-        if {$connector == ""} { 
+        if {$connector == ""} {
             set connector [eval [get_connector]]      
         }
         set sql_st [$connector prepare $sql]
@@ -59,7 +59,7 @@ namespace eval ::ngis::service {
         append sql "VALUES [join $values_l ","] "
         append sql "ON CONFLICT (gid,task) DO UPDATE SET "
         append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
-        append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info, "
+        append sql "exit_status = EXCLUDED.exit_status, exit_info = EXCLUDED.exit_info, "
         append sql "task_duration = EXCLUDED.task_duration"
         ::ngis::logger emit "$sql"
         #puts $sql
@@ -169,11 +169,9 @@ namespace eval ::ngis::service {
         }
         $query_result close
         return -code error -errorcode invalid_gid $result
-
     }
 
     proc entity_service_records_sql {entity {limit ALL} {offset 0}} {
-
         set columns [lmap c [split $::ngis::COLUMN_NAMES ","] {
             list "ul.${c}"
         }]
@@ -188,7 +186,6 @@ namespace eval ::ngis::service {
         }
 
         lappend sql "ORDER BY ul.uri,ul.gid LIMIT $limit OFFSET $offset"
-
         return [join $sql " "]
     }
 

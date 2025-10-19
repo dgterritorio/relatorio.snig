@@ -1,3 +1,8 @@
+2025-10-19 Massimo Manghi <massimo.manghi@gmail.com>
+	* Fixed bug in the cronjob. The record selection query
+	actually disregarded records that failed the congruence
+	test
+
 2024-10-17 Massimo Manghi <massimo.manghi@gmail.com>
 	* Fixed bug in sequence rescheduling
 	* Fixed issue#4 (unwanted files created by curl)

@@ -68,6 +68,7 @@ proc service_info {service_d} {
 proc service_tasks {service_d} {
 
     set css_classes_l {}
+    set task_t {}
     if {[dict exists $service_d tasks]} {
         set tasks_d [dict get $service_d tasks]
         set task_t [lmap t $::ngis::registered_tasks {
