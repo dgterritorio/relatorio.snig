@@ -24,8 +24,6 @@ package require tdbc::postgres
 package require ngis::servicedb
 package require ngis::conf
 package require ngis::clientio
-# importing Tclx too for its random number generator
-package require Tclx
 package require fileutil
 
 proc ::ngis::out {m} {
@@ -35,8 +33,6 @@ proc ::ngis::out {m} {
 
 # let's seed the random numbers generator
 
-random seed [clock seconds]
-
 set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
 ::ngis::clientio query_server $con "FORMAT JSON" 104
 
@@ -44,11 +40,11 @@ set http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.
                "join testsuite.service_status ss on ss.gid = ul.gid where ss.exit_info like 'Invalid% 0'"}
 
 set newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-		            "left join testsuite.service_status ss on ss.gid = ul.gid where ss.gid is null"}
+                    "left join testsuite.service_status ss on ss.gid = ul.gid where ss.gid is null"}
 
 set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul" 
                     "left join testsuite.service_status ss on ss.gid=ul.gid"
-		            "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
+                    "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
 
 set fun         http0recs
 set sql         $http0_sql
@@ -58,10 +54,6 @@ set nhours      24
 set ndays       0
 set min_wait    100
 set max_wait    4000
-set script_name [file tail [info script]]
-set lock_file   [file join /tmp ${script_name}.lock]
-set lock_owned  false
-set dry_run     false
 
 if {$argc > 0} {
     set arguments $argv
@@ -73,15 +65,6 @@ if {$argc > 0} {
                 set fun stalerecs
                 set sql $stalerecs_sql
                 ::ngis::out "Check for stale records"
-
-                # attempt a basic lock mechanism to avoid races between overlapping jobs
-
-                if {[file exists $lock_file]} {
-                    ::ngis::out "detected lock file created at [::fileutil::cat $lock_file]. We postpone execution"
-                    exit
-                }
-		        ::fileutil::writeFile $lock_file [clock format [clock seconds]]
-                set lock_owned  true
             }
             --newrecs {
                 set fun newrecs
@@ -115,9 +98,6 @@ if {$argc > 0} {
             --max-wait {
                 set arguments [lassign $arguments max_wait]
             }
-            --dry-run {
-                set dry_run true
-            }
             default {
                 ::ngis::out "Unrecognized argument '$a'"
             }
@@ -138,8 +118,8 @@ if {$ndays > 0} {
 
 if {($fun == "stalerecs") || ($fun == "http0recs")} {
     if {$nhours > 0} {
-	    lappend sql "and ss.ts < NOW() - INTERVAL '$nhours hours'"
-	}
+        lappend sql "and ss.ts < NOW() - INTERVAL '$nhours hours'"
+    }
     lappend sql "order by ss.ts"
 }
 if {$limit != 0} { lappend sql "LIMIT $limit" }
@@ -149,44 +129,27 @@ set sql [join [subst $sql] " "]
 ::ngis::out "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
-# setting up the random number generator
-
-set delta_t [expr $max_wait - $min_wait]
 set nrecs 0
-while {[$resultset nextdict service_d]} {
-    dict with service_d {
-        if {![info exists description]} { set description "" }
-        ::ngis::out "check service with gid $gid ($description)"
-        if {$dry_run} {
-            after 1000
-        } else { 
-            ::ngis::clientio query_server $con "CHECK $gid" 102
-        }
-        set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
-        set njobs [dict get $returned_message_d njobs]
-        while {$njobs > $max_jobs_n} {
-            if {[catch {
-                after 2000
-                set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
-                set njobs [dict get $returned_message_d njobs]
-                #::ngis::out "$njobs current jobs"
-            } e einfo]} {
-                ::ngis::out "error $e in JOBLIST server command"
-            }
-        }
-    }
-    incr nrecs
 
-    after [expr $min_wait + [random $delta_t]]
-}
-
-::ngis::out "$nrecs records processed for function $fun"
-
+set allrows [$resultset allrows]
+set gids [lmap r $allrows { dict get $r gid }]
 $resultset close
-chan close $con
-::ngis::out "Concluding task with args: $argv"
 
-if {$lock_owned && [file exists $lock_file]} {
-    ::ngis::out "Removing lock file $lock_file"
-    file delete $lock_file
+puts "gids: $gids"
+
+set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
+set njobs [dict get $returned_message_d njobs]
+
+if {$njobs > 0} {
+    ::ngis::out "Monitor busy: refusing to start more jobs"
+    exit
 }
+
+::ngis::out "checking [llength $gids] services"
+::ngis::clientio query_server $con "CHECK $gids" 102
+
+::ngis::out "[llength $gids] records check launched for function '$fun'"
+
+chan close $con
+::ngis::out "Concluding task '[file tail [info script]]' with args: $argv"
+

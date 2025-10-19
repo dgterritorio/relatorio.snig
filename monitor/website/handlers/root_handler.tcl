@@ -145,7 +145,7 @@ namespace eval ::rwdatas {
                 $banner_menu destroy
             }
 
-            set home_link [$::rivetweb::linkmodel create $this "" [dict create en "Home" pt "Home"] \
+            set home_link [$::rivetweb::linkmodel create $this "" [dict create en "Home" pt "Página inicial"] \
                                                                "" [dict create en "SNIG Homepage"]]
             set banner_menu [::rwmenu::RWMenu ::rwmenu::#auto "banner" root normal]
             $banner_menu assign title "" ""
@@ -170,19 +170,19 @@ namespace eval ::rwdatas {
                 set linkobj [$lm create $this "" [dict create en "Statistics" pt "Estatisticas"] \
                                                  [list show statistics] ""]
                 $banner_menu add_link $linkobj
-                set linkobj [$lm create $this "" [dict create en "Connections"] \
+                set linkobj [$lm create $this "" [dict create en "Active Connections" pt "Conexões ativas"] \
                                                  [list displayrep 112] ""]
                 $banner_menu add_link $linkobj
-                set linkobj [$lm create $this "" [dict create en "Jobs"] \
+                set linkobj [$lm create $this "" [dict create en "Jobs" pt "Tarefas"] \
                                                  [list displayrep 114] ""]
                 $banner_menu add_link $linkobj
-                set linkobj [$lm create $this "" [dict create en "Create User"] \
+                set linkobj [$lm create $this "" [dict create en "Create User" pt "Criar Utilizador"] \
                                                  [list newuser 1] ""]
                 $banner_menu add_link $linkobj
-                set linkobj [$lm create $this "" [dict create en "Users List"] \
+                set linkobj [$lm create $this "" [dict create en "User List" pt "Lista de Utilizadores"] \
                                                  [list userlist 1] ""]
                 $banner_menu add_link $linkobj
-                set linkobj [$lm create $this "" [dict create en "Logout"] \
+                set linkobj [$lm create $this "" [dict create en "Logout" pt "Sair"] \
                                                  [list logout 1] ""]
                 $banner_menu add_link $linkobj
             }
