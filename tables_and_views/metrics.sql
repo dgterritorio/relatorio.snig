@@ -21,24 +21,7 @@ CREATE OR REPLACE VIEW metrics._02_group_by_http_status_code_global AS
 WITH base AS (
   SELECT
     ss.gid, (SELECT ul.eid FROM testsuite.uris_long as ul WHERE ul.gid=ss.gid) AS eid,
-    CASE
-      WHEN ss.exit_info = 'Curl got nothing from the server' THEN 'Empty response'
-      WHEN ss.exit_info = 'An error occurred during the SSL/TLS handshake' THEN 'SSL error'
-      WHEN ss.exit_info LIKE 'http_status_code: 200%' THEN '200'
-      WHEN ss.exit_info = 'Invalid HTTP status code 0' THEN 'Status code 0'
-      WHEN ss.exit_info = 'Failure in receiving network data' THEN 'Network error'
-      WHEN ss.exit_info = 'Failed to connect to host' THEN 'Cannot connect to host'
-      WHEN ss.exit_info = 'Peer certificate cannot be authenticated with known CA certificates' THEN 'Certificates error'
-      WHEN ss.exit_info LIKE 'Success with http code 200 after redir%' THEN '200 after 301/302 redirect'
-      WHEN ss.exit_info IN ('Invalid HTTP status code 301 after redir',
-                         'Invalid HTTP status code 302 after redir')
-        THEN 'Error HTTP status code after redirect'
-      WHEN ss.exit_info LIKE 'Invalid HTTP status code%'
-           AND ss.exit_info NOT IN ('Invalid HTTP status code 301 after redir',
-                                 'Invalid HTTP status code 302 after redir')
-        THEN COALESCE(NULLIF(SUBSTRING(ss.exit_info FROM '(\d{3})$'), ''), ss.exit_info)
-      ELSE ss.exit_info
-    END AS status_code,
+    testsuite.exit_info_map(ss.exit_info) as status_code,
     ss.task_duration FROM testsuite.service_status AS ss
     WHERE ss.task = 'url_status_codes'
 ),
@@ -49,35 +32,6 @@ agg AS (
   FROM base
   GROUP BY eid,status_code
 ),
-labels(code, definition) AS (
-  VALUES
-    ('Empty response','Empty response'),
-    ('SSL error','SSL error'),
-    ('000','Timeout'),
-    ('URL status code check failed on a 20 secs timeout error','Timeout'),
-    ('200','OK'),
-    ('200 after 301/302 redirect','OK after redirect'),
-    ('201','Created'),
-    ('202','Accepted'),
-    ('204','No Content'),
-    ('301','Moved Permanently'),
-    ('302','Found'),
-    ('Error HTTP status code after redirect','Error after redirect'),
-    ('400','Bad Request'),
-    ('401','Unauthorized'),
-    ('403','Forbidden'),
-    ('404','Not Found'),
-    ('500','Internal Server Error'),
-    ('502','Bad Gateway'),
-    ('503','Service Unavailable'),
-    ('504','Gateway Timeout'),
-    ('499','Client Closed Request'),
-    ('Error resolving the URL host name','Hostname unknown'),
-    ('Network error','Network error'),
-    ('Cannot connect to host','Cannot connect to host'),
-    ('Certificates error','Certificates error'),
-    ('Status code 0','To be investigated')
-),
 ranked AS (
   SELECT
     a.eid,
@@ -87,8 +41,421 @@ ranked AS (
     a.count,
     a.ping_average
   FROM agg a
-  LEFT JOIN labels l ON l.code = a.status_code
+  LEFT JOIN LATERAL testsuite.labels() l ON l.code = a.status_code
 )
 SELECT eid, rid, status_code, definition, count, ping_average FROM ranked ORDER BY eid, count DESC;
 
 
+-- Count the URLs by they http status code and group also by domain
+CREATE OR REPLACE VIEW metrics._04_group_by_http_status_code_and_domain
+ AS
+ WITH a AS (
+         SELECT
+            c.eid, testsuite.exit_info_map(b.exit_info) AS status_code,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'url_status_codes'::text
+          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))),
+                   status_code
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.uri_domain,
+            a.status_code,
+            l.definition as status_code_definition,
+            a.count,
+            a.ping_average
+           FROM a LEFT JOIN LATERAL testsuite.labels() l on l.code = a.status_code
+        )
+ SELECT rid, eid,
+    uri_domain,
+    status_code,
+    status_code_definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
+
+
+-- Count the URLs by they WMS and WFS Capabilities document validity 
+CREATE OR REPLACE VIEW metrics._05_group_by_wms_capabilities_validity_global
+ AS
+ WITH a AS (
+         SELECT
+            ul.eid,
+			ss.exit_info AS status_code,
+			ss.exit_status,
+            count(*) AS count,
+			avg(ss.task_duration) AS ping_average
+          FROM testsuite.service_status AS ss
+          JOIN testsuite.uris_long AS ul ON ss.gid = ul.gid
+          WHERE ss.task::text = 'wms_capabilities'::text
+          GROUP BY ul.eid, ss.exit_info, ss.exit_status
+        ), temp AS (
+         SELECT a.eid, row_number() OVER () AS rid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY eid, count desc;
+
+
+CREATE OR REPLACE VIEW metrics._06_group_by_wfs_capabilities_validity_global
+ AS
+ WITH a AS (
+         SELECT
+            ul.eid,
+			ss.exit_info AS status_code,
+			ss.exit_status,
+            count(*) AS count,
+			avg(ss.task_duration) AS ping_average
+          FROM testsuite.service_status AS ss
+          JOIN testsuite.uris_long AS ul ON ss.gid = ul.gid
+          WHERE ss.task::text = 'wfs_capabilities'::text
+          GROUP BY ul.eid, ss.exit_info, ss.exit_status 
+        ), temp AS (
+         SELECT a.eid, row_number() OVER () AS rid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY eid, count desc;
+
+-- Count the URLs by they WMS/WFS Capabilities XML document validity and group also by organization
+CREATE OR REPLACE VIEW metrics._07_group_by_wms_capabilities_validity_and_entity
+ AS
+ WITH a AS (
+         SELECT
+            c.eid,
+			b.exit_info AS status_code,
+			b.exit_status,
+            count(*) AS count,
+			avg(b.task_duration) AS ping_average
+          FROM testsuite.service_status b
+		  JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wms_capabilities'::text
+          GROUP BY c.eid, b.exit_info, b.exit_status 
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY eid, count desc;
+
+CREATE OR REPLACE VIEW metrics._08_group_by_wfs_capabilities_validity_and_entity
+ AS
+ WITH a AS (
+         SELECT
+			b.exit_info AS status_code,
+			b.exit_status,
+			c.eid,
+            count(*) AS count,
+			avg(b.task_duration) AS ping_average
+          FROM testsuite.service_status b
+		  JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wfs_capabilities'::text
+          GROUP BY c.eid, b.exit_status, b.exit_info
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+		    a.eid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid,
+        eid,
+        status_code,
+        definition,
+        count,
+        ping_average
+   FROM temp
+  ORDER BY eid, count desc;
+
+-- Count the URLs by they WMS/WFS Capabilities XML document validity and group also by domain
+CREATE OR REPLACE VIEW metrics._09_group_by_wms_capabilities_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status, c.eid,
+            lower(regexp_replace(regexp_replace(c.uri_original,'^https?://'::text, ''::text),'(:[0-9]+)?/.*$'::text,''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wms_capabilities'::text
+          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original,'^https?://'::text, ''::text),'(:[0-9]+)?/.*$'::text,''::text))), b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
+
+
+CREATE OR REPLACE VIEW metrics._10_group_by_wfs_capabilities_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status, c.eid,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wfs_capabilities'::text
+          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))), b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
+
+
+-- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity 
+CREATE OR REPLACE VIEW metrics._11_group_by_wms_gdal_info_validity_global
+ AS
+ WITH a AS (
+         SELECT ul.eid,ss.exit_info AS status_code,
+            ss.exit_status,
+            count(*) AS count,
+            avg(ss.task_duration) AS ping_average
+           FROM testsuite.service_status AS ss
+           JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
+          WHERE ss.task::text = 'wms_gdal_info'::text
+          GROUP BY ul.eid,ss.exit_info,ss.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid, (SELECT ent.description FROM testsuite.entities AS ent WHERE ent.eid=temp.eid) entity,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY entity, count DESC;
+
+CREATE OR REPLACE VIEW metrics._12_group_by_wfs_ogr_info_validity_global
+ AS
+ WITH a AS (
+        SELECT 
+            ul.eid,
+            CASE
+                WHEN ss.exit_info = 'valid WFS OGR info response (version 1.0.0)'::text THEN 'valid WFS OGR info response (version 1.0.0)'::text
+                WHEN ss.exit_info = 'valid WFS OGR info response (version 1.1.0)'::text THEN 'valid WFS OGR info response (version 1.1.0)'::text
+                WHEN ss.exit_info = 'valid WFS OGR info response (version 2.0.0)'::text THEN 'valid WFS OGR info response (version 2.0.0)'::text
+                WHEN ss.exit_info = 'Service exception or error'::text THEN 'Service exception or error'::text
+                WHEN ss.exit_info ~~ 'Service exception or error (%'::text THEN 'Non fatal exception/error'::text
+                ELSE ss.exit_info
+            END AS status_code,
+            ss.exit_status,
+            count(*) AS count,
+           avg(ss.task_duration) AS ping_average
+           FROM testsuite.service_status AS ss
+           JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
+          WHERE ss.task::text = 'wfs_ogr_info'::text
+          GROUP BY ul.eid,status_code, ss.exit_status
+    ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid, (SELECT ent.description FROM testsuite.entities AS ent WHERE ent.eid=temp.eid) entity,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY entity, count DESC;
+
+-- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by organization
+CREATE OR REPLACE VIEW metrics._13_group_by_wms_gdal_info_validity_and_entity
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status,
+            c.eid,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wms_gdal_info'::text
+          GROUP BY c.eid, b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            (SELECT entities.description FROM testsuite.entities WHERE entities.eid=a.eid) entity,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid,
+    eid,
+    entity,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY entity, count DESC;
+  
+CREATE OR REPLACE VIEW metrics._14_group_by_wfs_ogr_info_validity_and_entity
+    AS
+    WITH a AS (
+         SELECT b.exit_info AS status_code,
+            b.exit_status,
+            c.eid,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b
+             JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wfs_ogr_info'::text
+          GROUP BY c.eid, b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            (SELECT entities.description FROM testsuite.entities WHERE entities.eid=a.eid) entity,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+    SELECT  rid,
+            entity,
+            status_code,
+            definition,
+            count,
+            ping_average
+   FROM temp
+  ORDER BY entity, count DESC;
+
+-- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by domain
+CREATE OR REPLACE VIEW metrics._15_group_by_wms_gdal_info_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            c.eid,
+            b.exit_status,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
+          WHERE b.task::text = 'wms_gdal_info'::text
+          GROUP BY c.eid, uri_domain, b.exit_info, b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
+
+CREATE OR REPLACE VIEW metrics._16_group_by_wfs_ogr_info_validity_and_domain
+ AS
+ WITH a AS (
+         SELECT b.exit_info AS status_code,
+            c.eid,
+            b.exit_status,
+            lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
+            count(*) AS count,
+            avg(b.task_duration) AS ping_average
+           FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
+           WHERE b.task::text = 'wfs_ogr_info'::text
+           GROUP BY c.eid,uri_domain,b.exit_info,b.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS rid,
+            a.eid,
+            a.uri_domain,
+            a.status_code,
+            a.exit_status AS definition,
+            a.count,
+            a.ping_average
+           FROM a
+        )
+ SELECT rid, eid,
+    uri_domain,
+    status_code,
+    definition,
+    count,
+    ping_average
+   FROM temp
+  ORDER BY uri_domain, count DESC;
