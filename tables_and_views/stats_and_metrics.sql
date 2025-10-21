@@ -24,8 +24,8 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
  WITH a AS (
          SELECT
                 CASE
-		    WHEN service_status.exit_info = 'Curl got nothing from the server'::text THEN 'Empty response'::text
-		    WHEN service_status.exit_info = 'An error occurred during the SSL/TLS handshake'::text THEN 'SSL error'::text
+		            WHEN service_status.exit_info = 'Curl got nothing from the server'::text THEN 'Empty response'::text
+		            WHEN service_status.exit_info = 'An error occurred during the SSL/TLS handshake'::text THEN 'SSL error'::text
                     WHEN service_status.exit_info ~~ 'http_status_code: 200%'::text THEN '200'::text
                     WHEN service_status.exit_info = 'Invalid HTTP status code 0'::text THEN 'Status code 0'::text
                     WHEN service_status.exit_info = 'Failure in receiving network data'::text THEN 'Network error'::text
@@ -43,8 +43,8 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
           WHERE service_status.task::text = 'url_status_codes'::text
           GROUP BY (
                 CASE
-		    WHEN service_status.exit_info = 'Curl got nothing from the server'::text THEN 'Empty response'::text
-		    WHEN service_status.exit_info = 'An error occurred during the SSL/TLS handshake'::text THEN 'SSL error'::text
+		            WHEN service_status.exit_info = 'Curl got nothing from the server'::text THEN 'Empty response'::text
+		            WHEN service_status.exit_info = 'An error occurred during the SSL/TLS handshake'::text THEN 'SSL error'::text
                     WHEN service_status.exit_info ~~ 'http_status_code: 200%'::text THEN '200'::text
                     WHEN service_status.exit_info = 'Invalid HTTP status code 0'::text THEN 'Status code 0'::text
                     WHEN service_status.exit_info = 'Failure in receiving network data'::text THEN 'Network error'::text
@@ -60,8 +60,8 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
          SELECT row_number() OVER () AS gid,
             a.status_code,
                 CASE a.status_code
-		    WHEN 'Empty response'::text THEN 'Empty response'::text
-		    WHEN 'SSL error'::text THEN 'SSL error'::text
+                    WHEN 'Empty response'::text THEN 'Empty response'::text
+                    WHEN 'SSL error'::text THEN 'SSL error'::text
                     WHEN '000'::text THEN 'Timeout'::text
                     WHEN 'URL status code check failed on a 20 secs timeout error'::text THEN 'Timeout'::text
                     WHEN '200'::text THEN 'OK'::text
