@@ -31,26 +31,14 @@
 					</header>
 
 				<!-- Menu -->
-                    <?
-                        set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
-                        set ns [$template_o formatters_ns]
-                        if {[dict exists $::rivetweb::pagemenus banner]} {
-                            puts [${ns}::generate_banner $::rivetweb::language [dict get $::rivetweb::pagemenus banner]]
-                        }
+<?
+                    set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+                    set ns [$template_o formatters_ns]
+                    if {[dict exists $::rivetweb::pagemenus banner]} {
+                        puts [${ns}::generate_banner $::rivetweb::language [dict get $::rivetweb::pagemenus banner]]
+                    }
 
-                    ?>
-					<!-- nav id="menu">
-						<ul class="links">
-							<li><a href="index.html">Home</a></li>
-							<li><a href="landing.html">Landing</a></li>
-							<li><a href="generic.html">Generic</a></li>
-							<li><a href="elements.html">Elements</a></li>
-						</ul>
-						<ul class="actions stacked">
-							<li><a href="#" class="button primary fit">Get Started</a></li>
-							<li><a href="#" class="button fit">Log In</a></li>
-						</ul>
-					</nav -->
+?>
 					<div id="main" class="alt">
 
 						<!-- One -->

@@ -5,8 +5,8 @@
 
 package require rwpage
 package require ngis::configuration
-package require DIO 2.0
-package require dio_Tdbc 2.0
+package require DIO
+package require dio_Tdbc
 
 namespace eval ::rwpage {
 
@@ -39,14 +39,16 @@ namespace eval ::rwpage {
             return $dbhandle
         }
 
-
         public method close_dbhandle {} {
             $dbhandle close
             set dbhandle ""
         }
 
-
         public method js {} { }
+
+        public method prepare_page {language argsqs} {
+            $this title $language "[$this key]: [info object class $this]"
+        }
 
         public method prepare {language argsqs} {
             RWPage::prepare $language $argsqs

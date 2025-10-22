@@ -58,8 +58,7 @@ CREATE OR REPLACE VIEW metrics._04_group_by_http_status_code_and_domain
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'url_status_codes'::text
-          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))),
-                   status_code
+          GROUP BY c.eid,uri_domain,status_code
         ), temp AS (
          SELECT row_number() OVER () AS rid,
             a.eid,
@@ -214,7 +213,7 @@ CREATE OR REPLACE VIEW metrics._09_group_by_wms_capabilities_validity_and_domain
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wms_capabilities'::text
-          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original,'^https?://'::text, ''::text),'(:[0-9]+)?/.*$'::text,''::text))), b.exit_info, b.exit_status
+          GROUP BY c.eid,uri_domain, b.exit_info, b.exit_status
         ), temp AS (
          SELECT row_number() OVER () AS rid,
             a.eid,
@@ -246,7 +245,7 @@ CREATE OR REPLACE VIEW metrics._10_group_by_wfs_capabilities_validity_and_domain
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wfs_capabilities'::text
-          GROUP BY c.eid,(lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text))), b.exit_info, b.exit_status
+          GROUP BY c.eid,uri_domain, b.exit_info, b.exit_status
         ), temp AS (
          SELECT row_number() OVER () AS rid,
             a.eid,
