@@ -2,6 +2,7 @@
 # -- ./ngis_conf.tcl
 #
 #
+#
 
 package require ngis::readconf
 
@@ -18,8 +19,8 @@ namespace eval ::ngis::configuration {
 	variable encoding                 "utf-8"                                  ;# Website default character encoding
 	variable service_recs_limit       100                                      ;# Size of the default view of an entity service records
 	variable website                  "http://snig.rivetweb.org:8080"          ;# Website Name
-    variable template                 "forty"				                   ;# Default Template
-    variable administrative_login     "dgt"                                    ;# Administrative login
+    	variable template                 "forty"				   ;# Default Template
+    	variable administrative_login     "dgt"                                    ;# Administrative login
 
 # -- Section dbauth
 #
@@ -36,6 +37,7 @@ namespace eval ::ngis::configuration {
 	variable service_status           "testsuite.service_status"               ;# Service Status Records
 	variable uris_table               "testsuite.uris_long"                    ;# URIs catalog table
 	variable users_table              "testsuite.snig_users"                   ;# SNIG User Table
+    	variable report_queries_schema    "metrics"                                ;# Reporting Queries Schema 
 
 # -- Section network
 #
@@ -46,5 +48,6 @@ namespace eval ::ngis::configuration {
 #
 	variable jquery_root              "http://ngis.rivetweb.org:8080"          ;# Root of the jQuery library
 	variable jquery_uri               "jQuery/jquery.min.js"                   ;# jQuery file name
+
 }
 package provide ngis::configuration 2.1
