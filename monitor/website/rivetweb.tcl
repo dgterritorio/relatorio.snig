@@ -18,13 +18,17 @@ package require ngis::ancillary_io_thread
 package require ngis::ancillary_io
 package require json
 package require ngis::common
+if {[::ngis::configuration::readconf development]} {
+    package require ngis::testhandler
+}
 
 ::rivetweb::init StaticContentFence top -nopkg
 ::rivetweb::init Users   top -nopkg
 ::rivetweb::init Marshal top -nopkg
 ::rivetweb::init Login   top -nopkg
-
-set snig_header [exec /usr/bin/figlet "S.N.I.G."]
+if {[::ngis::configuration::readconf development]} {
+    ::rivetweb::init Tests top -nopkg
+}
 
 set ::rivetweb::handler_script [fileutil::cat [file join $rweb_root tcl before.tcl]]
 

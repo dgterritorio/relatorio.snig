@@ -12,14 +12,17 @@
 <pre><?
     set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
     set ns [$template_o formatters_ns]
+    if {![info exists ::snig_header]} { 
+        set hr [string repeat "-" 132]
+        set snig_header [fileutil::cat [file join $::rivetweb::base_templates monospace monospace_header.txt]]
+    }
 
     set snig_header_l [split $::snig_header "\n"]
-    set padding [string repeat " " 50]
+    set padding       [string repeat " " 50]
     foreach l $snig_header_l {
         puts -nonewline $padding
         puts $l
     }
-    set hr [string repeat "-" 132]
     puts $hr
 ?><div id="headline"><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></div>
 <?= $hr ?></pre>
@@ -38,8 +41,8 @@
 <footer><pre><?
     set handler_class   [[::rwdatas::UrlHandler::current_handler] info class]
     set handler_db_link [::rivet::xml $handler_class [list a href [::rivetweb::composeUrl dbdump 1]]]
-    set development_footer [list [$::rivetweb::current_page key] \
-                                 "template: $::rivetweb::template_key" \
+    set development_footer [list [$::rivetweb::current_page key]        \
+                                 "template: $::rivetweb::template_key"  \
                                  [$::rivetweb::current_page info class] \
                                  $handler_db_link "is logged: [::rwdatas::NGIS::is_logged]" \
                                  "pid: [pid]" [::SESSION id]]

@@ -70,8 +70,6 @@ namespace eval ::rwdatas {
                 }
                 set key snig_login
                 return -code break -errorcode rw_ok
-                #$session_obj store status logged  1
-                #return -code continue -errorcode rw_continue
             }
 
             return -code continue -errorcode rw_continue

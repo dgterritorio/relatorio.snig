@@ -18,3 +18,4 @@ package ifneeded ngis::ancillary_io       1.0 [list source [file join $dir gener
 package ifneeded ngis::webservice         1.0 [list source [file join $dir tcl snig_wsservice.tcl]]
 package ifneeded ngis::content_fence      1.0 [list source [file join $dir handlers static_content_fence.tcl]]
 package ifneeded ngis::users              1.0 [list source [file join $dir handlers users.tcl]]
+package ifneeded ngis::testhandler        1.0 [list source [file join $dir handlers tests.tcl]]
