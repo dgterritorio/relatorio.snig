@@ -41,16 +41,17 @@ namespace eval ::rwpage {
         }
 
         proc print_form {eid} {
-            set form [form [namespace current]::confirm_sub -method     GET \
+            set formdefaults(eid) $eid
+            set form [form [namespace current]::confirm_sub -method     POST \
                                                             -action     [::rivetweb::composeUrl stats $eid] \
-                                                            -defaults   registration \
+                                                            -defaults   formdefaults \
                                                             -enctype    "multipart/form-data"]
 
             $form start
-
-
             set section_keys [lsort -integer [dict keys $sections_d]]
             $form select section -values $section_keys -labels [lmap k $section_keys { dict get $sections_d $k description }]
+            $form hidden eid -value $eid 
+            $form submit submit -value "Confirm Data"
             $form end
             $form destroy
         }
@@ -61,6 +62,9 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language} {
+            set args_s [lmap {k v} [$this url_args] { list $k $v }]
+            puts [::rivet::xml [join $args_s "\n"] pre]
+
             $this print_form $eid
         }
     }
