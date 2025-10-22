@@ -18,6 +18,23 @@ catch {package require Tclx}
 package require Itcl
 package require dio::formatters
 
+# Command ::rivet::lempty is extensively used within this class but it's
+# defined only when we run DIO from mod_rivet. For convenience we load it
+# here if needed
+
+if {[info commands ::rivet::lempty] == ""} {
+
+    namespace eval ::rivet {
+
+        proc lempty {list} {
+            if {[catch {llength $list} len]} { return 0 }
+            return [expr {$len == 0}]
+        }
+
+    }
+
+}
+
 ##set auto_path [linsert $auto_path 0 [file dirname [info script]]]
 
 namespace eval ::DIO {
@@ -31,7 +48,6 @@ proc handle {interface args} {
     }
 
     #puts "interface: $interface ($tdbc_driver)"
-
     set first [lindex $args 0]
     if {![::rivet::lempty $first] && [string index $first 0] != "-"} {
         set obj  [lindex $args 0]
@@ -40,15 +56,22 @@ proc handle {interface args} {
     uplevel \#0 package require dio_$interface
 
     #puts "tdbc: '$tdbc_driver' obj: '$obj' args 3: '$args'"
-
     if {$tdbc_driver == ""} {
 
         # old connectors based on traditional dbms drivers
 
-        return [uplevel \#0 ::DIO::$interface $obj $args]
+        set dio_o [uplevel \#0 ::DIO::$interface $obj $args]
     } else {
-        return [uplevel \#0 ::DIO::$interface $obj $tdbc_driver {*}$args]
+        set dio_o [uplevel \#0 ::DIO::$interface $obj $tdbc_driver {*}$args]
     }
+
+    # the Tdbc driver may rename the drive because we created
+    # a set of equivalence classes among DBMS (eg mariadb,sqlite etc)
+    # therefore the class for the interface passed by the constructor
+    # may not exist and it's ::DIO::Tdbc responsability to create it
+
+    $dio_o create_field_formatter
+    return $dio_o
 }
 
 ##
@@ -57,7 +80,6 @@ proc handle {interface args} {
 ::itcl::class Database {
     constructor {args} {
         eval configure $args
-        set special_fields_formatter [::DIO::formatters::${interface} ::DIO::formatters::#auto]
     }
 
     destructor {
@@ -104,17 +126,17 @@ proc handle {interface args} {
             set elem [lindex $args $i]
 
             switch -- [::string tolower $elem] {
-                "-and" { 
+                "-and" {
                     # -and -- switch to AND-style processing
                     set bool AND 
                 }
 
-                "-or"  { 
+                "-or"  {
                     # -or -- switch to OR-style processing
                     set bool OR 
                 }
 
-                "-table" { 
+                "-table" {
                     # -table -- identify which table the query is about
                     set myTable [lindex $args [incr i]] 
                 }
@@ -399,7 +421,7 @@ proc handle {interface args} {
             return -code error -errorcode missing_keyfield "-keyfield not specified in DIO object"
         }
 
-        set $keyVar   $data(-keyfield)
+        set $keyVar $data(-keyfield)
     }
 
     #
@@ -481,11 +503,11 @@ proc handle {interface args} {
     #
     method update {arrayName args} {
         table_check $args
-        upvar 1 $arrayName $arrayName $arrayName array
+        upvar 1 $arrayName $arrayName $arrayName row_a
 
         set key [makekey $arrayName $myKeyfield]
 
-        set fields [::array names array]
+        set fields [::array names row_a]
         set req [build_update_query array $fields $myTable]
         append req [build_key_where_clause $myKeyfield $key]
 
@@ -618,8 +640,12 @@ proc handle {interface args} {
         return [string "select count(*) from $myTable"]
     }
 
+    public method create_field_formatter {} {
+        set special_fields_formatter [::DIO::formatters::[::string totitle $interface] ::DIO::formatters::#auto]
+    }
+
     protected method set_field_formatter {formatter_class} {
-        $special_fields_formatter destroy
+        if {$special_fields_formatter != ""} { $special_fields_formatter destroy }
         set special_fields_formatter [$formatter_class ::DIO::formatters::#auto]
     }
 
@@ -638,7 +664,7 @@ proc handle {interface args} {
     }
 
     public method makeDBFieldValue {table_name field_name val {convert_to {}}} {
-        return [$this build_special_field $table_name $field_name $val]
+        return [$this build_special_field $table_name $field_name $val $convert_to]
     }
 
     ##
@@ -667,8 +693,7 @@ proc handle {interface args} {
     method host {{string ""}} { return [configure_variable host $string] }
     method port {{string ""}} { return [configure_variable port $string] }
 
-    public variable special_fields_formatter \
-                    [::DIO::formatters::RootFormatter ::DIO::formatters::#auto]
+    public variable special_fields_formatter ""
 
     public variable interface   ""
     public variable errorinfo   ""
@@ -908,4 +933,4 @@ proc handle {interface args} {
 
 } ; ## namespace eval DIO
 
-package provide DIO 2.0
+package provide DIO 1.2.3

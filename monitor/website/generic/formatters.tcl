@@ -2,22 +2,26 @@
 #
 # Copyright 2024 The Apache Software Foundation
 # 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#    Licensed to the Apache Software Foundation (ASF) under one
+#    or more contributor license agreements.  See the NOTICE file
+#    distributed with this work for additional information
+#    regarding copyright ownership.  The ASF licenses this file
+#    to you under the Apache License, Version 2.0 (the
+#    "License"); you may not use this file except in compliance
+#    with the License.  You may obtain a copy of the License at
 #
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing,
+#    software distributed under the License is distributed on an
+#    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#    KIND, either express or implied. See the License for the
+#    specific language governing permissions and limitations
+#    under the License.
 
 namespace eval ::DIO::formatters {
 
-    # ::itcl::class FieldFormatter
+    # ::itcl::class RootFormatter
     #
     # we devolve the role of special field formatter to this
     # class. By design this is more sensible with respect to
@@ -40,6 +44,17 @@ namespace eval ::DIO::formatters {
             dict set special_fields $table_name $field_name $ftype
         }
 
+        public method get_special_fields {table_name} {
+            if {[dict exists $special_fields $table_name]} {
+                return [dict keys [dict get $special_fields $table_name]
+            }
+            return ""
+        }
+
+        public method has_special_fields {table_name} {
+            return [dict exists $special_fields $table_name]
+        }
+
         public method build {table_name field_name val convert_to} {
             if {[dict exists $special_fields $table_name $field_name]} {
                 set field_type [dict get $special_fields $table_name $field_name]
@@ -56,7 +71,7 @@ namespace eval ::DIO::formatters {
             }
         }
 
-    } ; ## ::itcl::class FieldFormatter
+    } ; ## ::itcl::class RootFormatter
 
     ::itcl::class Mysql {
         inherit RootFormatter
@@ -75,12 +90,12 @@ namespace eval ::DIO::formatters {
 
         public method NOW {field_name val convert_to} {
 
-		    # we try to be coherent with the original purpose of this method whose
-		    # goal is endow the class with a uniform way to handle timestamps. 
-		    # E.g.: Package session expects this case to return a timestamp in seconds
-		    # so that differences with timestamps returned by [clock seconds]
-		    # can be done and session expirations are computed consistently.
-		    # (Bug #53703)
+            # we try to be coherent with the original purpose of this method whose
+            # goal endows the class with a uniform way to handle timestamps. 
+            # E.g.: Package session expects this case to return a timestamp in seconds
+            # so that differences with timestamps returned by [clock seconds]
+            # can be done and session expirations are computed consistently.
+            # (Bug #53703)
 
             switch $convert_to {
                 SECS {
@@ -182,7 +197,7 @@ namespace eval ::DIO::formatters {
         }
     }
 
-    ::itcl::class Postgresql {
+    ::itcl::class Postgres {
         inherit RootFormatter
 
         public method DATE {field_name val convert_to} {
