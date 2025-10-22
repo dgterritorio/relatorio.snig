@@ -14,7 +14,7 @@ namespace eval ::rwdatas {
         public method willHandle {arglist keyvar} {
             upvar $keyvar key
  
-            if {[dict exists arglist stats]} {
+            if {[dict exists $arglist stats]} {
                 set key snig_entity_stats
                 return -code break -errorcode rw_code
             }
@@ -22,6 +22,7 @@ namespace eval ::rwdatas {
             return -code continue -errorcode rw_continue
         }
 
+        public method menu_list {page} { return "" }
     }
 }
 package provide ngis::testhandler 1.0
