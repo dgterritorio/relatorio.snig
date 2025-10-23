@@ -61,14 +61,14 @@ namespace eval ::rwdatas {
                 set dbms_driver [::ngis::configuration readconf dbms_driver]
 
                 set dbhandle [attempt_db_connect]
-                set session_obj [Session ::SESSION  -dioObject              $dbhandle   \
-                                                    -debugMode              0           \
-                                                    -gcMaxLifetime          [expr 7200 + 3600]    \
-                                                    -sessionLifetime        [expr 3600 + 3600]    \
-                                                    -sessionRefreshInterval 1800    \
-                                                    -entropyFile            /dev/urandom \
-                                                    -entropyLength          10      \
-                                                    -gcProbability          2       \
+                set session_obj [Session ::SESSION  -dioObject              $dbhandle       \
+                                                    -debugMode              0               \
+                                                    -gcMaxLifetime          [expr 7200 + 3600] \
+                                                    -sessionLifetime        [expr 3600 + 3600] \
+                                                    -sessionRefreshInterval 1800            \
+                                                    -entropyFile            /dev/urandom    \
+                                                    -entropyLength          10              \
+                                                    -gcProbability          2               \
                                                     -sessionTable           "testsuite.rivet_session" \
                                                     -sessionCacheTable      "testsuite.rivet_session_cache" \
                                                     -scrambleCode           [clock format [clock seconds] -format "%S"]]

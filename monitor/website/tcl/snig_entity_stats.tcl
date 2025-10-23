@@ -1,6 +1,7 @@
 package require ngis::page
 package require json
 package require form
+package require ngis::servicedb
 
 namespace eval ::rwpage {
     ::itcl::class EntityStats {
@@ -8,12 +9,19 @@ namespace eval ::rwpage {
         private variable report_n
         private variable eid
         private variable entities_d
-        private variable queries_d
         private variable report_queries_schema
         private variable sections_d
+        private variable views_d
+        private variable results_set
+
+        # variable used to control the output
+        private variable section_range
+        private variable results_a
 
         constructor {key} {SnigPage::constructor $key} {
+            array set results_a {}
             ::ngis::configuration::readconf report_queries_schema
+            set results_set ""
             set entities_d [dict create]
             set views_d    [dict create 0 "_00_ungrouped_results"                           \
                                         1 "_01_group_urls_by_http_protocol"                 \
@@ -40,7 +48,11 @@ namespace eval ::rwpage {
  
         }
 
-        proc print_form {eid} {
+        public method is_authorized {eid} {
+            return true
+        }
+
+        proc entity_query_select_form {eid} {
             set formdefaults(eid) $eid
             set form [form [namespace current]::confirm_sub -method     POST \
                                                             -action     [::rivetweb::composeUrl stats $eid] \
@@ -50,7 +62,8 @@ namespace eval ::rwpage {
             $form start
             set section_keys [lsort -integer [dict keys $sections_d]]
             $form select section -values $section_keys -labels [lmap k $section_keys { dict get $sections_d $k description }]
-            $form hidden eid -value $eid 
+            $form hidden eid -value $eid
+            $form hidden stats -value $eid
             $form submit submit -value "Confirm Data"
             $form end
             $form destroy
@@ -59,13 +72,54 @@ namespace eval ::rwpage {
         public method prepare_page {language argsqs} {
             $this title $language "[$this key]: [info object class $this]"
             set eid [dict get $argsqs stats]
+
+            set args_posted [::rivet::var_post all]
+
+            if {$results_set != ""} {
+                catch { $results_set destroy }
+                set results_set ""
+            }
+            array unset results_a
+
+            if {[dict exists $args_posted section]} {
+                if {[$this is_authorized $eid]} {
+                    set dbhandle [$this get_dbhandle]
+                    set section [dict get $args_posted section]
+                    set section_range [dict get $sections_d $section range]
+
+                    array unset results_a
+                    foreach qi $section_range {
+                        set results_l {}
+                        set sql "SELECT * from ${report_queries_schema}.[dict get $views_d $qi] WHERE eid=$eid"
+                        set results_set [$dbhandle exec $sql]
+                        while {[$results_set next -dict d]} {
+                            lappend results_l $d
+                        }
+                        set results_a($qi) $results_l
+                    }
+                    $this close_dbhandle
+                }
+            }
         }
 
         public method print_content {language} {
             set args_s [lmap {k v} [$this url_args] { list $k $v }]
-            puts [::rivet::xml [join $args_s "\n"] pre]
+            puts [::rivet::xml "URL encoded: [join $args_s \n]" pre]
+            set args_s [lmap {k v} [::rivet::var_post all] { list $k $v }]
+            puts [::rivet::xml "POST encoded: [join $args_s \n]" pre]
+            $this entity_query_select_form $eid
 
-            $this print_form $eid
+            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+            set ns [$template_o formatters_ns]
+
+            if {[llength [array names results_a]] > 0} {
+                foreach qi $section_range {
+                    set rows_l $results_a($qi)
+                    set keys [dict keys [lindex $rows_l 0]]
+                    set table_body_rows [lmap r $rows_l { dict values $r }]
+                    puts [${ns}::mk_table $keys $table_body_rows]
+                }
+            }
         }
     }
 }

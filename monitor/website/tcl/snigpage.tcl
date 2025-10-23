@@ -40,7 +40,7 @@ namespace eval ::rwpage {
         }
 
         public method close_dbhandle {} {
-            $dbhandle close
+            $dbhandle destroy
             set dbhandle ""
         }
 

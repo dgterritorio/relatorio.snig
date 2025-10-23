@@ -30,6 +30,7 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
     }]
     set table_body_html [::rivet::xml [join $table_body_l "\n"] tbody]
     return [::rivet::xml "${table_head_html}\n${table_body_html}" [list table class "table-wrapper" {*}$table_html_attrs]]
+
 }
 
 proc entities_table {rows_l} {
