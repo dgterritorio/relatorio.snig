@@ -28,7 +28,7 @@ WITH base AS (
 agg AS (
   SELECT eid, status_code,
          COUNT(*) AS count,
-         AVG(task_duration) AS ping_average
+         to_char(avg(task_duration)::real,'9990D99') AS ping_average
   FROM base
   GROUP BY eid,status_code
 ),
@@ -53,7 +53,7 @@ CREATE OR REPLACE VIEW metrics._04_group_by_http_status_code_and_domain
         c.eid, testsuite.exit_info_map(b.exit_info) AS status_code,
         lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
         count(*) AS count,
-        avg(b.task_duration) AS ping_average
+        to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
         FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
         WHERE b.task::text = 'url_status_codes'::text
         GROUP BY c.eid,uri_domain,status_code
@@ -85,7 +85,7 @@ CREATE OR REPLACE VIEW metrics._05_group_by_wms_capabilities_validity_global
 			ss.exit_info AS result_message,
 			ss.exit_status AS result_code,
             count(*) AS count,
-			avg(ss.task_duration) AS ping_average
+            to_char(avg(ss.task_duration)::real,'9990D99') AS ping_average
           FROM testsuite.service_status AS ss
           JOIN testsuite.uris_long AS ul ON ss.gid = ul.gid
           WHERE ss.task::text = 'wms_capabilities'::text
@@ -115,7 +115,7 @@ CREATE OR REPLACE VIEW metrics._06_group_by_wfs_capabilities_validity_global
 			ss.exit_info AS result_message,
 			ss.exit_status AS result_code,
             count(*) AS count,
-			avg(ss.task_duration) AS ping_average
+            to_char(avg(ss.task_duration)::real,'9990D99') AS ping_average
           FROM testsuite.service_status AS ss
           JOIN testsuite.uris_long AS ul ON ss.gid = ul.gid
           WHERE ss.task::text = 'wfs_capabilities'::text
@@ -145,7 +145,7 @@ CREATE OR REPLACE VIEW metrics._07_group_by_wms_capabilities_validity_and_entity
 			b.exit_info AS result_message,
 			b.exit_status AS result_code,
             count(*) AS count,
-			avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
           FROM testsuite.service_status b
 		  JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wms_capabilities'::text
@@ -174,7 +174,7 @@ CREATE OR REPLACE VIEW metrics._08_group_by_wfs_capabilities_validity_and_entity
 			b.exit_status AS result_code,
 			c.eid,
             count(*) AS count,
-			avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
           FROM testsuite.service_status b
 		  JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wfs_capabilities'::text
@@ -205,7 +205,7 @@ CREATE OR REPLACE VIEW metrics._09_group_by_wms_capabilities_validity_and_domain
             b.exit_status, c.eid,
             lower(regexp_replace(regexp_replace(c.uri_original,'^https?://'::text, ''::text),'(:[0-9]+)?/.*$'::text,''::text)) AS uri_domain,
             count(*) AS count,
-            avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wms_capabilities'::text
@@ -235,8 +235,8 @@ CREATE OR REPLACE VIEW metrics._10_group_by_wfs_capabilities_validity_and_domain
  WITH a AS (
     SELECT b.exit_info, b.exit_status, c.eid,
        lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
-           count(*) AS count,
-           avg(b.task_duration) AS ping_average
+            count(*) AS count,
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
            WHERE b.task::text = 'wfs_capabilities'::text
            GROUP BY c.eid,uri_domain, b.exit_info, b.exit_status
@@ -266,7 +266,7 @@ CREATE OR REPLACE VIEW metrics._11_group_by_wms_gdal_info_validity_global
          SELECT ul.eid,ss.exit_info,
             ss.exit_status,
             count(*) AS count,
-            avg(ss.task_duration) AS ping_average
+            to_char(avg(ss.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status AS ss
            JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
           WHERE ss.task::text = 'wms_gdal_info'::text
@@ -303,7 +303,7 @@ CREATE OR REPLACE VIEW metrics._12_group_by_wfs_ogr_info_validity_global
             END, 
             ss.exit_status,
             count(*) AS count,
-           avg(ss.task_duration) AS ping_average
+            to_char(avg(ss.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status AS ss
            JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
           WHERE ss.task::text = 'wfs_ogr_info'::text
@@ -333,7 +333,7 @@ CREATE OR REPLACE VIEW metrics._13_group_by_wms_gdal_info_validity_and_entity
             b.exit_status,
             c.eid,
             count(*) AS count,
-            avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wms_gdal_info'::text
@@ -365,7 +365,7 @@ CREATE OR REPLACE VIEW metrics._14_group_by_wfs_ogr_info_validity_and_entity
             b.exit_status,
             c.eid,
             count(*) AS count,
-            avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b
              JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wfs_ogr_info'::text
@@ -398,7 +398,7 @@ CREATE OR REPLACE VIEW metrics._15_group_by_wms_gdal_info_validity_and_domain
             c.eid,
             lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
             count(*) AS count,
-            avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
           WHERE b.task::text = 'wms_gdal_info'::text
           GROUP BY c.eid, uri_domain, b.exit_info, b.exit_status
@@ -421,6 +421,7 @@ CREATE OR REPLACE VIEW metrics._15_group_by_wms_gdal_info_validity_and_domain
    FROM temp
   ORDER BY uri_domain, count DESC;
 
+
 CREATE OR REPLACE VIEW metrics._16_group_by_wfs_ogr_info_validity_and_domain
  AS
  WITH a AS (
@@ -429,7 +430,7 @@ CREATE OR REPLACE VIEW metrics._16_group_by_wfs_ogr_info_validity_and_domain
             c.eid,
             lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
             count(*) AS count,
-            avg(b.task_duration) AS ping_average
+            to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
            FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
            WHERE b.task::text = 'wfs_ogr_info'::text
            GROUP BY c.eid,uri_domain,b.exit_info,b.exit_status

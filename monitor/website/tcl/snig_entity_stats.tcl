@@ -102,10 +102,11 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language} {
-            set args_s [lmap {k v} [$this url_args] { list $k $v }]
-            puts [::rivet::xml "URL encoded: [join $args_s \n]" pre]
-            set args_s [lmap {k v} [::rivet::var_post all] { list $k $v }]
-            puts [::rivet::xml "POST encoded: [join $args_s \n]" pre]
+            #set args_s [lmap {k v} [$this url_args] { list $k $v }]
+            #puts [::rivet::xml "URL encoded: [join $args_s \n]" pre]
+            #set args_s [lmap {k v} [::rivet::var_post all] { list $k $v }]
+            #puts [::rivet::xml "POST encoded: [join $args_s \n]" pre]
+            
             $this entity_query_select_form $eid
 
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
@@ -114,9 +115,10 @@ namespace eval ::rwpage {
             if {[llength [array names results_a]] > 0} {
                 foreach qi $section_range {
                     set rows_l $results_a($qi)
-                    set keys [dict keys [lindex $rows_l 0]]
-                    set table_body_rows [lmap r $rows_l { dict values $r }]
-                    puts [${ns}::mk_table $keys $table_body_rows]
+                    set columns [::ngis::reports::get_report_columns $qi [dict keys [lindex $rows_l 0]]]
+                    set captions [::ngis::reports::get_captions $columns $language]
+                    set table_body_rows [lmap r $rows_l { dict values [dict filter $r key {*}$columns] }]
+                    puts [${ns}::mk_table $captions $table_body_rows]
                 }
             }
         }

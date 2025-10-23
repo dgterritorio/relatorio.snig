@@ -18,6 +18,7 @@ package require ngis::ancillary_io_thread
 package require ngis::ancillary_io
 package require json
 package require ngis::common
+package require ngis::reports
 if {[::ngis::configuration::readconf development]} {
     package require ngis::testhandler
 }
@@ -61,4 +62,6 @@ namespace eval ::ngis {
     set messagebox [MessagePrinter [namespace current]::#auto]
 
 }
+
+::ngis::reports::init
 ::rivet::apache_log_error info "rivetweb.tcl successfully terminates"
