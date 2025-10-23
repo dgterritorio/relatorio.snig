@@ -22,7 +22,6 @@ namespace eval ::rwpage {
             array set results_a {}
             ::ngis::configuration::readconf report_queries_schema
             set results_set ""
-            set entities_d [dict create]
             set views_d    [dict create 0 "_00_ungrouped_results"                           \
                                         1 "_01_group_urls_by_http_protocol"                 \
                                         2 "_02_group_by_http_status_code_global"            \
@@ -62,8 +61,8 @@ namespace eval ::rwpage {
             $form start
             set section_keys [lsort -integer [dict keys $sections_d]]
             $form select section -values $section_keys -labels [lmap k $section_keys { dict get $sections_d $k description }]
-            $form hidden eid -value $eid
-            $form hidden stats -value $eid
+            $form hidden eid    -value $eid
+            $form hidden stats  -value $eid
             $form submit submit -value "Confirm Data"
             $form end
             $form destroy
