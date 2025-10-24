@@ -267,10 +267,10 @@ CREATE OR REPLACE VIEW metrics._11_group_by_wms_gdal_info_validity_global
             ss.exit_status,
             count(*) AS count,
             to_char(avg(ss.task_duration)::real,'9990D99') AS ping_average
-           FROM testsuite.service_status AS ss
-           JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
-          WHERE ss.task::text = 'wms_gdal_info'::text
-          GROUP BY ul.eid,ss.exit_info,ss.exit_status
+            FROM testsuite.service_status AS ss
+            JOIN testsuite.uris_long AS ul ON ul.gid = ss.gid
+            WHERE ss.task::text = 'wms_gdal_info'::text
+            GROUP BY ul.eid,ss.exit_info,ss.exit_status
         ), temp AS (
          SELECT row_number() OVER () AS rid,
             a.eid,
@@ -381,13 +381,14 @@ CREATE OR REPLACE VIEW metrics._14_group_by_wfs_ogr_info_validity_and_entity
            FROM a
         )
     SELECT  rid,
+            eid,
             entity,
             result_code,
             result_message,
             count,
             ping_average
    FROM temp
-  ORDER BY entity, count DESC;
+  ORDER BY eid, count DESC;
 
 -- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by domain
 CREATE OR REPLACE VIEW metrics._15_group_by_wms_gdal_info_validity_and_domain

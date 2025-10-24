@@ -32,23 +32,33 @@ namespace eval ::ngis::reports {
                                      4 [dict create description "WMS GDAL_INFO Response" range [list 13 15]]    \
                                      5 [dict create description "WFS OGR_INFO Response"  range [list 14 16]]]
 
-    variable reports_d [dict create  1 [list url_start count] \
-                                     2 [list status_code status_code_definition count ping_average] \
-                                     4 [list uri_domains status_code status_code_definition count ping_average] \
+    variable table_headers_d [dict create   1   "Protocols" \
+                                            2   "Returned HTTP Status Codes" \
+                                            4   "Returned HTTP Status Codes By Domain/Host Name" \
+                                            5   "WMS Capabilities Test Results" \
+                                            6   "WFS Capabilities Test Results" \
+                                            7   "WMS Capabilities Validity" \
+                                            8   "WFS Capabilities Validity" \
+                                            9   "WMS Capabilities Validity by Domain/Host Name" \
+                                            10  "WMS Capabilities Validity by Domain/Host Name" \
+                                            13  "WMS GDAL Info Response" \
+                                            14  "WFS OGR Info Response" \
+                                            15  "WMS GDAL Info Response by Domain/Host Name" \
+                                            16  "WFS OGR Info Response By Domain/Host Name" \
     ]
+
+
 # status_code dovrebbe in modo consistente essere il risultato 
 # della traduzione della colonna service_status.exit_info
-
-                                     
 
     proc init {} {
         variable captions_d
 
         set captions_en [dict   create \
-                                status_code             "HTTP Status or Error"  \
+                                status_code            "HTTP Status or Error"  \
                                 status_code_definition "Status Code Definition" \
                                 count                  "Count"                  \
-                                ping_average           "Ping Average Response (secs.)" \
+                                ping_average           "Ping Average Time (secs.)" \
                                 uri_domain             "URL Host"               \
                                 result_message         "Result Description"     \
                                 result_code            "Result Code"            \
@@ -75,10 +85,28 @@ namespace eval ::ngis::reports {
     proc get_report_columns {report columns_l} {
         variable reports_d
 
-        if {[dict exists $reports_d $report]} {
-            return [dict get $reports_d $report]
+        if {$report == 1} {
+            return [list url_start count]
+        } elseif {$report == 2} {
+            return [list status_code status_code_definition count ping_average]
+        } elseif {$report == 4} {
+            return [list uri_domain status_code status_code_definition count ping_average]
+        } elseif {$report in [list 9 10 15]} {
+            return [list uri_domain result_code result_message count ping_average]
+        } elseif {$report in [list 5 6 7 8 11 12 13 14 16]} {
+            return [list result_code result_message count ping_average]
+        } else {
+            return $columns_l
         }
-        return $columns_l
+    }
+
+    proc get_table_header {qi} {
+        variable table_headers_d
+
+        if {[dict exists $table_headers_d $qi]} {
+            return [dict get $table_headers_d $qi]
+        }
+        return ""
     }
 
     proc get_section {sect_n} {

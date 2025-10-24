@@ -61,6 +61,9 @@ namespace eval ::ngis {
     set registered_tasks [ancillary::connection_init $ancillary::thread_id]
     set messagebox [MessagePrinter [namespace current]::#auto]
 
+    if {[::ngis::configuration readconf development]} {
+        source utils/dump_stack.tcl
+    }
 }
 
 ::ngis::reports::init

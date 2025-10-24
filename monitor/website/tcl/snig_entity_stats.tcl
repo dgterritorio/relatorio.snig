@@ -51,11 +51,12 @@ namespace eval ::rwpage {
             return true
         }
 
-        proc entity_query_select_form {eid} {
-            set formdefaults(eid) $eid
-            set form [form [namespace current]::confirm_sub -method     POST \
+        proc entity_query_select_form {form_response} {
+            upvar 1 $form_response formdefaults
+
+            set form [form [namespace current]::confirm_sub -method     POST                                \
                                                             -action     [::rivetweb::composeUrl stats $eid] \
-                                                            -defaults   formdefaults \
+                                                            -defaults   formdefaults                        \
                                                             -enctype    "multipart/form-data"]
 
             $form start
@@ -63,7 +64,7 @@ namespace eval ::rwpage {
             $form select section -values $section_keys -labels [lmap k $section_keys { dict get $sections_d $k description }]
             $form hidden eid    -value $eid
             $form hidden stats  -value $eid
-            $form submit submit -value "Confirm Data"
+            $form submit submit -value "Query Data"
             $form end
             $form destroy
         }
@@ -90,9 +91,19 @@ namespace eval ::rwpage {
                     foreach qi $section_range {
                         set results_l {}
                         set sql "SELECT * from ${report_queries_schema}.[dict get $views_d $qi] WHERE eid=$eid"
+                        puts $sql
                         set results_set [$dbhandle exec $sql]
-                        while {[$results_set next -dict d]} {
-                            lappend results_l $d
+                        if {[$results_set error]} {
+
+                        } else {
+                            if {[$results_set numrows] > 0} {
+                                while {[$results_set next -dict d]} {
+                                    lappend results_l $d
+                                }
+                            } else {
+                                #set results_a($qi) "No data"
+                                continue
+                            }
                         }
                         set results_a($qi) $results_l
                     }
@@ -107,7 +118,9 @@ namespace eval ::rwpage {
             #set args_s [lmap {k v} [::rivet::var_post all] { list $k $v }]
             #puts [::rivet::xml "POST encoded: [join $args_s \n]" pre]
             
-            $this entity_query_select_form $eid
+            array set response_post [::rivet::var_post all]
+
+            $this entity_query_select_form response_post
 
             set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
             set ns [$template_o formatters_ns]
@@ -115,10 +128,13 @@ namespace eval ::rwpage {
             if {[llength [array names results_a]] > 0} {
                 foreach qi $section_range {
                     set rows_l $results_a($qi)
-                    set columns [::ngis::reports::get_report_columns $qi [dict keys [lindex $rows_l 0]]]
-                    set captions [::ngis::reports::get_captions $columns $language]
+                    set columns     [::ngis::reports::get_report_columns $qi [dict keys [lindex $rows_l 0]]]
+                    #puts [::rivet::xml "columns = $columns" pre]
+                    set captions    [::ngis::reports::get_captions $columns $language]
                     set table_body_rows [lmap r $rows_l { dict values [dict filter $r key {*}$columns] }]
-                    puts [${ns}::mk_table $captions $table_body_rows]
+                    set top_header "[::ngis::reports::get_table_header $qi] ($qi)"
+                    #puts [::rivet::xml "qi = $qi" pre]
+                    puts [${ns}::mk_table $captions $table_body_rows $top_header]
                 }
             }
         }
