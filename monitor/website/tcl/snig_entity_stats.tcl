@@ -112,6 +112,19 @@ namespace eval ::rwpage {
             }
         }
 
+        private method transform_table {report_n table_rows_l} {
+            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+
+            set ns [$template_o formatters_ns]
+            set transformer ${ns}::report_${report_n}
+
+            if {[info commands $transformer] == ""} {
+                return $table_rows_l
+            } else {
+                return [$transformer $table_rows_l]
+            }
+        }
+
         public method print_content {language} {
             #set args_s [lmap {k v} [$this url_args] { list $k $v }]
             #puts [::rivet::xml "URL encoded: [join $args_s \n]" pre]
@@ -127,11 +140,12 @@ namespace eval ::rwpage {
 
             if {[llength [array names results_a]] > 0} {
                 foreach qi $section_range {
-                    set rows_l $results_a($qi)
+                    set rows_l      $results_a($qi)
                     set columns     [::ngis::reports::get_report_columns $qi [dict keys [lindex $rows_l 0]]]
                     #puts [::rivet::xml "columns = $columns" pre]
                     set captions    [::ngis::reports::get_captions $columns $language]
                     set table_body_rows [lmap r $rows_l { dict values [dict filter $r key {*}$columns] }]
+                    set table_body_rows [$this transform_table $qi $table_body_rows]
                     set top_header "[::ngis::reports::get_table_header $qi] ($qi)"
                     #puts [::rivet::xml "qi = $qi" pre]
                     puts [${ns}::mk_table $captions $table_body_rows $top_header]

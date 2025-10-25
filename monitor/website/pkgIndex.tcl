@@ -5,9 +5,6 @@ package ifneeded ngis::logger             0.1 [list source [file join $dir gener
 package ifneeded ngis::roothandler        1.0 [list source [file join $dir handlers root_handler.tcl]]
 package ifneeded ngis::login              1.0 [list source [file join $dir handlers login.tcl]]
 package ifneeded ngis::page               1.0 [list source [file join $dir tcl snigpage.tcl]]
-package ifneeded DIO                      1.2.3 [list source [file join $dir generic dio.tcl]]
-package ifneeded dio_Tdbc                 1.2.4 [list source [file join $dir generic dio_Tdbc.tcl]]
-package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
 package ifneeded snig::page               1.0 [list source [file join $dir pages snigpage.tcl]]
 package ifneeded snigreport	   			  0.6 [list source [file join $dir utils report.tcl]]
 package ifneeded struct::snigmatrix       2.3 [list source [file join $dir utils matrix.tcl]]
@@ -20,3 +17,8 @@ package ifneeded ngis::content_fence      1.0 [list source [file join $dir handl
 package ifneeded ngis::users              1.0 [list source [file join $dir handlers users.tcl]]
 package ifneeded ngis::testhandler        1.0 [list source [file join $dir handlers tests.tcl]]
 package ifneeded ngis::reports            1.0 [list source [file join $dir generic reports.tcl]]
+
+package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
+package ifneeded DIO                      1.2.3 [list source [file join $dir generic dio.tcl]]
+package ifneeded dio_Tdbc                 1.2.5 [list source [file join $dir generic dio_Tdbc.tcl]]
+

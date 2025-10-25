@@ -1,8 +1,8 @@
 package require ngis::common
 package require ngis::utils
 
-proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_l ""} {table_html_attrs ""}} {
 
+proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_l ""} {table_html_attrs ""}} {
     set nrows       [llength $table_body_rows_l]
     set ncolumns    [llength [lindex $table_body_rows_l 0]]
     if {$html_attributes_l == ""} {
@@ -22,11 +22,7 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
     }
 
     set table_body_l [lmap r $table_body_rows_l r_attr $html_attributes_l {
-        ::rivet::xml [join [lmap e $r c_attr $r_attr {
-
-            ::rivet::xml $e [list td {*}$c_attr]
-
-        }] ""] tr
+        ::rivet::xml [join [lmap e $r c_attr $r_attr {  ::rivet::xml $e [list td {*}$c_attr] }] ""] tr
     }]
     set table_body_html [::rivet::xml [join $table_body_l "\n"] tbody]
     return [::rivet::xml "${table_head_html}\n${table_body_html}" [list table class "table-wrapper" {*}$table_html_attrs]]
