@@ -51,17 +51,15 @@ CREATE OR REPLACE VIEW metrics._04_group_by_http_status_code_and_domain
  WITH a AS (
      SELECT
         c.eid, testsuite.exit_info_map(b.exit_info) AS status_code,
-        c.uri_original,
         lower(regexp_replace(regexp_replace(c.uri_original, '^https?://'::text, ''::text), '(:[0-9]+)?/.*$'::text, ''::text)) AS uri_domain,
         count(*) AS count,
         to_char(avg(b.task_duration)::real,'9990D99') AS ping_average
         FROM testsuite.service_status b JOIN testsuite.uris_long c ON b.gid = c.gid
         WHERE b.task::text = 'url_status_codes'::text
-        GROUP BY c.eid,c.uri_original,uri_domain,status_code
+        GROUP BY c.eid,uri_domain,status_code
     ), temp AS (
      SELECT row_number() OVER () AS rid,
         a.eid,
-        a.uri_original,
         a.uri_domain,
         a.status_code,
         COALESCE(l.definition,'') as status_code_definition,
@@ -70,7 +68,6 @@ CREATE OR REPLACE VIEW metrics._04_group_by_http_status_code_and_domain
        FROM a LEFT JOIN LATERAL testsuite.labels() l on l.code = a.status_code
     )
  SELECT rid, eid,
-    uri_original,
     uri_domain,
     status_code,
     status_code_definition,

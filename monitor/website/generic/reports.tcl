@@ -116,6 +116,12 @@ namespace eval ::ngis::reports {
         }
         return -code error -errorcode invalid_query_section "Invalid Report Query Section"
     }
+    
+    proc get_view {qi} {
+        variable views_d
+
+        return [dict get $views_d $qi]
+    }
 }
 
 

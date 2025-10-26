@@ -8,10 +8,9 @@ namespace eval ::rwpage {
         inherit SnigPage
         private variable report_n
         private variable eid
+        private variable hash
         private variable entities_d
         private variable report_queries_schema
-        private variable sections_d
-        private variable views_d
         private variable results_set
 
         # variable used to control the output
@@ -22,29 +21,6 @@ namespace eval ::rwpage {
             array set results_a {}
             ::ngis::configuration::readconf report_queries_schema
             set results_set ""
-            set views_d    [dict create 0 "_00_ungrouped_results"                           \
-                                        1 "_01_group_urls_by_http_protocol"                 \
-                                        2 "_02_group_by_http_status_code_global"            \
-                                        4 "_04_group_by_http_status_code_and_domain"        \
-                                        5 "_05_group_by_wms_capabilities_validity_global"   \
-                                        6 "_06_group_by_wfs_capabilities_validity_global"   \
-                                        7 "_07_group_by_wms_capabilities_validity_and_entity" \
-                                        8 "_08_group_by_wfs_capabilities_validity_and_entity" \
-                                        9 "_09_group_by_wms_capabilities_validity_and_domain" \
-                                       10 "_10_group_by_wfs_capabilities_validity_and_domain" \
-                                       11 "_11_group_by_wms_gdal_info_validity_global"      \
-                                       12 "_12_group_by_wfs_ogr_info_validity_global"       \
-                                       13 "_13_group_by_wms_gdal_info_validity_and_entity"  \
-                                       14 "_14_group_by_wfs_ogr_info_validity_and_entity"   \
-                                       15 "_15_group_by_wms_gdal_info_validity_and_domain"  \
-                                       16 "_16_group_by_wfs_ogr_info_validity_and_domain"]
-
-            set sections_d [dict create 1 [dict create description "HTTP Status Codes"      range [list 1 2 4]] \
-                                        2 [dict create description "WMS Capabilities"       range [list 5 7 9]] \
-                                        3 [dict create description "WFS Capabilities"       range [list 6 8 10]] \
-                                        4 [dict create description "WMS GDAL_INFO Response" range [list 13 15]] \
-                                        5 [dict create description "WFS OGR_INFO Response"  range [list 14 16]]]
- 
         }
 
         public method is_authorized {eid} {
@@ -54,24 +30,31 @@ namespace eval ::rwpage {
         proc entity_query_select_form {form_response} {
             upvar 1 $form_response formdefaults
 
-            set form [form [namespace current]::confirm_sub -method     POST                                \
-                                                            -action     [::rivetweb::composeUrl stats $eid] \
-                                                            -defaults   formdefaults                        \
+            set form [form [namespace current]::confirm_sub -method     POST                                 \
+                                                            -action     [::rivetweb::composeUrl stats $hash] \
+                                                            -defaults   formdefaults                         \
                                                             -enctype    "multipart/form-data"]
 
             $form start
-            set section_keys [lsort -integer [dict keys $sections_d]]
-            $form select section -values $section_keys -labels [lmap k $section_keys { dict get $sections_d $k description }]
-            $form hidden eid    -value $eid
-            $form hidden stats  -value $eid
-            $form submit submit -value "Query Data"
+            set section_keys [lsort -integer [dict keys $::ngis::reports::sections_d]]
+            $form select section -values $section_keys -labels [lmap k $section_keys {
+                dict get $::ngis::reports::sections_d $k description 
+            }]
+            $form hidden statseid   -value $eid
+            $form hidden stats      -value $hash
+            $form submit submit     -value "Query"
             $form end
             $form destroy
         }
 
         public method prepare_page {language argsqs} {
-            $this title $language "[$this key]: [info object class $this]"
-            set eid [dict get $argsqs stats]
+            set dbhandle [$this get_dbhandle]
+            set eid [dict get $argsqs statseid]
+            set hash [dict get $argsqs stats]
+
+            set result_set [$dbhandle list "SELECT description from testsuite.entities where eid=$eid"]
+            lassign $result_set entity_description
+            $this title $language $entity_description
 
             set args_posted [::rivet::var_post all]
 
@@ -83,14 +66,12 @@ namespace eval ::rwpage {
 
             if {[dict exists $args_posted section]} {
                 if {[$this is_authorized $eid]} {
-                    set dbhandle [$this get_dbhandle]
                     set section [dict get $args_posted section]
-                    set section_range [dict get $sections_d $section range]
-
+                    set section_range [dict get [::ngis::reports::get_section $section] range]
                     array unset results_a
                     foreach qi $section_range {
                         set results_l {}
-                        set sql "SELECT * from ${report_queries_schema}.[dict get $views_d $qi] WHERE eid=$eid"
+                        set sql "SELECT * from ${report_queries_schema}.[::ngis::reports::get_view $qi] WHERE eid=$eid"
                         puts $sql
                         set results_set [$dbhandle exec $sql]
                         if {[$results_set error]} {
@@ -107,21 +88,53 @@ namespace eval ::rwpage {
                         }
                         set results_a($qi) $results_l
                     }
-                    $this close_dbhandle
                 }
             }
+            $this close_dbhandle
+        }
+
+        private method report_4 {k v} {
+            set attr ""
+            if {$k == "status_code_definition"} {
+                if {$v != "OK"} {
+                    set attr [list class taskerror]
+                }
+            }
+            return $attr
+        }
+
+        private method report_9 {k v} {
+            if {$k == "result_code"} {
+                switch -nocase $v {
+                    error {
+                        return [list class taskerror]
+                    }
+                    warning {
+                        return [list class taskwarning]
+                    }
+                    ok {
+                        return [list class taskok]
+                    }
+                }
+            }
+            return ""
         }
 
         private method transform_table {report_n table_rows_l} {
-            set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+            set transformer "[namespace current]::report_${report_n}"
 
-            set ns [$template_o formatters_ns]
-            set transformer ${ns}::report_${report_n}
+            # we exploit the Itcl info method in order
+            # to understand if a table transformer exists
 
-            if {[info commands $transformer] == ""} {
-                return $table_rows_l
-            } else {
+            if {$transformer in [$this info function]} {
+                return [lmap r $table_rows_l {
+                    lmap {k v} $r {
+                        $transformer $k $v
+                    }
+                }]
                 return [$transformer $table_rows_l]
+            } else {
+                return $table_rows_l
             }
         }
 
@@ -140,15 +153,17 @@ namespace eval ::rwpage {
 
             if {[llength [array names results_a]] > 0} {
                 foreach qi $section_range {
-                    set rows_l      $results_a($qi)
-                    set columns     [::ngis::reports::get_report_columns $qi [dict keys [lindex $rows_l 0]]]
+                    set columns     [::ngis::reports::get_report_columns $qi [dict keys [lindex $results_a($qi) 0]]]
+                    set rows_l      [lmap r $results_a($qi) { dict filter $r key {*}$columns }]
                     #puts [::rivet::xml "columns = $columns" pre]
-                    set captions    [::ngis::reports::get_captions $columns $language]
-                    set table_body_rows [lmap r $rows_l { dict values [dict filter $r key {*}$columns] }]
-                    set table_body_rows [$this transform_table $qi $table_body_rows]
+
+                    set captions                [::ngis::reports::get_captions $columns $language]
+                    set table_body_attributes   [$this transform_table $qi $rows_l]
+                    set table_body_rows         [lmap r $rows_l { dict values $r }]
                     set top_header "[::ngis::reports::get_table_header $qi] ($qi)"
+
                     #puts [::rivet::xml "qi = $qi" pre]
-                    puts [${ns}::mk_table $captions $table_body_rows $top_header]
+                    puts [${ns}::mk_table $captions $table_body_rows $top_header $table_body_attributes]
                 }
             }
         }

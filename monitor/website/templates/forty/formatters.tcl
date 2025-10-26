@@ -3,6 +3,7 @@ package require ngis::utils
 
 
 proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_l ""} {table_html_attrs ""}} {
+
     set nrows       [llength $table_body_rows_l]
     set ncolumns    [llength [lindex $table_body_rows_l 0]]
     if {$html_attributes_l == ""} {

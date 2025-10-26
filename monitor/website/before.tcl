@@ -7,8 +7,11 @@ if {[::ngis::configuration readconf development]} {
     catch {::ngis::HRFormat destroy }
     catch {::snig_nav_matrix destroy }
     catch {::snig_nav_bar destroy }
-    source ../tcloo/hrformat.tcl
+
+    source [file join [::ngis::configuration readconf snig_server_dir] tcloo hrformat.tcl]
+
     ::rivetweb::RWTemplate::read_formatters templates/monospace $template_o
+
     set template_o [::rivetweb::RWTemplate::template forty]
     ::rivetweb::RWTemplate::read_formatters templates/forty $template_o
 

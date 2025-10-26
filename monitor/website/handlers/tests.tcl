@@ -15,12 +15,30 @@ namespace eval ::rwdatas {
             upvar $keyvar key
  
             # debugging
-            #source generic/map_entity_hash.tcl
+            source generic/map_entity_hash.tcl
             # debugging
+            puts $arglist
+            set arglist [::rivetweb::strip_sticky_args $arglist]
+            if {([dict size $arglist] == 1) && [dict exists $arglist stats]} {
+                set eid [::ngis::entity_hash_map::hash_2_eid [dict get $arglist stats]]
+                if { $eid == "" } {
+                    # invalid entity hash
+                } else {
+                    dict set ::rivetweb::argsqs statseid $eid
+                    set key snig_entity_stats
+                    return -code break -errorcode rw_code
+                }
 
-            if {[dict exists $arglist stats]} {
-                set key snig_entity_stats
-                return -code break -errorcode rw_code
+            } elseif {[::rwdatas::NGIS::is_logged] && [dict exists $arglist statseid]} {
+                set hash [::ngis::entity_hash_map::eid_2_hash [dict get $arglist statseid]]
+                if { $hash == "" } {
+                    # invalid entity id
+                } else {
+                    dict set ::rivetweb::argsqs stats $hash
+                    set key snig_entity_stats
+                    return -code break -errorcode rw_code
+                }
+            
             }
 
             return -code continue -errorcode rw_continue
@@ -28,5 +46,6 @@ namespace eval ::rwdatas {
 
         public method menu_list {page} { return "" }
     }
+
 }
 package provide ngis::testhandler 1.0
