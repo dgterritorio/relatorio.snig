@@ -35,7 +35,7 @@ header('Content-Type: text/html');
 <br/><br/>
 <table>
     <tr>
-        <th>Entity</th>
+        <th>Domain</th>
         <th>Status Code</th>
         <th>Definition</th>
         <th>Count</th>
