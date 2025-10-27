@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<csw:GetRecords
+    xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
+    xmlns:ogc="http://www.opengis.net/ogc"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ows="http://www.opengis.net/ows"
+    outputSchema="http://www.opengis.net/cat/csw/2.0.2"
+    outputFormat="application/xml"
+    version="2.0.2"
+    service="CSW"
+    resultType="results"
+    startPosition="XXX"
+    maxRecords="YYY"
+    xsi:schemaLocation="http://www.opengis.net/cat/csw/2.0.2
+                        http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd">
+
+  <csw:Query typeNames="csw:Record">
+    <csw:ElementSetName>full</csw:ElementSetName>
+    <csw:Constraint version="1.1.0">
+      <ogc:Filter>
+        <ogc:And>
+          <!-- Full-text match (returns all text content) -->
+          <ogc:PropertyIsLike wildCard="%" singleChar="_" escapeChar="\">
+            <ogc:PropertyName>csw:AnyText</ogc:PropertyName>
+            <ogc:Literal>%</ogc:Literal>
+          </ogc:PropertyIsLike>
+
+          <!-- Type filter: only dataset or series -->
+          <ogc:Or>
+            <ogc:PropertyIsEqualTo>
+              <ogc:PropertyName>dc:type</ogc:PropertyName>
+              <ogc:Literal>dataset</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+            <ogc:PropertyIsEqualTo>
+              <ogc:PropertyName>dc:type</ogc:PropertyName>
+              <ogc:Literal>series</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+          </ogc:Or>
+        </ogc:And>
+      </ogc:Filter>
+    </csw:Constraint>
+  </csw:Query>
+</csw:GetRecords>
