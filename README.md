@@ -25,8 +25,10 @@ A collection of scripts to harvest and (health) check the services published at 
 * tcl-tls
 * Tclx
 * pandoc
-* php-cli
-* php-pgsql
+* php*-cli
+* php*-pgsql
+* php*-gd
+* composer (a dependency manager for PHP)
 
 ## Web interface dependencies
 
@@ -37,7 +39,7 @@ A collection of scripts to harvest and (health) check the services published at 
 
 * Install the dependencies: 
 
-apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis
+apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis pandoc composer php8.3-cli php8.3-pgsql php8.3-gd
 
 * System user creation.
 
@@ -151,6 +153,13 @@ systemctl start snig-monitor
 ```
 
 The service will start anyway at boot time
+
+* Enter the "standalone_scripts" folder and install two dependencies with PHP composer
+
+```
+composer require mpdf/mpdf:^8.0
+composer require phpmailer/phpmailer
+```
 
 ## CLI Usage:
 
