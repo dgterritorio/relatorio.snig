@@ -12,6 +12,7 @@
         <pagetext>
             <ul>
                 <li><a href="index.rvt?show=estatisticas#A">HTTP vs HTTPS</a></li>
+                <li><a href="index.rvt?show=estatisticas#A2">HTTP vs HTTPS by Entity</a></li>
                 <li><a href="index.rvt?show=estatisticas#B">HTTP STATUS CODES</a></li>
                 <li><a href="index.rvt?show=estatisticas#C">HTTP STATUS CODES by Entity</a></li>
                 <li><a href="index.rvt?show=estatisticas#D">HTTP STATUS CODES by Domain</a></li>
