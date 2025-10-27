@@ -21,11 +21,16 @@ process_chunk() {
 
     # Unique payload file for this chunk
     local payload_file="download_csw_records_payload_${start}.txt"
+    local payload_file_cdgs="download_csw_records_payload_cdgs_${start}.txt"
 
     # Prepare payload file
     cp "$SCRIPT_DIR/01_download_csw_records_payload_template.txt" "$BASEFOLDER/$payload_file"
+    cp "$SCRIPT_DIR/01_download_csw_records_payload_cdgs_template.txt" "$BASEFOLDER/$payload_file_cdgs"
+
     sed -i 's/XXX/'$start'/' "$BASEFOLDER/$payload_file"
     sed -i 's/YYY/'$step'/' "$BASEFOLDER/$payload_file"
+    sed -i "s/XXX/${start}/" "$BASEFOLDER/$payload_file_cdgs"
+    sed -i "s/YYY/${step}/" "$BASEFOLDER/$payload_file_cdgs"
 
     # Make the HTTP request and save the output
     curl -X POST --header "Content-Type:text/xml;charset=UTF-8" --data @"$BASEFOLDER/$payload_file" \
@@ -37,8 +42,14 @@ process_chunk() {
         "https://snig.dgterritorio.gov.pt/rndg/srv/eng/csw-inspire?request=GetRecords&service=CSW" \
         -o "$BASEFOLDER/CSW_RECORDS/csw_records_inspire_${start}_$((start + step)).xml"
 
+    # Harvest also CDGS catalog
+    curl -X POST --header "Content-Type:text/xml;charset=UTF-8" \
+        --data @"$BASEFOLDER/$payload_file_cdgs" \
+        "https://snig.dgterritorio.gov.pt/rndg/srv/por/csw-cdgs?request=GetRecords&service=CSW" \
+        -o "$BASEFOLDER/CSW_RECORDS/csw_records_cdgs_${start}_$((start + step)).xml"
+
     # Cleanup temporary file
-    rm -f "$BASEFOLDER/$payload_file"
+    rm -f "$BASEFOLDER/$payload_file" "$BASEFOLDER/$payload_file_cdgs"
 }
 
 # Export the function for use with GNU parallel
