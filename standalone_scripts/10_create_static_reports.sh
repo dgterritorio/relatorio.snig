@@ -446,6 +446,6 @@ while IFS="|" read -r gid entity manager email eid; do
 done <<< "$entities"
 
 echo
-echo "Relatorios HTML processados."
+echo "Relatórios HTML processados."
 
 php "$SCRIPT_DIR/11_html_to_pdf.php"
