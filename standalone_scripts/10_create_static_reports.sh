@@ -101,24 +101,24 @@ while IFS="|" read -r gid entity manager email eid; do
     echo "<b>Responsável:</b> ${manager}<br>"
     echo "<b>Endereço E-mail:</b> ${email}<br>"
     echo "<b>Descrição dos testes:</b> Os testes são executados numa ordem especifica, quando um teste de um URL/serviço falhar, o testes seguintes
-	não são executados. O <i>timeout</i> dos testes é de 20 segundos. Os testes executados são: \"<i>congruence</i>\": ***. \"<i>Código de estado HTTP</i>\":
+        não são executados. O <i>timeout</i> dos testes é de 20 segundos. Os testes executados são: \"<i>congruence</i>\": ***. \"<i>Código de estado HTTP</i>\":
         o URL/serviço deve devolver <i>status code</i> 200. \"<i>Validade da resposta ao pedido WMS/WFS GetCapabilities</i>\": o documento XML resultante de pedidos
         standard OGC \"GetCapabilities\" deve ser valido. \"<i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>\": a resposta ao pedido de informações
         feita com as ferramentas \"gdalinfo\" (https://gdal.org/en/stable/programs/gdalinfo.html) e \"ogrinfo\" (https://gdal.org/en/stable/programs/ogrinfo.html)
         não deve conter erros.
-	</div>"
+        </div>"
     } > "$OUTPUT"
 
     echo "<h2>Detalhe dos resultados</h2>" >> "$OUTPUT"
-    echo "<table><tr><th>URL</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração do teste</th></tr>" >> "$OUTPUT"
+    echo "<table><tr><th>SNIG</th><th>URL</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração do teste</th></tr>" >> "$OUTPUT"
 
     psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
-        SELECT b.entity, b.uri, a.task, a.exit_status, a.exit_info, a.task_duration
+        SELECT b.uuid,b.entity, b.uri, a.task, a.exit_status, a.exit_info, a.task_duration
         FROM testsuite.service_status a
         JOIN testsuite.uris_long b ON a.gid = b.gid
         WHERE b.entity = '${entity_esc}'
         ORDER BY entity, uri, task;
-    " | while IFS="|" read -r row_entity row_uri row_task row_exit row_exit_info row_duration; do
+    " | while IFS="|" read -r row_uuid row_entity row_uri row_task row_exit row_exit_info row_duration; do
 
     color=""
     exit_lower=$(echo "$row_exit" | tr '[:upper:]' '[:lower:]')
@@ -130,7 +130,7 @@ while IFS="|" read -r gid entity manager email eid; do
         color="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td>${row_uri}</td><td>${row_task}</td><td style='${color}'>${row_exit}</td><td>${row_exit_info}</td><td>${row_duration}</td></tr>" >> "$OUTPUT"
+        echo "<tr><td><a href=\"https://snig.dgterritorio.gov.pt/rndg/srv/por/catalog.search#/metadata/${row_uuid}\">${row_uuid}</a></td><td>${row_uri}</td><td>${row_task}</td><td style='${color}'>${row_exit}</td><td>${row_exit_info}</td><td>${row_duration}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
@@ -446,6 +446,6 @@ while IFS="|" read -r gid entity manager email eid; do
 done <<< "$entities"
 
 echo
-echo "Relatórios HTML processados."
+echo "Relatorios HTML processados."
 
 php "$SCRIPT_DIR/11_html_to_pdf.php"
