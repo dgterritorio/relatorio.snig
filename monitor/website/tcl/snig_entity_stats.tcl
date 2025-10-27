@@ -1,7 +1,6 @@
 package require ngis::page
 package require json
 package require form
-package require ngis::servicedb
 
 namespace eval ::rwpage {
     ::itcl::class EntityStats {

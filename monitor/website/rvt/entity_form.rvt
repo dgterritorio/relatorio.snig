@@ -1,0 +1,23 @@
+<?
+    # entity_d is a private instance variable of class ViewEntity
+
+
+    array set entity_a $entity_d
+    #::rivet::parray entity_a
+    set form [form [namespace current]::confirm_sub -method     POST        \
+                                                    -action     [::rivetweb::composeUrl viewent $entity_a(eid) \
+                                                                                        fun     entity_update] \
+                                                    -defaults   entity_a    \
+                                                    -enctype    "multipart/form-data"]
+
+    $form start
+    $form hidden eid -value $entity_a(eid)
+?>  <table>
+        <tr><td>Entity</td><td><?= $entity_a(description) ?></td></tr>
+        <tr><td>Email</td><td><? $form email email -size 64 ?></td></tr>
+        <tr><td colspan="2"><input type="submit" value="Update Data" /></td></tr>
+    </table>
+<?
+    $form end
+    $form destroy
+?>

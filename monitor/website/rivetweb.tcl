@@ -19,17 +19,14 @@ package require ngis::ancillary_io
 package require json
 package require ngis::common
 package require ngis::reports
-if {[::ngis::configuration::readconf development]} {
-    package require ngis::testhandler
-}
+package require ngis::entitymap
+package require ngis::entityhandler
 
 ::rivetweb::init StaticContentFence top -nopkg
 ::rivetweb::init Users   top -nopkg
 ::rivetweb::init Marshal top -nopkg
 ::rivetweb::init Login   top -nopkg
-if {[::ngis::configuration::readconf development]} {
-    ::rivetweb::init Tests top -nopkg
-}
+::rivetweb::init Entity  top -nopkg
 
 set ::rivetweb::handler_script [fileutil::cat [file join $rweb_root tcl before.tcl]]
 

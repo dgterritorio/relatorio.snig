@@ -15,10 +15,12 @@ package ifneeded ngis::ancillary_io       1.0 [list source [file join $dir gener
 package ifneeded ngis::webservice         1.0 [list source [file join $dir tcl snig_wsservice.tcl]]
 package ifneeded ngis::content_fence      1.0 [list source [file join $dir handlers static_content_fence.tcl]]
 package ifneeded ngis::users              1.0 [list source [file join $dir handlers users.tcl]]
-package ifneeded ngis::testhandler        1.0 [list source [file join $dir handlers tests.tcl]]
+package ifneeded ngis::entityhandler      1.1 [list source [file join $dir handlers entity.tcl]]
 package ifneeded ngis::reports            1.0 [list source [file join $dir generic reports.tcl]]
-
+package ifneeded ngis::entitymap          1.0 [list source [file join $dir generic map_entity_hash.tcl]]
+#
 package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
 package ifneeded DIO                      1.2.3 [list source [file join $dir generic dio.tcl]]
 package ifneeded dio_Tdbc                 1.2.5 [list source [file join $dir generic dio_Tdbc.tcl]]
+
 

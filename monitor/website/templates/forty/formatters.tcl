@@ -31,7 +31,7 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
 }
 
 proc entities_table {rows_l} {
-    return [mk_table [list "eid" "entity definition" "service record"] $rows_l ""]
+    return [mk_table [list "eid" "Entity Definition" "Services" ""] $rows_l ""]
 }
 
 proc entity_service_recs {rows_l entity_description} {

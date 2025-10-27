@@ -46,6 +46,11 @@ namespace eval ::rwdatas {
             }
         }
 
+        public proc get_dbhandle {} {
+            if {[info exists dbhandle]} { return $dbhandle }
+            return -code error -errorcode undefined_database_handle "Database Handle Undefined"
+        }
+
         public proc get_session_obj {args} {
 
             # the common variable 'session_obj' is used to
