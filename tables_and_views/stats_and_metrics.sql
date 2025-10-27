@@ -18,6 +18,19 @@ ORDER BY url_start
 SELECT row_number() OVER () AS gid, * FROM temp;
 
 
+-- Count the URLs by they http protocol (http vs https vs other) and group also by organization
+CREATE OR REPLACE VIEW stats_and_metrics._01_group_urls_by_http_protocol_and_entity AS
+WITH temp AS 
+(
+SELECT entity, REGEXP_REPLACE("uri_original", ':.*$', '', 'g') AS url_start, 
+count(*) AS count
+FROM testsuite.uris_long
+GROUP BY entity,url_start
+ORDER BY entity,url_start
+)
+SELECT row_number() OVER () AS gid, * FROM temp;
+
+
 -- Count the URLs by they http status code
 CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
  AS
@@ -101,10 +114,6 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
   ORDER BY count DESC;
 
 -- Count the URLs by they http status code and group also by organization
--- View: stats_and_metrics._03_group_by_http_status_code_and_entity
-
--- DROP VIEW stats_and_metrics._03_group_by_http_status_code_and_entity;
-
 CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entity
  AS
  WITH a AS (
@@ -189,11 +198,6 @@ CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entit
     ping_average
    FROM temp
   ORDER BY entity, count DESC;
-
-ALTER TABLE stats_and_metrics._03_group_by_http_status_code_and_entity
-    OWNER TO dgt;
-
-
 
 -- Count the URLs by they http status code and group also by domain
 CREATE OR REPLACE VIEW stats_and_metrics._04_group_by_http_status_code_and_domain
