@@ -1,8 +1,32 @@
 -- Ungrouped results
 CREATE OR REPLACE VIEW stats_and_metrics._00_ungrouped_results AS
-SELECT b.entity,b.uri,a.task,a.exit_status,a.task_duration FROM testsuite.service_status a 
+SELECT 
+    b.entity,
+    b.uri,
+    b.uuid,
+    b.description,
+    a.task,
+    a.exit_status,
+    a.task_duration,
+    a.ts
+FROM testsuite.service_status a
 JOIN testsuite.uris_long b ON a.gid = b.gid
-ORDER BY entity,uri,task
+UNION ALL
+SELECT 
+    b.entity,
+    b.uri,
+    b.uuid,
+    b.description,
+    'http_vs_https' AS task,
+    CASE
+        WHEN b.uri LIKE 'https://%' THEN 'ok'
+        WHEN b.uri LIKE 'http://%' THEN 'warning'
+        ELSE 'error'
+    END AS exit_status,
+    NULL AS task_duration,
+    NULL AS ts
+FROM testsuite.uris_long b
+ORDER BY entity, uri, task;
 
 
 -- Count the URLs by they http protocol (http vs https vs other)
