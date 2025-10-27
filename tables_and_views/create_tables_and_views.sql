@@ -158,3 +158,16 @@ CREATE TABLE IF NOT EXISTS testsuite.uris_long_temp
     uri_original text,
     CONSTRAINT uris_long_temp_pkey PRIMARY KEY (gid)
 );
+
+-- CREATE TABLE TO STORE THE NAME AND EMAIL ADDRESS
+-- OF THE DATASETS/RECORDS MANAGERS OF THE ENTITIES
+CREATE TABLE IF NOT EXISTS testsuite.entities_email_reports
+(
+    gid SERIAL,
+    entity text,
+    manager text,
+    email,
+    services_number integer,
+	eid integer,
+    CONSTRAINT entities_email_reports_pkey PRIMARY KEY (gid)
+);
