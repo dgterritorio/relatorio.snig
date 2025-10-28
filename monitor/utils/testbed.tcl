@@ -1,4 +1,5 @@
-#!/usr/bin/tclsh
+#!/usr/bin/tclsh8.6
+
 # -- testbed.tcl
 #
 #
