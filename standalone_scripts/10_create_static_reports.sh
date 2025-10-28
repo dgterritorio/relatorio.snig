@@ -100,17 +100,26 @@ while IFS="|" read -r gid entity manager email eid; do
     echo "<div class='meta'><b>Entidade:</b> ${entity}<br>"
     echo "<b>Responsável:</b> ${manager}<br>"
     echo "<b>Endereço E-mail:</b> ${email}<br>"
-    echo "<b>Descrição dos testes:</b> Os testes são executados numa ordem especifica, quando um teste de um URL/serviço falhar, o testes seguintes
-        não são executados. O <i>timeout</i> dos testes é de 20 segundos. Os testes executados são: \"<i>congruence</i>\": ***. \"<i>Código de estado HTTP</i>\":
-        o URL/serviço deve devolver <i>status code</i> 200. \"<i>Validade da resposta ao pedido WMS/WFS GetCapabilities</i>\": o documento XML resultante de pedidos
-        standard OGC \"GetCapabilities\" deve ser valido. \"<i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>\": a resposta ao pedido de informações
-        feita com as ferramentas \"gdalinfo\" (https://gdal.org/en/stable/programs/gdalinfo.html) e \"ogrinfo\" (https://gdal.org/en/stable/programs/ogrinfo.html)
-        não deve conter erros.
-        </div>"
+
+    echo "<b>Descrição dos testes:</b> Os testes são executados numa ordem especifica, quando um teste de um URL/serviço falha,
+         os testes seguintes não são executados.<br><br>
+         O <i>timeout</i> dos testes é de 20 segundos, ao fim desse periodo é interrompido o teste para evitar respostas com tempos muito
+         longos e é atribuido erro ao resultado.<br><br>
+         Os testes executados são:<br><br>
+         1) <i>Congruence</i>: Verifica se os URLs dos serviços são formalmente corretos.<br><br>
+         2) <i>Código de estado HTTP</i>: o URL/serviço deve devolver <i>status code</i> 200.<br><br>
+         3) <i>Validade da resposta ao pedido GetCapabilities</i>: o documento XML resultante de pedidos
+         standard OGC WMS/WFS \"GetCapabilities\" deve ser valido.<br><br>
+         4) <i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>: a resposta ao pedido de informações
+         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b>gdalinfo</b></a> e
+         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b>ogrinfo</b></a>
+         não deve conter erros.
+         </div>"
+
     } > "$OUTPUT"
 
     echo "<h2>Detalhe dos resultados</h2>" >> "$OUTPUT"
-    echo "<table><tr><th>SNIG</th><th>URL</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração do teste</th></tr>" >> "$OUTPUT"
+    echo "<table><tr><th>URL do SNIG</th><th>URL do Serviço</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração (segundos)</th></tr>" >> "$OUTPUT"
 
     psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
         SELECT b.uuid,b.entity, b.uri, a.task, a.exit_status, a.exit_info, a.task_duration
