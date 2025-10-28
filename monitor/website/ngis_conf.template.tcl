@@ -37,6 +37,7 @@ namespace eval ::ngis::configuration {
 	variable service_status           "testsuite.service_status"               ;# Service Status Records
 	variable uris_table               "testsuite.uris_long"                    ;# URIs catalog table
 	variable users_table              "testsuite.snig_users"                   ;# SNIG User Table
+    variable entities_email           "testsuite.entities_email_reports"
     variable report_queries_schema    "metrics"                                ;# Reporting Queries Schema 
 
 # -- Section network

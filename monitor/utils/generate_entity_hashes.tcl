@@ -5,7 +5,7 @@
 # Overall utility to generate missing hashes
 #
 
-set auto_path [concat [file join [file dirname [info script]] ".."]]
+set auto_path [concat [file join [file dirname [info script]] ".."] $auto_path]
 
 package require ngis::conf
 package require ngis::servicedb
@@ -13,7 +13,7 @@ package require syslog
 package require md5
 
 proc out {m} {
-    syslog -pid info -ident snig -facility syslog -perror $m
+    syslog -pid -ident snig -facility syslog -perror info $m
 }
 
 
@@ -27,10 +27,15 @@ out "read [llength $entities_l] records"
 
 foreach e $entities_l {
     set eid [dict get $e eid]
-    dict with e {
-        if {![info exists services_number]} { continue }
+    out "examing entitity '$e'"
+    if {![dict exists $e services_number] || ([dict get $e services_number] == 0)} { continue }
+    if {(![dict exists $e hash] || ([string trim [dict get $e hash]] == "")) && [dict exists $e email]} {
 
-        if {![info exists hash] && [info exists email] && ($email != "")} {
+            if {[string trim [dict get $e email]] == ""} {
+                out "invalid or undefined email for entity [dict get $e entity]"
+                continue
+            }
+
             set rf "/dev/urandom"
             set fp [open $rf r]
             chan configure $fp -eofchar "" -buffering none -translation binary -encoding binary
@@ -39,11 +44,10 @@ foreach e $entities_l {
             close $fp
             binary scan $eb h* hexeb
             set hash [string range [::md5::md5 -hex -- $hexeb] 0 15]
-            dict set e hash $hash
             set sql "UPDATE $::ngis::ENTITY_EMAIL SET hash='$hash' WHERE eid=$eid"
-            out $sql
-            #set tdbc_res [::ngis::service exec_sql_query $sql]
-        }
+
+            set tdbc_res [::ngis::service exec_sql_query $sql]
+
     }
 }
 

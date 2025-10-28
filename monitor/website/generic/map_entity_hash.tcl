@@ -2,9 +2,12 @@
 #
 #
 
+package require ngis::conf
+
 namespace eval ::ngis::entity_hash_map {
-    variable hash_d         [dict create DGT 29 SRAAC 35 APA 54]
-    variable hash_reverse_d [concat {*}[lmap {k v} $hash_d { list $v $k }]]
+    # we do some caching here...
+    variable hash_d         [dict create]
+    variable hash_reverse_d [dict create]
     variable entities_d     [dict create]
 
     proc hash_2_eid {hash} {
@@ -12,6 +15,14 @@ namespace eval ::ngis::entity_hash_map {
 
         if {[dict exists $hash_d $hash]} {
             return [dict get $hash_d $hash]
+        } else {
+            set dbhandle [::rwdatas::NGIS::attempt_db_connect]
+            ::ngis::configuration::readconf entities_email
+            if {[$dbms fetch $hash e -table $entities_email -keyfield {hash}]} {
+                dict set hash_d $e(eid) $e(hash)
+                dict set hash_reverse_d $e(hash) $e(eid)
+            }
+            ::rwdatas::NGIS::close_db_connection
         }
         return ""
     }
@@ -21,15 +32,22 @@ namespace eval ::ngis::entity_hash_map {
 
         if {[dict exists $hash_reverse_d $eid]} {
             return [dict get $hash_reverse_d $eid]
+        } else {
+            set dbhandle [::rwdatas::NGIS::attempt_db_connect]
+            ::ngis::configuration::readconf entities_email
+            if {[$dbms fetch $eid e -table $entities_email -keyfield {eid}]} {
+                dict set hash_d $e(eid) $e(hash)
+                dict set hash_reverse_d $e(hash) $e(eid)
+            }
+            ::rwdatas::NGIS::close_db_connection
         }
+
         return ""
     }
 
     proc init {dbhandle} {
         variable entities_d
-        $dbhandle forall "select * from [::ngis::configuration::readconf entities_table]" e {
-            set eid $e(eid)
-            dict set entities_d $eid [array get e]
+        $dbhandle forall "select * from [::ngis::configuration::readconf entities_email]" e {
         }
 
     }
