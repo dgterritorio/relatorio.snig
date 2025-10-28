@@ -17,7 +17,9 @@ $smtp_host      = '192.168.10.70';
 $smtp_port      = 25;
 
 $email_subject  = 'Relatório de funcionamento e qualidade dos serviços publicados no SNIG';
-$email_body     = "Segue em anexo o relatório de funcionamento e qualidade dos serviços publicados no SNIG.\n\nCumprimentos,\nDireção-Geral do Território";
+//$email_body     = "Segue em anexo o relatório de funcionamento e qualidade dos serviços publicados no SNIG.\n\nCumprimentos,\nDireção-Geral do Território";
+$email_body     = "Ex.mo(a) Gestor(a) de Metadados,\n\nNo âmbito do processo de verificação e reporte periódico do funcionamento dos serviços dos conjuntos de dados abertos publicados no Registo Nacional dos Dados Geográficos do SNIG, envia-se em anexo o relatório dos testes de funcionamento e qualidade dos serviços publicados no SNIG pela sua entidade, realizados na presente data.\n\nAgradecemos a sua intervenção em conformidade para corrigir com a maior celeridade possível os eventuais problemas e assim assegurar a utilização dos respetivos serviços publicados de forma contínua e permanente pelos cidadãos, entidades e empresas.\n\nNo caso de verificar que o serviço está a funcionar corretamente e não consiga replicar o erro, agradecemos que nos contacte com a identificação explicita do erro, teste e serviço.\n\nCom os melhores Cumprimentos,\nDireção-Geral do Território";
+
 
 if (!is_dir($report_dir_pdf)) {
     mkdir($report_dir_pdf, 0775, true);
