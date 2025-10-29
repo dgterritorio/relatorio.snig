@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # This script will take the CSV, in \"long\" format, that contains the harvested services URLs
-# and will generate a copy of the same fiel were the URLs have been \"sanitized\" and where the protool version and type
-# are also added, because frequentely the service URLs in metadata are not well written and version and protocal type are
+# and will generate a copy of the same file were the URLs have been \"sanitized\" and where the protocol version and type
+# are also added, because frequentely the service URLs in metadata are not well written and version and protocol type are
 # often not desribed at all
 
 BASEFOLDER="/tmp"
