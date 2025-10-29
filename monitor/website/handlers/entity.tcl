@@ -20,10 +20,10 @@ namespace eval ::rwdatas {
             # debugging
             #source generic/map_entity_hash.tcl
             # debugging
-            #puts $arglist
             set arglist [::rivetweb::strip_sticky_args $arglist]
             if {([dict size $arglist] == 1) && [dict exists $arglist stats]} {
-                set eid [::ngis::entity_hash_map::hash_2_eid [dict get $arglist stats]]
+                set dbhandle [::rwdatas::NGIS::attempt_db_connect]
+                set eid [::ngis::entity_hash_map::hash_2_eid $dbhandle [dict get $arglist stats]]
                 if { $eid == "" } {
                     # invalid entity hash
                 } else {
@@ -31,10 +31,10 @@ namespace eval ::rwdatas {
                     set key snig_entity_stats
                     return -code break -errorcode rw_code
                 }
-
             } elseif {[::rwdatas::NGIS::is_logged]} {
+                set dbhandle [::rwdatas::NGIS::attempt_db_connect]
                 if {[dict exists $arglist statseid]} {
-                    set hash [::ngis::entity_hash_map::eid_2_hash [dict get $arglist statseid]]
+                    set hash [::ngis::entity_hash_map::eid_2_hash $dbhandle [dict get $arglist statseid]]
                     if { $hash == "" } {
                         # invalid entity id
                     } else {
