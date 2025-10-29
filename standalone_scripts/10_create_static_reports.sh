@@ -98,8 +98,8 @@ while IFS="|" read -r gid entity manager email eid; do
 
     echo "<h1>Relatório de funcionamento e qualidade dos URLs e serviços publicados no SNIG,  Sistema Nacional de Informação Geográfica</h1>"
     echo "<div class='meta'><b>Entidade:</b> ${entity}<br>"
-    echo "<b>Responsável:</b> ${manager}<br>"
-    echo "<b>Endereço E-mail:</b> ${email}<br>"
+    #echo "<b>Responsável:</b> ${manager}<br>"
+    #echo "<b>Endereço E-mail:</b> ${email}<br>"
 
     echo "<b>Descrição dos testes:</b> Os testes são executados numa ordem especifica, quando um teste de um URL/serviço falha,
          os testes seguintes não são executados.<br><br>
@@ -107,12 +107,12 @@ while IFS="|" read -r gid entity manager email eid; do
          longos e é atribuido erro ao resultado.<br><br>
          Os testes executados são:<br><br>
          1) <i>Congruence</i>: Verifica se os URLs dos serviços são formalmente corretos.<br><br>
-         2) <i>Código de estado HTTP</i>: o URL/serviço deve devolver <i>status code</i> 200.<br><br>
+         2) <i>Código de estado HTTP</i>: o URL/serviço deve devolver <i>status code</i> 200 (o pedido foi bem sucedido).<br><br>
          3) <i>Validade da resposta ao pedido GetCapabilities</i>: o documento XML resultante de pedidos
-         standard OGC WMS/WFS \"GetCapabilities\" deve ser valido.<br><br>
+         standard OGC WMS/WFS \"<i>GetCapabilities</i>\" deve ser valido.<br><br>
          4) <i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>: a resposta ao pedido de informações
-         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b>gdalinfo</b></a> e
-         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b>ogrinfo</b></a>
+         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> e
+         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a>
          não deve conter erros.
          </div>"
 
