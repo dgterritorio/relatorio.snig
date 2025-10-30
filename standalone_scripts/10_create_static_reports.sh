@@ -113,7 +113,8 @@ while IFS="|" read -r gid entity manager email eid; do
          4) <i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>: a resposta ao pedido de informações
          feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> e
          <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a>
-         não deve conter erros.
+         não deve conter erros.<br><br>
+         A equipa SNIG/INSPIRE.
          </div>"
 
     } > "$OUTPUT"
