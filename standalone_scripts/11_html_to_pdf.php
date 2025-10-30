@@ -12,7 +12,7 @@ $dbport = '5432';
 $report_dir_html = '/tmp';
 $report_dir_pdf  = '/tmp/reports_pdf';
 
-$email_from     = 'rpinho@dgterritorio.pt';
+$email_from     = 'snig@dgterritorio.pt';
 $smtp_host      = '192.168.10.70';
 $smtp_port      = 25;
 
