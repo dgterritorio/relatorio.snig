@@ -12,6 +12,9 @@
 
     $form start
     $form hidden eid -value $entity_a(eid)
+
+    if {![info exists entity_a(hash)]} { set entity_a(hash) "" }
+
 ?>  <table>
         <tr><td>Entity</td><td><?= $entity_a(description) ?></td></tr>
         <tr><td>Email</td><td><? $form email email -size 64 ?></td></tr>
