@@ -66,10 +66,11 @@ namespace eval ::rwpage {
                 set page_text "<b>$e</b> (code $errorCode)"
                 set pobj [::rwpage::RWBasicPage ::#auto $errorCode]
                 set error_page $pobj
-
+                append page_text "<pre>"
                 dict for {k v} $opts {
-                    append page_text "<pre><b>$k</b>: <pre>$v</pre>\n"
+                    append page_text "<b>$k</b>: <b>$v</b>\n"
                 }
+                append page_text "</pre>"
 
                 $pobj pagetext $::rivetweb::language $page_text "Error: $errorCode"
                 set error_page $pobj

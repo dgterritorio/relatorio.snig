@@ -34,14 +34,8 @@ namespace eval ::rwdatas {
             } elseif {[::rwdatas::NGIS::is_logged]} {
                 set dbhandle [::rwdatas::NGIS::attempt_db_connect]
                 if {[dict exists $arglist statseid]} {
-                    set hash [::ngis::entity_hash_map::eid_2_hash $dbhandle [dict get $arglist statseid]]
-                    if { $hash == "" } {
-                        # invalid entity id
-                    } else {
-                        dict set ::rivetweb::argsqs stats $hash
-                        set key snig_entity_stats
-                        return -code break -errorcode rw_code
-                    }
+                    set key snig_entity_stats
+                    return -code break -errorcode rw_code
                 } elseif {[dict exists $arglist viewent]} {
                     set key snig_entity_view
                     return -code break -errorcode rw_code

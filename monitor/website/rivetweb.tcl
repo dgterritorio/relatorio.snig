@@ -63,5 +63,13 @@ namespace eval ::ngis {
     }
 }
 
+set dbhandle [::rwdatas::NGIS::attempt_db_connect]
+set website  [::ngis::configuration::readconf website]
+set hostname [$dbhandle list "SELECT * from testsuite.website_status where hostname='$website'"]
+if {$hostname == ""} {
+    array set global_a [list hostname $website]
+    $dbhandle insert [::ngis::configuration::readconf website_global_status] global_a
+}
+
 ::ngis::reports::init
 ::rivet::apache_log_error info "rivetweb.tcl successfully terminates"

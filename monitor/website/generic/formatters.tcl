@@ -287,4 +287,4 @@ namespace eval ::DIO::formatters {
 
 }; ## namespace eval DIO
 
-package provide dio::formatters 1.0
+package provide dio::formatters 1.1

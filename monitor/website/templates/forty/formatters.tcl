@@ -6,6 +6,7 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
 
     set nrows       [llength $table_body_rows_l]
     set ncolumns    [llength [lindex $table_body_rows_l 0]]
+    set table_head_html ""
     if {$html_attributes_l == ""} {
         set html_attributes_l [lrepeat $nrows [lrepeat $ncolumns ""]]
     }
@@ -17,16 +18,24 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
     }
 
     set captions_html_l [lmap t $table_captions_l { ::rivet::xml $t th }]
-    set table_head_html ""
     if {[llength $captions_html_l] > 0} {
-        set table_head_html "<thead>${top_cap_html}[join $captions_html_l ""]</thead>"
+        set captions_head_html [::rivet::xml [join $captions_html_l ""] tr]
+    } else {
+        set captions_head_html ""
+    }
+
+    if {($top_cap_html != "") || ($table_head_html != "")} {
+        set table_head_html [::rivet::xml [join [list $top_cap_html $captions_head_html] "\n"] thead]
     }
 
     set table_body_l [lmap r $table_body_rows_l r_attr $html_attributes_l {
+        #::ngis::log "tbl row: $r"
+        #::ngis::log "attr row: $r_attr"
+        
         ::rivet::xml [join [lmap e $r c_attr $r_attr {  ::rivet::xml $e [list td {*}$c_attr] }] ""] tr
     }]
     set table_body_html [::rivet::xml [join $table_body_l "\n"] tbody]
-    return [::rivet::xml "${table_head_html}\n${table_body_html}" [list table class "table-wrapper" {*}$table_html_attrs]]
+    return [::rivet::xml [join [list $table_head_html $table_body_html] "\n"] [list table class "table-wrapper" {*}$table_html_attrs]]
 
 }
 

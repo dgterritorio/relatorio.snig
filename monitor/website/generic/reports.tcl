@@ -44,9 +44,7 @@ namespace eval ::ngis::reports {
                                             13  "WMS GDAL Info Response" \
                                             14  "WFS OGR Info Response" \
                                             15  "WMS GDAL Info Response by Domain/Host Name" \
-                                            16  "WFS OGR Info Response By Domain/Host Name" \
-    ]
-
+                                            16  "WFS OGR Info Response By Domain/Host Name"]
 
 # status_code dovrebbe in modo consistente essere il risultato 
 # della traduzione della colonna service_status.exit_info
@@ -55,7 +53,7 @@ namespace eval ::ngis::reports {
         variable captions_d
 
         set captions_en [dict   create \
-                                status_code            "HTTP Status or Error"  \
+                                status_code            "HTTP Status or Error"   \
                                 status_code_definition "Status Code Definition" \
                                 count                  "Count"                  \
                                 ping_average           "Ping Average Time (secs.)" \

@@ -15,9 +15,24 @@
 ?>  <table>
         <tr><td>Entity</td><td><?= $entity_a(description) ?></td></tr>
         <tr><td>Email</td><td><? $form email email -size 64 ?></td></tr>
+        <tr><td>Manager</td><td><? $form text manager -size 64 ?></td></tr>
+        <tr><td>Hash</td><td><?= $entity_a(hash) ?></td></tr>
         <tr><td colspan="2"><input type="submit" value="Update Data" /></td></tr>
-    </table>
-<?
+    </table><?
     $form end
     $form destroy
+
+    if {[info exists entity_a(email)] && ($entity_a(email) != "")} {
+        set form [form [namespace current]::confirm_sub -method     POST        \
+                                                        -action     [::rivetweb::composeUrl viewent $entity_a(eid) \
+                                                                                            fun     regenerate_hash] \
+                                                        -enctype    "multipart/form-data"]
+        $form start
+        $form hidden eid -value $entity_a(eid)
+?>
+        <table><tr><td colspan="2"><input type="submit" value="Regenerate Entity Hash" /></td></tr></table>
+<?
+        $form end
+        $form destroy
+    }
 ?>

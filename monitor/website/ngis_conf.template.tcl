@@ -38,6 +38,7 @@ namespace eval ::ngis::configuration {
 	variable uris_table               "testsuite.uris_long"                    ;# URIs catalog table
 	variable users_table              "testsuite.snig_users"                   ;# SNIG User Table
     variable entities_email           "testsuite.entities_email_reports"
+    variable website_global_status    "testsuite.website_status"
     variable report_queries_schema    "metrics"                                ;# Reporting Queries Schema 
 
 # -- Section network
@@ -50,5 +51,10 @@ namespace eval ::ngis::configuration {
 	variable jquery_root              "http://ngis.rivetweb.org:8080"          ;# Root of the jQuery library
 	variable jquery_uri               "jQuery/jquery.min.js"                   ;# jQuery file name
 
+# -- Email spool
+
+    variable message_files_dir        "/var/lib/snig"                          ;# Temporary directory for messages
+    variable manager_name             "Giovanni Manghi"
+    variable manager_email            "giovanni.manghi@gmail.com"
 }
 package provide ngis::configuration 2.1

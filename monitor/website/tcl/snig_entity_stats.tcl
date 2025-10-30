@@ -14,6 +14,7 @@ namespace eval ::rwpage {
 
         # variable used to control the output
         private variable section_range
+        private variable current_section
         private variable results_a
 
         constructor {key} {SnigPage::constructor $key} {
@@ -22,16 +23,18 @@ namespace eval ::rwpage {
             set results_set ""
         }
 
-        public method is_authorized {eid} {
-            return true
-        }
-
         proc entity_query_select_form {form_response} {
             upvar 1 $form_response formdefaults
 
-            set form [form [namespace current]::confirm_sub -method     POST                                 \
-                                                            -action     [::rivetweb::composeUrl stats $hash] \
-                                                            -defaults   formdefaults                         \
+            if {$hash == ""} {
+                set formurl [::rivetweb::composeUrl statseid $eid]
+            } else {
+                set formurl [::rivetweb::composeUrl stats $hash]
+            }
+
+            set form [form [namespace current]::confirm_sub -method     POST                    \
+                                                            -action     $formurl                \
+                                                            -defaults   formdefaults            \
                                                             -enctype    "multipart/form-data"]
 
             $form start
@@ -39,19 +42,25 @@ namespace eval ::rwpage {
             $form select section -values $section_keys -labels [lmap k $section_keys {
                 dict get $::ngis::reports::sections_d $k description 
             }]
-            $form hidden statseid   -value $eid
-            $form hidden stats      -value $hash
-            $form submit submit     -value "Query"
+            $form submit submit -value "Query"
             $form end
             $form destroy
         }
 
         public method prepare_page {language argsqs} {
             set dbhandle [$this get_dbhandle]
-            set eid [dict get $argsqs statseid]
-            set hash [dict get $argsqs stats]
+            set eid     [dict get $argsqs statseid]
+            set section [::rivet::var_post get section 1]
+            set hash    ""
+            if {[dict exists $argsqs stats]} {
+                set hash [dict get $argsqs stats]
+            }
 
             set result_set [$dbhandle list "SELECT description from testsuite.entities where eid=$eid"]
+            if {$result_set == ""} {
+                return -code error -errorcode invalid_eid "Invalid Entity id"
+            }
+
             lassign $result_set entity_description
             $this title $language $entity_description
 
@@ -62,32 +71,29 @@ namespace eval ::rwpage {
                 set results_set ""
             }
             array unset results_a
+            set current_section ""
 
-            if {[dict exists $args_posted section]} {
-                if {[$this is_authorized $eid]} {
-                    set section [dict get $args_posted section]
-                    set section_range [dict get [::ngis::reports::get_section $section] range]
-                    array unset results_a
-                    foreach qi $section_range {
-                        set results_l {}
-                        set sql "SELECT * from ${report_queries_schema}.[::ngis::reports::get_view $qi] WHERE eid=$eid"
-                        puts $sql
-                        set results_set [$dbhandle exec $sql]
-                        if {[$results_set error]} {
-
-                        } else {
-                            if {[$results_set numrows] > 0} {
-                                while {[$results_set next -dict d]} {
-                                    lappend results_l $d
-                                }
-                            } else {
-                                #set results_a($qi) "No data"
-                                continue
-                            }
+            set current_section [::ngis::reports::get_section $section]
+            set section_range [dict get $current_section range]
+            array unset results_a
+            foreach qi $section_range {
+                set results_l {}
+                set sql "SELECT * from ${report_queries_schema}.[::ngis::reports::get_view $qi] WHERE eid=$eid"
+                #puts $sql
+                set results_set [$dbhandle exec $sql]
+                if {[$results_set error]} {
+                    return -code error -errorcode sql_error "error in SQL query '$sql'" 
+                } else {
+                    if {[$results_set numrows] > 0} {
+                        while {[$results_set next -dict d]} {
+                            lappend results_l $d
                         }
-                        set results_a($qi) $results_l
+                    } else {
+                        #set results_a($qi) "No data"
+                        continue
                     }
                 }
+                set results_a($qi) $results_l
             }
             $this close_dbhandle
         }
@@ -133,7 +139,7 @@ namespace eval ::rwpage {
                 }]
                 return [$transformer $table_rows_l]
             } else {
-                return $table_rows_l
+                return [lrepeat [llength $table_rows_l] ""]
             }
         }
 
@@ -159,11 +165,13 @@ namespace eval ::rwpage {
                     set captions                [::ngis::reports::get_captions $columns $language]
                     set table_body_attributes   [$this transform_table $qi $rows_l]
                     set table_body_rows         [lmap r $rows_l { dict values $r }]
-                    set top_header "[::ngis::reports::get_table_header $qi] ($qi)"
+                    set top_header              "[::ngis::reports::get_table_header $qi] ($qi)"
 
                     #puts [::rivet::xml "qi = $qi" pre]
                     puts [${ns}::mk_table $captions $table_body_rows $top_header $table_body_attributes]
                 }
+            } else {
+                puts [::rivet::xml "No data found for '[dict get $current_section description]'" div]
             }
         }
     }

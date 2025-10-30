@@ -1,0 +1,5 @@
+
+Statistics concerning 'ENTITY_NAME' are now visible at the URL
+
+ ENTITY_STATS_URL
+

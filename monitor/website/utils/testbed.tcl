@@ -6,7 +6,9 @@ if {$dot < 0} {
     set auto_path [concat "." [lreplace $auto_path $dot $dot]]
 }
 
+package require Itcl
 package require ngis::configuration
+package require dio::formatters 1.1
 package require DIO 
 package require dio_Tdbc
 

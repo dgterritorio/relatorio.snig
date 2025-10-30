@@ -19,7 +19,7 @@ package ifneeded ngis::entityhandler      1.1 [list source [file join $dir handl
 package ifneeded ngis::reports            1.0 [list source [file join $dir generic reports.tcl]]
 package ifneeded ngis::entitymap          1.0 [list source [file join $dir generic map_entity_hash.tcl]]
 #
-package ifneeded dio::formatters          1.0 [list source [file join $dir generic formatters.tcl]]
+package ifneeded dio::formatters          1.1 [list source [file join $dir generic formatters.tcl]]
 package ifneeded DIO                      1.2.3 [list source [file join $dir generic dio.tcl]]
 package ifneeded dio_Tdbc                 1.2.5 [list source [file join $dir generic dio_Tdbc.tcl]]
 

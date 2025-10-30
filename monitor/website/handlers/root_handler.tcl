@@ -32,6 +32,9 @@ namespace eval ::rwdatas {
 
         public proc attempt_db_connect {} {
             if {![info exists dbhandle]} {
+                foreach v {dbuser dbhost dbname dbpasswd dbms_driver} {
+                    ::ngis::configuration readconf $v $v
+                }
                 set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
                 set ::dbms      [eval $connectcmd]
                 set dbhandle    $::dbms
@@ -58,13 +61,7 @@ namespace eval ::rwdatas {
             # initialized
 
             if {![info exists session_obj]} {
-
-                foreach v {dbuser dbhost dbname dbpasswd} {
-                    ::ngis::configuration readconf $v $v
-                }
                 set error_page  ""
-                set dbms_driver [::ngis::configuration readconf dbms_driver]
-
                 set dbhandle [attempt_db_connect]
                 set session_obj [Session ::SESSION  -dioObject              $dbhandle       \
                                                     -debugMode              0               \
