@@ -24,6 +24,8 @@ package require tdbc::postgres
 package require ngis::servicedb
 package require ngis::conf
 package require ngis::clientio
+# importing Tclx too for its random number generator
+package require Tclx
 package require fileutil
 
 proc ::ngis::out {m} {
@@ -32,6 +34,8 @@ proc ::ngis::out {m} {
 
 
 # let's seed the random numbers generator
+
+random seed [clock seconds]
 
 set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
 ::ngis::clientio query_server $con "FORMAT JSON" 104
@@ -46,10 +50,14 @@ set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_lo
                     "left join testsuite.service_status ss on ss.gid=ul.gid"
                     "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
 
+# With Tcl9 this should become an immutable variable
+set min_jobs_per_seq 20
+
 set fun         http0recs
 set sql         $http0_sql
 set limit       20
 set max_jobs_n  0
+set jobs_seq_delay 5000
 set nhours      24
 set ndays       0
 set min_wait    100
@@ -92,6 +100,15 @@ if {$argc > 0} {
                 set arguments [lassign $arguments max_jobs_n]
                 ::ngis::out "set maximum concurrent jobs as $max_jobs_n"
             }
+	    --seq-delay {
+		set arguments [lassign $arguments js_delay]
+		if {$js_delay > 0} {
+		    set jobs_seq_delay $js_delay
+		    ::ngis::out "job sequence scheduling delay $jobs_seq_delay"
+		} else {
+		    ::ngis::out "The job sequence scheduling delay must be > 0"
+		}
+	    }
             --min-wait {
                 set arguments [lassign $arguments min_wait]
             }
@@ -129,27 +146,45 @@ set sql [join [subst $sql] " "]
 ::ngis::out "sql: $sql"
 
 set resultset [::ngis::service exec_sql_query $sql]
+# setting up the random number generator
+
+set delta_t [expr $max_wait - $min_wait]
 set nrecs 0
 
 set allrows [$resultset allrows]
-set gids [lmap r $allrows { dict get $r gid }]
-$resultset close
-
-puts "gids: $gids"
+set gids_l [lmap r $allrows { dict get $r gid }]
+::ngis::out "processing gids: $gids_l"
 
 set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
 set njobs [dict get $returned_message_d njobs]
 
-if {$njobs > 0} {
+if {(($fun == "stalerecs") || ($fun == "http0recs")) && ($njobs > 0)} {
     ::ngis::out "Monitor busy: refusing to start more jobs"
     exit
 }
 
-::ngis::out "checking [llength $gids] services"
-::ngis::clientio query_server $con "CHECK $gids" 102
+::ngis::out "checking [llength $gids_l] services"
 
-::ngis::out "[llength $gids] records check launched for function '$fun'"
+if {$max_jobs_n == 0} { set max_jobs_n $min_jobs_per_seq }
+::ngis::out "Creating Job Sequences of $max_jobs_n jobs max"
 
+set njobs_to_process [llength $gids_l]
+while {[llength $gids_l] > 0} {
+    set service_l {}
+    for {set n 0} {($n < $max_jobs_n) && [llength $gids_l]} {incr n} {
+        set gids_l [lassign $gids_l j]
+        lappend service_l $j
+    }
+    if {[llength $service_l]} {
+        ::ngis::clientio query_server $con "CHECK $service_l" 102
+        ::ngis::out "Created Job Sequence for [llength $service_l] jobs"
+    }
+    after $jobs_seq_delay
+}
+
+::ngis::out "$njobs_to_process records processed for function $fun"
+
+$resultset close
 chan close $con
-::ngis::out "Concluding task '[file tail [info script]]' with args: $argv"
+::ngis::out "Concluding task with args: $argv"
 
