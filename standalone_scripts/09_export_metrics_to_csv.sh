@@ -22,3 +22,22 @@ for TABLE in $TABLES; do
 done
 
 echo "Export completed."
+
+cd "$OUTPUT_DIR" || exit 1
+
+ZIP_FILE="estatisticas.zip"
+
+if [ -f "$ZIP_FILE" ]; then
+    echo "Removing existing $ZIP_FILE"
+    rm -f "$ZIP_FILE"
+fi
+
+FILES_TO_ZIP=$(find . -maxdepth 1 -type f -name "_*.csv")
+
+if [ -n "$FILES_TO_ZIP" ]; then
+    echo "Zipping CSV files starting with '_' into $ZIP_FILE"
+    zip "$ZIP_FILE" _*.csv
+    echo "Created $ZIP_FILE successfully."
+else
+    echo "No CSV files starting with '_' found to zip."
+fi
