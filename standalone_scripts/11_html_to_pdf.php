@@ -16,9 +16,17 @@ $email_from     = 'snig@dgterritorio.pt';
 $smtp_host      = '192.168.10.70';
 $smtp_port      = 25;
 
-$email_subject  = 'Relatório de funcionamento e qualidade dos serviços publicados no SNIG';
-//$email_body     = "Segue em anexo o relatório de funcionamento e qualidade dos serviços publicados no SNIG.\n\nCumprimentos,\nDireção-Geral do Território";
-$email_body     = "Ex.mo(a) Senhor(a),\n\nNo âmbito do processo de verificação e reporte periódico do funcionamento dos serviços dos conjuntos de dados abertos publicados no Registo Nacional dos Dados Geográficos do SNIG, envia-se em anexo o relatório dos testes de funcionamento e qualidade dos serviços publicados no SNIG pela sua entidade, realizados na presente data.\n\nAgradecemos a sua intervenção em conformidade para corrigir com a maior celeridade possível os eventuais problemas e assim assegurar a utilização dos respetivos serviços publicados de forma contínua e permanente pelos cidadãos, entidades e empresas.\n\nNo caso de verificar que o serviço está a funcionar corretamente e não consiga replicar o erro, agradecemos que nos contacte com a identificação explicita do erro, teste e serviço.\n\nCom os melhores cumprimentos,\nA equipa SNIG/INSPIRE.";
+
+    setlocale(LC_TIME, 'pt_PT.UTF-8', 'pt_PT', 'pt', 'portuguese');
+    $data_envio = strftime('%e de %B de %Y'); // e.g. "26 de Outubro de 2025"
+
+    if (empty(trim($data_envio)) || $data_envio === ' de ') {
+        $fmt = new IntlDateFormatter('pt_PT', IntlDateFormatter::LONG, IntlDateFormatter::NONE);
+        $data_envio = $fmt->format(new DateTime());
+    }
+
+
+$email_body     = "Ex.mo(a) Senhor(a),\n\nNo âmbito do processo de verificação e reporte periódico do funcionamento dos serviços dos conjuntos de dados abertos publicados no Registo Nacional dos Dados Geográficos do SNIG, envia-se em anexo o relatório dos testes de funcionamento e qualidade dos serviços publicados no SNIG pela sua entidade, realizados a $data_envio.\n\nAgradecemos a sua intervenção em conformidade para corrigir com a maior celeridade possível os eventuais problemas e assim assegurar a utilização dos respetivos serviços publicados de forma contínua e permanente pelos cidadãos, entidades e empresas.\n\nNo caso de verificar que o serviço está a funcionar corretamente e não consiga replicar o erro, agradecemos que nos contacte com a identificação explicita do erro, teste e serviço.\n\nCom os melhores cumprimentos,\nA equipa SNIG/INSPIRE.";
 
 
 if (!is_dir($report_dir_pdf)) {
@@ -75,13 +83,6 @@ while ($row = pg_fetch_assoc($result)) {
     }
 
 try {
-    setlocale(LC_TIME, 'pt_PT.UTF-8', 'pt_PT', 'pt', 'portuguese');
-    $data_envio = strftime('%e de %B de %Y'); // e.g. "26 de Outubro de 2025"
-
-    if (empty(trim($data_envio)) || $data_envio === ' de ') {
-        $fmt = new IntlDateFormatter('pt_PT', IntlDateFormatter::LONG, IntlDateFormatter::NONE);
-        $data_envio = $fmt->format(new DateTime());
-    }
 
     $subject_date = "Relatório de funcionamento e qualidade dos serviços publicados no SNIG: $data_envio";
 
