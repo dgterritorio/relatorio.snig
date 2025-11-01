@@ -100,6 +100,7 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
                     WHEN 'Empty response'::text THEN 'Empty response'::text
                     WHEN 'SSL error'::text THEN 'SSL error'::text
                     WHEN '000'::text THEN 'Timeout'::text
+	                WHEN 'task execution times out after 20 secs'::text THEN 'Timeout'::text
                     WHEN 'URL status code check failed on a 20 secs timeout error'::text THEN 'Timeout'::text
                     WHEN '200'::text THEN 'OK'::text
                     WHEN '200 after 301/302 redirect'::text THEN 'OK after redirect'::text
@@ -185,6 +186,7 @@ CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entit
 				    WHEN 'Empty response'::text THEN 'Empty response'::text
 				    WHEN 'SSL error'::text THEN 'SSL error'::text
                     WHEN '000'::text THEN 'Timeout'::text
+					WHEN 'task execution times out after 20 secs'::text THEN 'Timeout'::text
                     WHEN 'URL status code check failed on a 20 secs timeout error'::text THEN 'Timeout'::text
                     WHEN '200'::text THEN 'OK'::text
                     WHEN '200 after 301/302 redirect'::text THEN 'OK after redirect'::text
@@ -271,6 +273,7 @@ CREATE OR REPLACE VIEW stats_and_metrics._04_group_by_http_status_code_and_domai
 				    WHEN 'Empty response'::text THEN 'Empty response'::text
 				    WHEN 'SSL error'::text THEN 'SSL error'::text
                     WHEN '000'::text THEN 'Timeout'::text
+					WHEN 'task execution times out after 20 secs'::text THEN 'Timeout'::text
                     WHEN 'URL status code check failed on a 20 secs timeout error'::text THEN 'Timeout'::text
                     WHEN '200'::text THEN 'OK'::text
                     WHEN '200 after 301/302 redirect'::text THEN 'OK after redirect'::text
