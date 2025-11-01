@@ -100,6 +100,7 @@ while IFS="|" read -r gid entity manager email eid; do
     echo "<div class='meta'><b>Entidade:</b> ${entity}<br>"
     #echo "<b>Responsável:</b> ${manager}<br>"
     #echo "<b>Endereço E-mail:</b> ${email}<br>"
+    echo "<b>Data dos testes:</b> $(date +'%d de') $(LC_TIME=pt_PT.UTF-8 date +'%B de %Y')<br>"
 
     echo "<b>Descrição dos testes:</b> Os testes são executados numa ordem especifica, quando um teste de um URL/serviço falha,
          os testes seguintes não são executados.<br><br>
