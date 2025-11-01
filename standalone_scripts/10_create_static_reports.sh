@@ -424,31 +424,49 @@ echo "</table>" >> "$OUTPUT"
 
 
 
-    echo "<h2>Detalhe dos resultados</h2>" >> "$OUTPUT"
-    echo "<table><tr><th>URL do SNIG</th><th>URL do Serviço</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração (segundos)</th></tr>" >> "$OUTPUT"
+echo "<h2>Detalhe dos resultados</h2>" >> "$OUTPUT"
+echo "<table><tr><th>URL do SNIG</th><th>URL do Serviço</th><th>Teste</th><th>Código de saída</th><th>Definição</th><th>Duração (segundos)</th></tr>" >> "$OUTPUT"
 
-    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
-        SELECT b.uuid,b.entity, b.uri, a.task, a.exit_status, a.exit_info, a.task_duration
-        FROM testsuite.service_status a
-        JOIN testsuite.uris_long b ON a.gid = b.gid
-        WHERE b.entity = '${entity_esc}'
-        ORDER BY entity, uri, task;
-    " | while IFS="|" read -r row_uuid row_entity row_uri row_task row_exit row_exit_info row_duration; do
+psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+    SELECT b.uuid,b.entity, b.uri, a.task, a.exit_status, a.exit_info, a.task_duration
+    FROM testsuite.service_status a
+    JOIN testsuite.uris_long b ON a.gid = b.gid
+    WHERE b.entity = '${entity_esc}'
+    ORDER BY entity, uri, task;
+" | while IFS="|" read -r row_uuid row_entity row_uri row_task row_exit row_exit_info row_duration; do
 
-    color=""
     exit_lower=$(echo "$row_exit" | tr '[:upper:]' '[:lower:]')
     if [[ "$exit_lower" =~ ok|success|200|passed ]]; then
-        color="background-color:#c6efce;"
+        color_exit="background-color:#c6efce;"
     elif [[ "$exit_lower" =~ warning|redirect|partial ]]; then
-        color="background-color:#ffeb9c;"
+        color_exit="background-color:#ffeb9c;"
     else
-        color="background-color:#ffc7ce;"
+        color_exit="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td><a href=\"https://snig.dgterritorio.gov.pt/rndg/srv/por/catalog.search#/metadata/${row_uuid}\">${row_uuid}</a></td><td>${row_uri}</td><td>${row_task}</td><td style='${color}'>${row_exit}</td><td>${row_exit_info}</td><td>${row_duration}</td></tr>" >> "$OUTPUT"
-    done
-    echo "</table>" >> "$OUTPUT"
+    if [[ ! "$row_duration" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        row_duration=0
+    fi
 
+    if (( $(echo "$row_duration <= 1" | bc -l) )); then
+        color_dur="background-color:#c6efce;"
+    elif (( $(echo "$row_duration <= 5" | bc -l) )); then
+        color_dur="background-color:#ffeb9c;"
+    else
+        color_dur="background-color:#ffc7ce;"
+    fi
+
+    echo "<tr>
+        <td><a href=\"https://snig.dgterritorio.gov.pt/rndg/srv/por/catalog.search#/metadata/${row_uuid}\">${row_uuid}</a></td>
+        <td>${row_uri}</td>
+        <td>${row_task}</td>
+        <td style='${color_exit}'>${row_exit}</td>
+        <td>${row_exit_info}</td>
+        <td style='${color_dur}'>${row_duration}</td>
+    </tr>" >> "$OUTPUT"
+done
+
+echo "</table>" >> "$OUTPUT"
 
 
 
