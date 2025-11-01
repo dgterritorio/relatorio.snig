@@ -7,6 +7,7 @@ AS $$
     ('Empty response','Empty response'),
     ('SSL error','SSL error'),
     ('000','Timeout'),
+    ('task execution times out after 20 secs','Timeout'),
     ('URL status code check failed on a 20 secs timeout error','Timeout'),
     ('200','OK'),
     ('200 after 301/302 redirect','OK after redirect'),
