@@ -57,16 +57,36 @@ while ($row = pg_fetch_assoc($result)) {
     $email   = trim($row['email']);
     $eid     = $row['eid'];
 
-    $pattern = sprintf('%s/%s_*', $report_dir_html, $eid);
-    $html_files = glob($pattern . '.html');
 
-    if (empty($html_files)) {
-        echo "⚠️ No HTML found for geid {$eid} ({$entity})\n";
-        continue;
-    }
+$pattern_old = sprintf('%s/%s_*.html', $report_dir_html, $eid);
+$pattern_new = sprintf('%s/%s_*_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].html', $report_dir_html, $eid);
 
-    $html_file = $html_files[0];
-    $pdf_file  = sprintf('%s/%s_%s.pdf', $report_dir_pdf, $eid, preg_replace('/[\/ ]+/', '_', $entity));
+$html_files = array_merge(glob($pattern_new), glob($pattern_old));
+
+if (empty($html_files)) {
+    echo "⚠️ No HTML found for eid {$eid} ({$entity})\n";
+    continue;
+}
+
+usort($html_files, function($a, $b) {
+    return filemtime($b) <=> filemtime($a);
+});
+
+$html_file = $html_files[0];
+
+if (preg_match('/_(\d{8})\.html$/', basename($html_file), $m)) {
+    $date_suffix = '_' . $m[1];
+} else {
+    $date_suffix = '';
+}
+
+$pdf_file = sprintf('%s/%s_%s%s.pdf',
+    $report_dir_pdf,
+    $eid,
+    preg_replace('/[\/ ]+/', '_', $entity),
+    $date_suffix
+);
+
 
     try {
         $html_content = file_get_contents($html_file);
