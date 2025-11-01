@@ -11,6 +11,7 @@
         <headline>Statistics</headline>
         <pagetext>
             <ul>
+                <li><a href="/pages/statistics.zip">Stats download in CSV format</a></li>
                 <li><a href="index.rvt?show=estatisticas#A">HTTP vs HTTPS</a></li>
                 <li><a href="index.rvt?show=estatisticas#A2">HTTP vs HTTPS by Entity</a></li>
                 <li><a href="index.rvt?show=estatisticas#B">HTTP STATUS CODES</a></li>
