@@ -112,8 +112,8 @@ while IFS="|" read -r gid entity manager email eid; do
          3) <i>Validade da resposta ao pedido GetCapabilities</i>: o documento XML resultante de pedidos
          standard OGC WMS/WFS \"<i>GetCapabilities</i>\" deve ser valido.<br><br>
          4) <i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>: a resposta ao pedido de informações
-         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> e
-         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a>
+         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> (gdalinfo WMS:"URL") e
+         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a> (ogrinfo -so WFS:"URL")
          não deve conter erros.<br><br>
          A equipa SNIG/INSPIRE.
          </div>"
