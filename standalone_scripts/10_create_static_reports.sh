@@ -53,7 +53,7 @@ while IFS="|" read -r gid entity manager email eid; do
         s/__/_/g;
         ')
 
-    OUTPUT="/tmp/${eid}_${entity_sanitized}.html"
+    OUTPUT="/tmp/${eid}_${entity_sanitized}_$(date +%d%m%Y).html"
 
     {
     echo "<html><head><meta charset='utf-8'><title>Relatório de funcionamento e qualidade dos URLs e serviços publicados no SNIG, Sistema Nacional de Informação Geográfica :: ${entity} ::</title>"
