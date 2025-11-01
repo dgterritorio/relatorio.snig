@@ -29,6 +29,7 @@ A collection of scripts to harvest and (health) check the services published at 
 * php*-pgsql
 * php*-gd
 * composer (a dependency manager for PHP)
+* zip
 
 ## Web interface dependencies
 
@@ -39,7 +40,7 @@ A collection of scripts to harvest and (health) check the services published at 
 
 * Install the dependencies: 
 
-apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis pandoc composer php8.3-cli php8.3-pgsql php8.3-gd
+apt-get install git gdal-bin jq csvtool xmlstarlet csvkit parallel libxml2-utils postgresql-16-postgis-3-scripts postgis pandoc composer php8.3-cli php8.3-pgsql php8.3-gd zip
 
 * System user creation.
 
