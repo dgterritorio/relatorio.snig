@@ -22,7 +22,7 @@ DB_PORT="5432"
     UPDATE testsuite.entities_email_reports r
         SET services_number = COALESCE(sub.count, 0)
         FROM (
-            SELECT e.entity, COUNT(u.*) AS count
+            SELECT e.entity, COUNT(DISTINCT u.*) AS count
             FROM testsuite.entities_email_reports e
             LEFT JOIN testsuite.uris_long u ON e.entity = u.entity
             GROUP BY e.entity
