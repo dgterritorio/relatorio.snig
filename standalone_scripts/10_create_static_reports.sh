@@ -127,30 +127,31 @@ while IFS="|" read -r gid entity manager email eid; do
     echo "<h2>HTTP vs HTTPs</h2>" >> "$OUTPUT"
     echo "<table><tr><th>Protocolo</th><th>Número</th></tr>" >> "$OUTPUT"
 
-    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
-        WITH temp AS (
-            SELECT REGEXP_REPLACE(b.uri_original, ':.*$', '', 'g') AS url_start,
-                   COUNT(*) AS count
-            FROM testsuite.uris_long b
-            WHERE b.entity = '${entity_esc}'
-            GROUP BY url_start
-            ORDER BY url_start
-        )
-        SELECT ROW_NUMBER() OVER () AS gid, url_start, count FROM temp;
-    " | while IFS="|" read -r url_gid url_start url_count; do
-    color=""
+psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+    WITH temp AS (
+        SELECT REGEXP_REPLACE(b.uri_original, ':.*$', '', 'g') AS url_start,
+               COUNT(*) AS count
+        FROM testsuite.uris_long b
+        WHERE b.entity = '${entity_esc}'
+        GROUP BY url_start
+        ORDER BY url_start
+    )
+    SELECT ROW_NUMBER() OVER () AS gid, url_start, count FROM temp;
+" | while IFS="|" read -r url_gid url_start url_count; do
     proto_lower=$(echo "$url_start" | tr '[:upper:]' '[:lower:]')
+
     if [[ "$proto_lower" == "https" ]]; then
         color="background-color:#c6efce;"
-    else
+    elif [[ "$proto_lower" == "http" ]]; then
         color="background-color:#ffeb9c;"
+    else
+        color="background-color:#ffc7ce;"
     fi
 
     echo "<tr><td style='${color}'>${url_start}</td><td>${url_count}</td></tr>" >> "$OUTPUT"
-    done
-    echo "</table>" >> "$OUTPUT"
+done
 
-
+echo "</table>" >> "$OUTPUT"
 
 
 
