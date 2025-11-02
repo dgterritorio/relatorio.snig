@@ -16,6 +16,7 @@ namespace eval ::ngis::configuration {
 #
 	variable cssprogressive           20241201                                 ;# CSS progressive number to force reloads
 	variable development              "true"                                   ;# Flag to enable development site specific parts
+	variable session_debug            "true"                                   ;# Flag to enable development site specific parts
 	variable encoding                 "utf-8"                                  ;# Website default character encoding
 	variable service_recs_limit       100                                      ;# Size of the default view of an entity service records
 	variable website                  "http://snig.rivetweb.org:8080"          ;# Website Name

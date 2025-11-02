@@ -27,6 +27,9 @@ namespace eval ::rwpage {
             $dbhandle forall $sql u {
                 set edituser_link [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]]
                 set deleteuser_link [::rivet::xml "delete" [list a href [::rivetweb::composeUrl deleteuser $u(userid)]]]
+                if {[regexp {(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.\d*} $u(ts) m v]} {
+                    set u(ts) $v
+                }
 
                 if {$u(userid) == 1} { set deleteuser_link "---" }
                 if {$is_administrator || ($u(login) == $current_login)} {
@@ -40,8 +43,8 @@ namespace eval ::rwpage {
         }
 
         public method print_content {language args} {
-            set template_o  [::rivetweb::RWTemplate::template $::rivetweb::template_key]
-            set ns [$template_o formatters_ns]
+            set template_o       [::rivetweb::RWTemplate::template $::rivetweb::template_key]
+            set ns               [$template_o formatters_ns]
             set session_obj      [::rwdatas::NGIS::get_session_obj]
             set current_login    [$session_obj fetch status login]
             puts [::rivet::xml "New User" [list div style "margin-bottom: 2em;"] [list a href [::rivetweb::composeUrl newuser 1]]]

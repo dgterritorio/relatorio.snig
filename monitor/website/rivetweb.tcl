@@ -11,7 +11,6 @@ package require ngis::content_fence
 package require ngis::users
 package require ngis::login
 package require ngis::page
-package require Session
 package require ngis::servicedb
 package require Thread
 package require ngis::ancillary_io_thread

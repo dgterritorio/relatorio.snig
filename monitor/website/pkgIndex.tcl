@@ -22,5 +22,4 @@ package ifneeded ngis::entitymap          1.0 [list source [file join $dir gener
 package ifneeded dio::formatters          1.1 [list source [file join $dir generic formatters.tcl]]
 package ifneeded DIO                      1.2.3 [list source [file join $dir generic dio.tcl]]
 package ifneeded dio_Tdbc                 1.2.5 [list source [file join $dir generic dio_Tdbc.tcl]]
-
-
+package ifneeded Session                  1.1 [list source [file join $dir generic session-class.tcl]]

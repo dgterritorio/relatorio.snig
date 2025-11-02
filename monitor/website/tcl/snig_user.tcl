@@ -23,6 +23,9 @@ namespace eval ::rwpage {
 
             set session_obj      [::rwdatas::NGIS::get_session_obj]
             set current_login    [$session_obj fetch status login]
+
+            #puts "<pre>current login: $current_login</pre>"
+
             set is_administrator [::rwdatas::NGIS::is_administrator $current_login]
 
             if {[dict exists $argsqs newuser]} {
@@ -72,7 +75,6 @@ namespace eval ::rwpage {
                 }
                 set login       [string trim [::rivet::var_post get login]]
                 set password    [string trim [::rivet::var_post get password]]
-                $this title $language "New user '$login' created"
 
                 # in case of error we redirect to the create user form
 
@@ -83,9 +85,9 @@ namespace eval ::rwpage {
                     $ngis::messagebox post_message "Invalid login (login must be at least 5 characters long)"
                     set rvt_template newuser.rvt
                 }
-                if {[regexp -nocase {^[a-z][a-z0-9_]{8,}} $password] == 0} {
-                    $ngis::messagebox post_message "Invalid password: must be at least 8 characters" error
-                    $this title $language "Error: insufficient administrative privileges"
+                if {[regexp -nocase {^[a-z][a-z0-9_]{7,}} $password] == 0} {
+                    $ngis::messagebox post_message "Invalid password '$password': must be at least 8 characters" error
+                    $this title $language "Error: insufficient administrative privileges" 
                     set rvt_template newuser.rvt
                 }
 
@@ -100,17 +102,26 @@ namespace eval ::rwpage {
                         $ngis::messagebox post_message "login '$login' already existing" error
                         set rvt_template newuser.rvt
                         return
-                    }
-
-                    set sql "INSERT INTO $usertable (login,password) VALUES ('$login',crypt('$password',gen_salt('bf')))"
-                    #puts [::rivet::xml $sql pre]
-                    set sqlres [$dbhandle exec $sql]
-                    $sqlres destroy
-                    set userid [$dbhandle list "SELECT su.userid FROM $usertable su WHERE su.login='$login'"]
-                    if {$userid != ""} {
-                        $ngis::messagebox post_message "new login '$login' created with userid '$userid'"
                     } else {
-                        $ngis::messagebox post_message "error creating login '$login'" error
+
+                        set sql     [list "INSERT INTO $usertable (login,password,ts)"]
+                        lappend sql "VALUES ('$login',crypt('$password',gen_salt('bf')),clock_timestamp())"
+                        set sql [join $sql " "]
+
+                        #puts [::rivet::xml $sql pre]
+                        set sqlres [$dbhandle exec $sql]
+                        $sqlres destroy
+                        set userid [$dbhandle list "SELECT su.userid FROM $usertable su WHERE su.login='$login'"]
+                        if {$userid != ""} {
+                            set msg "new login '$login' created with userid '$userid'"
+                            set severity info
+                        } else {
+                            set msg "error creating login '$login'"
+                            set serverity error
+                        }
+                        $ngis::messagebox post_message "new login '$login' created with userid '$userid'" $severity
+                        $this title $language "New user '$login' created"
+
                     }
                 }
 
@@ -146,15 +157,19 @@ namespace eval ::rwpage {
                 set nusers [$dbhandle list "SELECT count(userid) FROM $usertable"]
 
                 # assuming user 'dgt' has userid = 1
-                if {($nusers == 1) || ($userid == 1)} {
-                    $ngis::messagebox post_message "Can't delete the user: last user remaining" error
-                    $this title $language "Can't delete the user: last user remaining"
+                set severity error
+                set msg ""
+                if { $nusers == 1 } {
+                    set msg  "Can't delete the user: last user remaining"
+                } elseif { $userid == 1 } {
+                    set msg "Can't delete the basic administrative user"
                 } elseif {[$dbhandle fetch $userid userrec -table $usertable -keyfield {userid}]} {
                     $dbhandle delete $userid -table $usertable -keyfield {userid}
-                    $ngis::messagebox post_message "Login '$userrec(login)' with id '$userrec(userid)' deleted"
-                    $this title $language "Login '$userrec(login)' with id '$userrec(userid)' deleted"
+                    set msg "Login '$userrec(login)' with id '$userrec(userid)' deleted"
+                    set severity info
                 }
-
+                $ngis::messagebox post_message $msg $severity
+                $this title $language $msg
             }
         }
 

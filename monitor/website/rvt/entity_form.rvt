@@ -17,8 +17,8 @@
 
 ?>  <table>
         <tr><td>Entity</td><td><?= $entity_a(description) ?></td></tr>
-        <tr><td>Email</td><td><? $form email email -size 64 ?></td></tr>
         <tr><td>Manager</td><td><? $form text manager -size 64 ?></td></tr>
+        <tr><td>Email</td><td><? $form email email -size 64 ?></td></tr>
         <tr><td>Hash</td><td><?= $entity_a(hash) ?></td></tr>
         <tr><td colspan="2"><input type="submit" value="Update Data" /></td></tr>
     </table><?

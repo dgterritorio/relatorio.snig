@@ -11,6 +11,7 @@ package require rwlogger
 package require rwmenu
 package require rwlink
 package require ngis::utils
+package require Session 1.1
 
 namespace eval ::rwdatas {
 
@@ -35,7 +36,10 @@ namespace eval ::rwdatas {
                 foreach v {dbuser dbhost dbname dbpasswd dbms_driver} {
                     ::ngis::configuration readconf $v $v
                 }
-                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
+                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser \
+                                                                    -db   $dbname \
+                                                                    -host $dbhost \
+                                                                    -pass $dbpasswd]
                 set ::dbms      [eval $connectcmd]
                 set dbhandle    $::dbms
             }
@@ -75,6 +79,9 @@ namespace eval ::rwdatas {
                                                     -sessionCacheTable      "testsuite.rivet_session_cache" \
                                                     -scrambleCode           [clock format [clock seconds] -format "%S"]]
 
+                if {[::ngis::configuration readconf session_debug]} {
+                    $session_obj configure -debugMode 1 -debugFile [open "/tmp/session-[::rivet::thread_id].log" w]
+                }
             }
 
             return $session_obj
@@ -98,17 +105,24 @@ namespace eval ::rwdatas {
             upvar 1 $userid_v userid
             ::ngis::configuration readconf users_table users_table
 
-            #set tdbc_res [::ngis::service::exec_sql_query \
-            #    "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
-
             set dbhandle [attempt_db_connect]
-            set sqlres [$dbhandle exec "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+            set sqlres [$dbhandle exec \
+                    "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
             set found  [expr [$sqlres numrows] == 1]
             if {$found} {
                 set userid [$sqlres next -list]
             }
             $sqlres destroy
             return $found
+        }
+
+        public method destroy {} {
+            if {([llength [UrlHandler::registered_handlers]] == 1) && [info exists session_obj]} {
+                if {[::ngis::configuration readconf session_debug]} {
+                    close [$session_obj cget -debugFile]
+                }
+                unset session_obj
+            }
         }
 
         # Instance methods
