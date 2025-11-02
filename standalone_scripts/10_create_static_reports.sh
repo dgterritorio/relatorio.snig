@@ -33,6 +33,8 @@ DB_PORT="5432"
 entities=$(psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
     SELECT gid, entity, manager, email, eid
     FROM testsuite.entities_email_reports
+    WHERE email IS NOT NULL AND email <> ''
+      AND services_number IS NOT NULL AND services_number > 0
     ORDER BY entity;
 ")
 
@@ -112,8 +114,8 @@ while IFS="|" read -r gid entity manager email eid; do
          3) <i>Validade da resposta ao pedido GetCapabilities</i>: o documento XML resultante de pedidos
          standard OGC WMS/WFS \"<i>GetCapabilities</i>\" deve ser valido.<br><br>
          4) <i>Validade da resposta ao pedido GDALINFO/OGRINFO</i>: a resposta ao pedido de informações
-         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> (gdalinfo WMS:\"URL\") e
-         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a> (ogrinfo -so WFS:\"URL\")
+         feita com as ferramentas <a href=\"https://gdal.org/en/stable/programs/gdalinfo.html\"><b><i>gdalinfo</i></b></a> (<code>gdalinfo WMS:&quot;URL&quot;</code>) e
+         <a href=\"https://gdal.org/en/stable/programs/ogrinfo.html\"><b><i>ogrinfo</i></b></a> (<code>ogrinfo -so WFS:&quot;URL&quot;</code>)
          não deve conter erros.<br><br>
          A equipa SNIG/INSPIRE.
          </div>"
@@ -230,7 +232,23 @@ echo "</table>" >> "$OUTPUT"
             color="background-color:#ffc7ce;" ;;
     esac
 
-    echo "<tr><td style='${color}'>${status_code}</td><td>${definition}</td><td>${count}</td><td>${avg}</td></tr>" >> "$OUTPUT"
+    color_avg=""
+    def_lower=$(echo "$definition" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "ok after redirect" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+echo "<tr><td style='${color}'>${status_code}</td><td>${definition}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
@@ -276,7 +294,26 @@ echo "</table>" >> "$OUTPUT"
         color="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td>${avg}</td></tr>" >> "$OUTPUT"
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+    
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
@@ -322,7 +359,24 @@ echo "</table>" >> "$OUTPUT"
         color="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td>${avg}</td></tr>" >> "$OUTPUT"
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+    
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
@@ -369,7 +423,24 @@ echo "</table>" >> "$OUTPUT"
         color="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td>${avg}</td></tr>" >> "$OUTPUT"
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
@@ -416,7 +487,24 @@ echo "</table>" >> "$OUTPUT"
         color="background-color:#ffc7ce;"
     fi
 
-        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td>${avg}</td></tr>" >> "$OUTPUT"
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
