@@ -248,7 +248,7 @@ echo "</table>" >> "$OUTPUT"
         fi
     fi
 
-echo "<tr><td style='${color}'>${status_code}</td><td>${definition}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+echo "<tr><td>${status_code}</td><td style='${color}'>${definition}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
     done
     echo "</table>" >> "$OUTPUT"
 
