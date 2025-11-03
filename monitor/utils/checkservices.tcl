@@ -62,6 +62,7 @@ set nhours      24
 set ndays       0
 set min_wait    100
 set max_wait    4000
+set eid         ""
 
 if {$argc > 0} {
     set arguments $argv
@@ -69,6 +70,10 @@ if {$argc > 0} {
         set arguments [lassign $arguments a]
 
         switch -nocase -- $a {
+	    --eid {
+		set arguments [lassign $arguments eid]
+                ::ngis::out "Restricting to eid = $eid"
+	    }
             --stalerecs {
                 set fun stalerecs
                 set sql $stalerecs_sql
@@ -137,6 +142,13 @@ if {($fun == "stalerecs") || ($fun == "http0recs")} {
     if {$nhours > 0} {
         lappend sql "and ss.ts < NOW() - INTERVAL '$nhours hours'"
     }
+}
+
+if {$eid != 0} {
+    lappend sql "AND ul.eid = $eid"
+}
+
+if {($fun == "stalerecs") || ($fun == "http0recs")} {
     lappend sql "order by ss.ts"
 }
 if {$limit != 0} { lappend sql "LIMIT $limit" }
