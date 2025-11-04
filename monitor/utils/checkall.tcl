@@ -32,13 +32,22 @@ proc ::ngis::out {m} {
     syslog -perror -ident snig -facility user info $m
 }
 
-proc ::ngis::fetch_gids {sql_l {nrecs 0}} {
+proc ::ngis::fetch_gids {sql_l eid {min_age 0} {nrecs 0}} {
+	if {$eid > 0} {
+		lappend sql_l "AND eid=$eid"
+	}
+	if {$min_age > 0} {
+		lappend sql_l "AND ss.ts < NOW() - INTERVAL '$min_age hours'"
+	}
+
+	lappend sql_l "ORDER BY ss.ts"
 	if {$nrecs > 0} {
 		set sql_t [join [concat $sql_l "LIMIT $nrecs"] " "]
 	} else {
 		set sql_t [join $sql_l " "]
 	}
 
+	puts $sql_t
 	set resultset [::ngis::service exec_sql_query $sql_t]
 
 	# setting up the random number generator
@@ -57,7 +66,7 @@ set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
 
 set sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul" 
           "left join testsuite.service_status ss on ss.gid=ul.gid"
-	      "where ss.task = 'congruence' order by ss.ts" }
+	      "where ss.task = 'congruence'" }
 
 
 set delay	1
@@ -65,6 +74,9 @@ set concurrency 0
 set min_wait    1
 set max_wait    -1
 set limit       0
+set eid			0
+set min_days	0
+set min_hours	0
 
 if {$argc > 0} {
     set arguments $argv
@@ -72,6 +84,9 @@ if {$argc > 0} {
         set arguments [lassign $arguments a]
 
         switch -nocase -- $a {
+			--eid {
+				set arguments [lassign $arguments eid]
+			}
 			--delay {
 				set arguments [lassign $arguments js_delay]
 				if {$js_delay > 0} {
@@ -87,6 +102,12 @@ if {$argc > 0} {
 					::ngis::out "The concurrency must be a positive integer"
 				}
 			}
+			--min-age-days {
+				set arguments [lassign $arguments min_days]
+			}
+			--min-age-hours {
+				set arguments [lassign $arguments min_hours]
+			}
             --min-wait {
                 set arguments [lassign $arguments min_wait]
             }
@@ -100,22 +121,22 @@ if {$argc > 0} {
     }
 }
 
-if {$min_wait < 0} {
-    set min_wait 1
-}
-
 if {$max_wait < $min_wait} {
     set max_wait [expr $min_wait + 1]
 }
-set delta_t [expr $max_wait - $min_wait]
+
+set delta_t [expr 1000*($max_wait - $min_wait)]
 set nrecs 0
 set njobs 0
 
-set gids_l [::ngis::fetch_gids $sql $limit]
+set min_age [expr 24*$min_days + $min_hours]
+
+set gids_l [::ngis::fetch_gids $sql $eid $min_age $limit]
 ::ngis::out "processing [llength $gids_l] gids"
 
 set processed_services 0
 while {[llength $gids_l] > 0} {
+
     if {$concurrency > 0} {
 		set message_d [::ngis::clientio query_server $con "JOBLIST" 114]
 		set njobs [dict get $message_d njobs]
@@ -125,11 +146,15 @@ while {[llength $gids_l] > 0} {
 		}
     }
     set gids_l [lassign $gids_l gid]
+
     ::ngis::clientio query_server $con "CHECK $gid" 102
 
-    set random_delta [random $delta_t]
-    after [expr 1000*($min_wait + $random_delta)]
+	# the argumento to 'random' must be > 0
+
+    set random_delta [random [expr 1 + $delta_t]]
+    after [expr 1000*$min_wait + $random_delta]
     incr processed_services
+
 }
 ::ngis::out "processed $processed_services records"
 

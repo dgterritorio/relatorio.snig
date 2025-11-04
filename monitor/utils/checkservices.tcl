@@ -32,7 +32,6 @@ proc ::ngis::out {m} {
     syslog -perror -ident snig -facility user info $m
 }
 
-
 # let's seed the random numbers generator
 
 random seed [clock seconds]
@@ -51,18 +50,18 @@ set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_lo
                     "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
 
 # With Tcl9 this should become an immutable variable
-set min_jobs_per_seq 20
 
 set fun         http0recs
 set sql         $http0_sql
 set limit       20
 set max_jobs_n  0
+set min_jobs_per_seq 20
 set jobs_seq_delay 5000
 set nhours      24
 set ndays       0
 set min_wait    100
 set max_wait    4000
-set eid         ""
+set eid         0
 
 if {$argc > 0} {
     set arguments $argv
@@ -70,10 +69,10 @@ if {$argc > 0} {
         set arguments [lassign $arguments a]
 
         switch -nocase -- $a {
-	    --eid {
-		set arguments [lassign $arguments eid]
+            --eid {
+                set arguments [lassign $arguments eid]
                 ::ngis::out "Restricting to eid = $eid"
-	    }
+            }
             --stalerecs {
                 set fun stalerecs
                 set sql $stalerecs_sql
@@ -105,15 +104,15 @@ if {$argc > 0} {
                 set arguments [lassign $arguments max_jobs_n]
                 ::ngis::out "set maximum concurrent jobs as $max_jobs_n"
             }
-	    --seq-delay {
-		set arguments [lassign $arguments js_delay]
-		if {$js_delay > 0} {
-		    set jobs_seq_delay $js_delay
-		    ::ngis::out "job sequence scheduling delay $jobs_seq_delay"
-		} else {
-		    ::ngis::out "The job sequence scheduling delay must be > 0"
-		}
-	    }
+            --seq-delay {
+                set arguments [lassign $arguments js_delay]
+                if {$js_delay > 0} {
+                    set jobs_seq_delay $js_delay
+                    ::ngis::out "job sequence scheduling delay $jobs_seq_delay"
+                } else {
+                    ::ngis::out "The job sequence scheduling delay must be > 0"
+                }
+            }
             --min-wait {
                 set arguments [lassign $arguments min_wait]
             }
