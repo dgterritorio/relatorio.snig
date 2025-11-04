@@ -24,6 +24,7 @@ A collection of scripts to harvest and (health) check the services published at 
 * tcl-thread
 * tcl-tls
 * Tclx
+* libjs-jquery
 * pandoc
 * php*-cli
 * php*-pgsql
