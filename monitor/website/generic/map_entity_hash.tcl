@@ -2,6 +2,7 @@
 #
 #
 
+package require md5
 package require ngis::configuration
 
 namespace eval ::ngis::entity_hash_map {

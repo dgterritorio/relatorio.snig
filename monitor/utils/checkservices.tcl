@@ -28,9 +28,7 @@ package require ngis::clientio
 package require Tclx
 package require fileutil
 
-proc ::ngis::out {m} {
-    syslog -perror -ident snig -facility user info $m
-}
+proc ::ngis::out {m} { syslog -perror -ident snig -facility user info $m }
 
 # let's seed the random numbers generator
 
@@ -139,7 +137,7 @@ if {$ndays > 0} {
 
 if {($fun == "stalerecs") || ($fun == "http0recs")} {
     if {$nhours > 0} {
-        lappend sql "and ss.ts < NOW() - INTERVAL '$nhours hours'"
+        lappend sql "AND ss.ts < NOW() - INTERVAL '$nhours hours'"
     }
 }
 
@@ -148,7 +146,7 @@ if {$eid != 0} {
 }
 
 if {($fun == "stalerecs") || ($fun == "http0recs")} {
-    lappend sql "order by ss.ts"
+    lappend sql "ORDER BY ss.ts"
 }
 if {$limit != 0} { lappend sql "LIMIT $limit" }
 

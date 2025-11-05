@@ -4,7 +4,6 @@
 package require fileutil
 package require form
 package require ngis::entitymap
-package require md5
 
 namespace eval ::rwpage {
     ::itcl::class ViewEntity {
