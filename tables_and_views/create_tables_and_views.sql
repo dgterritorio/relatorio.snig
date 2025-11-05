@@ -1,173 +1,195 @@
+-- ============================================================
+-- DATABASE SCHEMAS
+-- ============================================================
 CREATE SCHEMA testsuite;
 CREATE SCHEMA stats;
 
--- CREATE TABLE TO STORE THE LATESTS status OF THE MONITOR
-CREATE TABLE IF NOT EXISTS testsuite.service_status
-(
-    gid integer NOT NULL,
-    ts timestamp without time zone NOT NULL,
-    task character varying NOT NULL,
-    exit_status character varying NOT NULL,
-    exit_info text,
-    uuid character varying,
+-- ============================================================
+-- TABLE: testsuite.service_status
+-- DESCRIPTION: Stores the latest status of the monitor for each service/task
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.service_status (
+    gid           INTEGER                NOT NULL,
+    ts            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    task          VARCHAR                NOT NULL,
+    exit_status   VARCHAR                NOT NULL,
+    exit_info     TEXT,
+    uuid          VARCHAR,
     CONSTRAINT service_status_unique UNIQUE (gid, task)
 );
 
--- CREATE TABLE TO STORE THE log OF THE MONITOR
-CREATE TABLE IF NOT EXISTS testsuite.service_log
-(
-    entryid SERIAL,
-    gid integer NOT NULL,
-    ts timestamp without time zone NOT NULL,
-    task character varying NOT NULL,
-    exit_status character varying NOT NULL,
-    exit_info text,
-    uuid character varying
+-- ============================================================
+-- TABLE: testsuite.service_log
+-- DESCRIPTION: Stores the complete log of monitor results
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.service_log (
+    entryid       SERIAL,
+    gid           INTEGER                NOT NULL,
+    ts            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    task          VARCHAR                NOT NULL,
+    exit_status   VARCHAR                NOT NULL,
+    exit_info     TEXT,
+    uuid          VARCHAR
 );
 
--- CREATE TABLE TO STORE THE DELETE RECORDS FROM THE log OF THE MONITOR
-CREATE TABLE IF NOT EXISTS testsuite.service_log_deleted
-(
-    entryid SERIAL,
-    gid integer NOT NULL,
-    date_deleted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ts timestamp without time zone NOT NULL,
-    task character varying NOT NULL,
-    exit_status character varying NOT NULL,
-    exit_info text,
-    uuid character varying
+-- ============================================================
+-- TABLE: testsuite.service_log_deleted
+-- DESCRIPTION: Stores deleted records from the service_log table
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.service_log_deleted (
+    entryid       SERIAL,
+    gid           INTEGER                NOT NULL,
+    date_deleted  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ts            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    task          VARCHAR                NOT NULL,
+    exit_status   VARCHAR                NOT NULL,
+    exit_info     TEXT,
+    uuid          VARCHAR
 );
 
--- CREATE TABLE TO STORE THE entities LIST
-CREATE TABLE IF NOT EXISTS testsuite.entities
-(
-    eid SERIAL,
-    description character varying,
+-- ============================================================
+-- TABLE: testsuite.entities
+-- DESCRIPTION: Stores the list of entities
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.entities (
+    eid           SERIAL,
+    description   VARCHAR,
     CONSTRAINT entities_pk PRIMARY KEY (eid)
 );
 
--- CREATE TABLE TO STORE GEONETWORK METADATA IN XML FORMAT
+-- ============================================================
+-- TABLE: testsuite.xml_metadata
+-- DESCRIPTION: Stores GeoNetwork metadata in XML format
+-- ============================================================
 CREATE TABLE IF NOT EXISTS testsuite.xml_metadata (
-    id SERIAL PRIMARY KEY,
-    filename TEXT NOT NULL,
-    content XML,
-    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_empty BOOLEAN NOT NULL,
-    deleted BOOLEAN DEFAULT FALSE
+    id            SERIAL PRIMARY KEY,
+    filename      TEXT                  NOT NULL,
+    content       XML,
+    date_added    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_empty      BOOLEAN               NOT NULL,
+    deleted       BOOLEAN DEFAULT FALSE
 );
 
--- CREATE TABLE TO STORE GEONETWORK RECORDS SERVICES URLS IN WIDE FORMAT
--- THIS WILL CONTAIN ONLY THE RESULTS OF THE LAST HARVEST
-CREATE TABLE IF NOT EXISTS testsuite.uris_wide
-(
-    gid SERIAL,
-    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    uuid text,
-    entity text,
-    description text,
-    uri1 text,
-    uri2 text,
-    uri3 text,
-    uri4 text,
-    uri5 text,
-    uri6 text,
-    uri7 text,
-    uri8 text,
-    uri9 text,
-    uri10 text,
-    uri11 text,
-    uri12 text,
-    uri13 text,
+-- ============================================================
+-- TABLE: testsuite.uris_wide
+-- DESCRIPTION: Stores GeoNetwork record service URLs (wide format)
+--              Contains only the results of the last harvest
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.uris_wide (
+    gid           SERIAL,
+    date_added    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uuid          TEXT,
+    entity        TEXT,
+    description   TEXT,
+    uri1          TEXT,
+    uri2          TEXT,
+    uri3          TEXT,
+    uri4          TEXT,
+    uri5          TEXT,
+    uri6          TEXT,
+    uri7          TEXT,
+    uri8          TEXT,
+    uri9          TEXT,
+    uri10         TEXT,
+    uri11         TEXT,
+    uri12         TEXT,
+    uri13         TEXT,
     CONSTRAINT uris_wide_pkey PRIMARY KEY (gid)
 );
 
--- CREATE TABLE TO STORE GEONETWORK RECORDS SERVICES URLS IN WIDE FORMAT
--- THIS WILL CONTAIN THE RESULTS OF ALL HARVESTS
-CREATE TABLE IF NOT EXISTS testsuite.uris_wide_all
-(
-    gid SERIAL,
-    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    uuid text,
-    entity text,
-    description text,
-    uri1 text,
-    uri2 text,
-    uri3 text,
-    uri4 text,
-    uri5 text,
-    uri6 text,
-    uri7 text,
-    uri8 text,
-    uri9 text,
-    uri10 text,
-    uri11 text,
-    uri12 text,
-    uri13 text,
+-- ============================================================
+-- TABLE: testsuite.uris_wide_all
+-- DESCRIPTION: Stores GeoNetwork record service URLs (wide format)
+--              Contains results of all harvests
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.uris_wide_all (
+    gid           SERIAL,
+    date_added    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uuid          TEXT,
+    entity        TEXT,
+    description   TEXT,
+    uri1          TEXT,
+    uri2          TEXT,
+    uri3          TEXT,
+    uri4          TEXT,
+    uri5          TEXT,
+    uri6          TEXT,
+    uri7          TEXT,
+    uri8          TEXT,
+    uri9          TEXT,
+    uri10         TEXT,
+    uri11         TEXT,
+    uri12         TEXT,
+    uri13         TEXT,
     CONSTRAINT uris_wide_all_pkey PRIMARY KEY (gid)
 );
 
--- CREATE TABLE TO STORE GEONETWORK RECORDS SERVICES URLS IN LONG FORMAT
--- THIS WILL CONTAIN THE INCREMENTAL, NOT REPEATED, LIST OF HARVESTED URLS
--- IF AN URL THAT IS IN THIS TABLE IS NO LONGER PART OF A NEW HARVEST
--- THIS (RECORD) WILL BE REMOVED AND STORED IN A SEPARATE TABLE
-CREATE TABLE IF NOT EXISTS testsuite.uris_long
-(
-    gid SERIAL,
-    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    uuid text,
-    entity text,
-    description text,
-    uri text,
-    uri_type text,
-    eid integer,
-    version character varying,
-    uri_original text,
+-- ============================================================
+-- TABLE: testsuite.uris_long
+-- DESCRIPTION: Stores incremental (non-repeated) list of harvested URLs
+--              Records are removed if a URL disappears from new harvest results
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.uris_long (
+    gid           SERIAL,
+    date_added    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uuid          TEXT,
+    entity        TEXT,
+    description   TEXT,
+    uri           TEXT,
+    uri_type      TEXT,
+    eid           INTEGER,
+    version       VARCHAR,
+    uri_original  TEXT,
     CONSTRAINT uris_long_pkey PRIMARY KEY (gid)
 );
 
--- CREATE TABLE TO STORE CONTAIN/ARCHIVE THE RECORDS THAT WILL BE DELETED FROM THE PREVIOUS TABLE
--- BECAUSE THE SERVICE/URL DOES NOT SHOW ANYMORE IN HARVESTING RESULTS
-CREATE TABLE IF NOT EXISTS testsuite.uris_long_deleted
-(
-    gid SERIAL,
-    date_deleted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    uuid text,
-    entity text,
-    description text,
-    uri text,
-    uri_type text,
-    eid integer,
-    version character varying,
-    uri_original text,
+-- ============================================================
+-- TABLE: testsuite.uris_long_deleted
+-- DESCRIPTION: Stores archived records removed from uris_long
+--              (URLs no longer present in new harvests)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.uris_long_deleted (
+    gid           SERIAL,
+    date_deleted  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uuid          TEXT,
+    entity        TEXT,
+    description   TEXT,
+    uri           TEXT,
+    uri_type      TEXT,
+    eid           INTEGER,
+    version       VARCHAR,
+    uri_original  TEXT,
     CONSTRAINT uris_long_deleted_pkey PRIMARY KEY (gid)
 );
 
--- CREATE TABLE TO STORE TEMPORARLY THE URLS FROM A NEW HARVEST
--- AND THAT WILL BE USED TO COMPARE WITH WHAT ALREADY IS IN THE MAIN TABLE
--- SO TO CHECK WHAT NEEDS TO BE DELETED AND WHAT NEEDS TO BE UPDATED
-CREATE TABLE IF NOT EXISTS testsuite.uris_long_temp
-(
-    gid SERIAL,
-    uuid text,
-    entity text,
-    description text,
-    uri text,
-    uri_type text,
-    eid integer,
-    version character varying,
-    uri_original text,
+-- ============================================================
+-- TABLE: testsuite.uris_long_temp
+-- DESCRIPTION: Temporary table to store URLs from new harvests
+--              Used for comparison against main tables
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.uris_long_temp (
+    gid           SERIAL,
+    uuid          TEXT,
+    entity        TEXT,
+    description   TEXT,
+    uri           TEXT,
+    uri_type      TEXT,
+    eid           INTEGER,
+    version       VARCHAR,
+    uri_original  TEXT,
     CONSTRAINT uris_long_temp_pkey PRIMARY KEY (gid)
 );
 
--- CREATE TABLE TO STORE THE NAME AND EMAIL ADDRESS
--- OF THE DATASETS/RECORDS MANAGERS OF THE ENTITIES
-CREATE TABLE IF NOT EXISTS testsuite.entities_email_reports
-(
-    gid SERIAL,
-    entity text,
-    manager text,
-    email,
-    services_number integer,
-	eid integer,
+-- ============================================================
+-- TABLE: testsuite.entities_email_reports
+-- DESCRIPTION: Stores entity managers' names and email addresses
+-- ============================================================
+CREATE TABLE IF NOT EXISTS testsuite.entities_email_reports (
+    gid              SERIAL,
+    entity           TEXT,
+    manager          TEXT,
+    email            TEXT,
+    services_number  INTEGER,
+    eid              INTEGER,
     CONSTRAINT entities_email_reports_pkey PRIMARY KEY (gid)
 );
