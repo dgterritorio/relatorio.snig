@@ -3,7 +3,7 @@
 BASEFOLDER="/tmp"
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-$SCRIPT_DIR/01_download_csw_records_parallel.sh
+$SCRIPT_DIR/01_download_csw_records.sh
 $SCRIPT_DIR/02_csw_records_to_csv.sh
 $SCRIPT_DIR/03_download_geonetwork_metadata.sh
 $SCRIPT_DIR/04_import_xml_metadata.sh
