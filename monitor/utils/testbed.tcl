@@ -76,9 +76,7 @@ set q [$job_o task_queue]
 
 set task_l [$q peek [$q size]]
 
-foreach t $task_l {
-    set task_a([dict get $t task]) $t
-}
+foreach t $task_l { set task_a([dict get $t task]) $t }
 
 #source tcl/tasks_procedures.tcl
 #$job_o post_task [thread::id]

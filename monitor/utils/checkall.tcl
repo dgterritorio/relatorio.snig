@@ -72,7 +72,7 @@ set sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul"
 set delay	1
 set concurrency 0
 set min_wait    1
-set max_wait    -1
+set max_wait   -1
 set limit       0
 set eid			0
 set min_days	0

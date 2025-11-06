@@ -29,7 +29,8 @@ package require Tclx
 package require fileutil
 
 proc ::ngis::out {m} { syslog -perror -ident snig -facility user info $m }
-
+proc ::ngis::err {m} { syslog -perror -ident snig -facility user error $m }
+ 
 # let's seed the random numbers generator
 
 random seed [clock seconds]
@@ -37,29 +38,27 @@ random seed [clock seconds]
 set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
 ::ngis::clientio query_server $con "FORMAT JSON" 104
 
-set http0_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-               "join testsuite.service_status ss on ss.gid = ul.gid where ss.exit_info like 'Invalid% 0'"}
+set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul join testsuite.service_status ss on ss.gid = ul.gid" }
 
-set newservice_sql {"select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-                    "left join testsuite.service_status ss on ss.gid = ul.gid where ss.gid is null"}
+set http0_sql       [concat $sql_base "where ss.exit_info like 'Invalid% 0'"]
+set newservice_sql  [concat $sql_base "where ss.gid is null"]
+set stalerecs_sql   [concat $sql_base "where ss.task = 'congruence'"]
 
-set stalerecs_sql { "select uri,ul.gid,ss.exit_info,ss.ts from testsuite.uris_long ul" 
-                    "left join testsuite.service_status ss on ss.gid=ul.gid"
-                    "where ss.task = 'congruence' and ss.exit_info != 'Invalid% 0'"}
+# With Tcl9 these should become immutable variables
 
-# With Tcl9 this should become an immutable variable
-
-set fun         http0recs
-set sql         $http0_sql
-set limit       20
-set max_jobs_n  0
+set fun             generic
+set sql             $sql_base
+set limit           20
+set max_jobs_n      0
 set min_jobs_per_seq 20
-set jobs_seq_delay 5000
-set nhours      24
-set ndays       0
-set min_wait    100
-set max_wait    4000
-set eid         0
+set jobs_seq_delay  5000
+set nhours          24
+set ndays           0
+set min_wait        100
+set max_wait        4000
+set eid             0
+set gids            ""
+set hosts           ""
 
 if {$argc > 0} {
     set arguments $argv
@@ -67,9 +66,33 @@ if {$argc > 0} {
         set arguments [lassign $arguments a]
 
         switch -nocase -- $a {
+            --eids -
             --eid {
                 set arguments [lassign $arguments eid]
-                ::ngis::out "Restricting to eid = $eid"
+                if {[regexp {^\d+([ \t]*,[ \t]*\d+)*$} $eid] == 0} {
+                    ::ngis::err "Invalid argument: --eid argument must be comma separated list of integers"
+                    return
+                }
+                ::ngis::out "Restricting to eid in $eid"
+            }
+            --gids {
+                set arguments [lassign $arguments gids]
+                if {[regexp {^\d+([ \t]*,[ \t]*\d+)*$} $gids] == 0} {
+                    ::ngis::err "Invalid argument: --gids argument must be comma separated list of integers"
+                    return
+                }
+                ::ngis::out "Restricting to records in $gids"
+            }
+            --hosts {
+                set arguments [lassign $arguments hosts]
+                if {[regexp {^(\w[\w\.]*)([ \t]*,[ \t]*(\w[\w\.]*))*$} $hosts] == 0} {
+                    ::ngis::err "Invalid argument: --gids argument must be comma separated list of host names"
+                    return
+                }
+                set hosts [lmap h [split $hosts ","] {
+                    format "'%s'" $h
+                }]
+                set hosts [join $hosts ","]
             }
             --stalerecs {
                 set fun stalerecs
@@ -139,18 +162,30 @@ if {($fun == "stalerecs") || ($fun == "http0recs")} {
     if {$nhours > 0} {
         lappend sql "AND ss.ts < NOW() - INTERVAL '$nhours hours'"
     }
+} elseif {$fun == "generic"} {
+    lappend sql "WHERE ss.task = 'congruence'"
 }
 
-if {$eid != 0} {
-    lappend sql "AND ul.eid = $eid"
+set clauses_l {}
+if {$eid != 0} { lappend clauses_l "ul.eid IN ($eid)" }
+if {$gids != ""} { lappend clauses_l "ul.gid IN ($gids)" }
+if {$hosts != ""} { 
+    set hostname_regexp { substring( ul.uri from '.*://([^/]*)' )}
+    lappend clauses_l "$hostname_regexp in ($hosts)"
+}
+
+if {[llength $clauses_l] > 0} {
+    set clauses [join $clauses_l " OR "]
+    lappend sql "AND ($clauses)"
 }
 
 if {($fun == "stalerecs") || ($fun == "http0recs")} {
     lappend sql "ORDER BY ss.ts"
 }
 if {$limit != 0} { lappend sql "LIMIT $limit" }
+::ngis::out "sql (list): $sql"
 
-set sql [join [subst $sql] " "]
+set sql [join $sql " "]
 
 ::ngis::out "sql: $sql"
 
