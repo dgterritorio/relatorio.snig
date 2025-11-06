@@ -30,15 +30,45 @@ package require fileutil
 
 proc ::ngis::out {m} { syslog -perror -ident snig -facility user info $m }
 proc ::ngis::err {m} { syslog -perror -ident snig -facility user error $m }
- 
-# let's seed the random numbers generator
+proc ::ngis::print_help {} {
+    puts {checkservice.tcl --option1 value --option2 value...
 
-random seed [clock seconds]
+where recognized options are
 
-set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
-::ngis::clientio query_server $con "FORMAT JSON" 104
+  * --stalerecs check stale services status records. By default service status
+                records last checked before 24h (this value can be changed with
+                options '--nhours' and '--ndays'
 
-set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul join testsuite.service_status ss on ss.gid = ul.gid" }
+  * --newrecs   starts a check run that searches for service record just registered
+                by the harvesting procedure
+
+  * --http0     searches for service status records of the url_status_codes tests that
+                for some reason returned an invalid HTTP status code 0
+
+  * --gids      Comma separated list of service records gids to be checked
+
+  * --eids      Comma separated list of entity eid to be checked
+
+  * --host      Comma separated list of host names to be checked
+
+                The three options --host, --eids, --gids selection results are or'ed and
+                therefore the selected record set is the union of them 
+
+  * --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
+                the limit is disabled
+
+  * --min-wait  
+    --max-wait Minimum and maximum time (in seconds) between subsequent job sequence checks.
+               The actual wait time is generated randomly between these extrema. Setting
+               only the minimum forces constant rate of checks
+
+  * --max-jobs Maximum number of jobs in every job sequence (default 20). If the search
+               rules select for example 110 records these are checked in 5 20 jobs sequences
+               and a final 10 jobs sequence}
+} 
+
+set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" \
+               "join testsuite.service_status ss on ss.gid = ul.gid" }
 
 set http0_sql       [concat $sql_base "where ss.exit_info like 'Invalid% 0'"]
 set newservice_sql  [concat $sql_base "where ss.gid is null"]
@@ -54,8 +84,8 @@ set min_jobs_per_seq 20
 set jobs_seq_delay  5000
 set nhours          24
 set ndays           0
-set min_wait        100
-set max_wait        4000
+set min_wait        5
+set max_wait       -1
 set eid             0
 set gids            ""
 set hosts           ""
@@ -125,15 +155,6 @@ if {$argc > 0} {
                 set arguments [lassign $arguments max_jobs_n]
                 ::ngis::out "set maximum concurrent jobs as $max_jobs_n"
             }
-            --seq-delay {
-                set arguments [lassign $arguments js_delay]
-                if {$js_delay > 0} {
-                    set jobs_seq_delay $js_delay
-                    ::ngis::out "job sequence scheduling delay $jobs_seq_delay"
-                } else {
-                    ::ngis::out "The job sequence scheduling delay must be > 0"
-                }
-            }
             --min-wait {
                 set arguments [lassign $arguments min_wait]
             }
@@ -142,11 +163,28 @@ if {$argc > 0} {
             }
             default {
                 ::ngis::out "Unrecognized argument '$a'"
+                ::ngis::print_help
+                return
             }
         }
-
     }
+} else {
+    ::ngis::print_help
+    return
 }
+
+#
+# let's seed the random numbers generator
+
+random seed [clock seconds]
+
+set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
+::ngis::clientio query_server $con "FORMAT JSON" 104
+
+if {$max_wait < $min_wait} {
+    set max_wait [expr $min_wait + 1]
+}
+set delta_t [expr 1000*($max_wait - $min_wait)]
 
 ::ngis::out "Random wait time limits: $min_wait, $max_wait"
 
@@ -183,7 +221,7 @@ if {($fun == "stalerecs") || ($fun == "http0recs")} {
     lappend sql "ORDER BY ss.ts"
 }
 if {$limit != 0} { lappend sql "LIMIT $limit" }
-::ngis::out "sql (list): $sql"
+#::ngis::out "sql (list): $sql"
 
 set sql [join $sql " "]
 
@@ -192,12 +230,11 @@ set sql [join $sql " "]
 set resultset [::ngis::service exec_sql_query $sql]
 # setting up the random number generator
 
-set delta_t [expr $max_wait - $min_wait]
 set nrecs 0
 
 set allrows [$resultset allrows]
 set gids_l [lmap r $allrows { dict get $r gid }]
-::ngis::out "processing gids: $gids_l"
+::ngis::out "processing [llength $gids_l] gids"
 
 set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
 set njobs [dict get $returned_message_d njobs]
@@ -223,7 +260,11 @@ while {[llength $gids_l] > 0} {
         ::ngis::clientio query_server $con "CHECK $service_l" 102
         ::ngis::out "Created Job Sequence for [llength $service_l] jobs"
     }
-    after $jobs_seq_delay
+
+    # the random time is in ms
+
+    set random_delta [random [expr 1 + $delta_t]]
+    after [expr 1000*$min_wait + $random_delta]
 }
 
 ::ngis::out "$njobs_to_process records processed for function $fun"

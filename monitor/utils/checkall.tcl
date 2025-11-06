@@ -122,7 +122,7 @@ if {$argc > 0} {
 }
 
 if {$max_wait < $min_wait} {
-    set max_wait [expr $min_wait + 1]
+    set max_wait $min_wait
 }
 
 set delta_t [expr 1000*($max_wait - $min_wait)]
@@ -150,9 +150,11 @@ while {[llength $gids_l] > 0} {
     ::ngis::clientio query_server $con "CHECK $gid" 102
 
 	# the argumento to 'random' must be > 0
-
-    set random_delta [random [expr 1 + $delta_t]]
-    after [expr 1000*$min_wait + $random_delta]
+    set effective_delta 0
+    if {$delta_t > 0} { 
+        set effective_delta [random [expr 1 + $delta_t]]
+    }
+    after [expr 1000*$min_wait + $effective_delta]
     incr processed_services
 
 }

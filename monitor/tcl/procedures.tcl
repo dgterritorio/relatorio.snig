@@ -74,11 +74,12 @@ namespace eval ::ngis::procedures {
             namespace eval ::ngis::tasks [list source $script]
         }
 
+		set gid      [::ngis::tasks gid $task_d]
         set uri_type [::ngis::tasks type $task_d]
         set uuid     [::ngis::tasks uuid $task_d]
         set function [::ngis::tasks function $task_d]
 
-        set uuid_space      [file join $::ngis::data_root data $uri_type $uuid]
+        set uuid_space      [file join $::ngis::data_root data $uri_type $uuid $gid]
         set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
         if {[ catch {
             set t1 [clock milliseconds]
@@ -111,9 +112,10 @@ namespace eval ::ngis::procedures {
         # determine the storage space for this task. The uuid_space and
         # tmpfile_root directory are passed as arguments to the script.
 
+		set gid			 [::ngis::tasks gid $task_d]
         set uuid         [::ngis::tasks uuid $task_d]
         set uri_type     [::ngis::tasks type $task_d]
-        set uuid_space   [file join $::ngis::data_root data $uri_type $uuid]
+        set uuid_space   [file join $::ngis::data_root data $uri_type $uuid $gid]
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
 
         set script [::ngis::tasks script $task_d]
