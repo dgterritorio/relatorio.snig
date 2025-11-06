@@ -1,4 +1,8 @@
--- Ungrouped results
+-- ============================================================
+-- VIEW: stats_and_metrics._00_ungrouped_results
+-- PURPOSE:  00 ungrouped results
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._00_ungrouped_results AS
 SELECT 
     b.entity,
@@ -29,7 +33,11 @@ FROM testsuite.uris_long b
 ORDER BY entity, uri, task;
 
 
--- Count the URLs by they http protocol (http vs https vs other)
+-- ============================================================
+-- VIEW: stats_and_metrics._01_group_urls_by_http_protocol
+-- PURPOSE:  01 group urls by http protocol
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._01_group_urls_by_http_protocol AS
 WITH temp AS 
 (
@@ -42,7 +50,11 @@ ORDER BY url_start
 SELECT row_number() OVER () AS gid, * FROM temp;
 
 
--- Count the URLs by they http protocol (http vs https vs other) and group also by organization
+-- ============================================================
+-- VIEW: stats_and_metrics._01_group_urls_by_http_protocol_and_entity
+-- PURPOSE:  01 group urls by http protocol and entity
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._01_group_urls_by_http_protocol_and_entity AS
 WITH temp AS 
 (
@@ -55,7 +67,11 @@ ORDER BY entity,url_start
 SELECT row_number() OVER () AS gid, * FROM temp;
 
 
--- Count the URLs by they http status code
+-- ============================================================
+-- VIEW: stats_and_metrics._02_group_by_http_status_code_global
+-- PURPOSE:  02 group by http status code global
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
  AS
  WITH a AS (
@@ -138,7 +154,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._02_group_by_http_status_code_global
    FROM temp
   ORDER BY count DESC;
 
--- Count the URLs by they http status code and group also by organization
+
+-- ============================================================
+-- VIEW: stats_and_metrics._03_group_by_http_status_code_and_entity
+-- PURPOSE:  03 group by http status code and entity
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entity
  AS
  WITH a AS (
@@ -225,7 +246,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._03_group_by_http_status_code_and_entit
    FROM temp
   ORDER BY entity, count DESC;
 
--- Count the URLs by they http status code and group also by domain
+
+-- ============================================================
+-- VIEW: stats_and_metrics._04_group_by_http_status_code_and_domain
+-- PURPOSE:  04 group by http status code and domain
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._04_group_by_http_status_code_and_domain
  AS
  WITH a AS (
@@ -313,7 +339,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._04_group_by_http_status_code_and_domai
   ORDER BY uri_domain, count DESC;
 
 
--- Count the URLs by they WMS and WFS Capabilities document validity 
+-- ============================================================
+-- VIEW: stats_and_metrics._05_group_by_wms_capabilities_validity_global
+-- PURPOSE:  05 group by wms capabilities validity global
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._05_group_by_wms_capabilities_validity_global
  AS
  WITH a AS (
@@ -340,6 +370,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._05_group_by_wms_capabilities_validity_
     ping_average
    FROM temp
   ORDER BY count desc;
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._06_group_by_wfs_capabilities_validity_global
+-- PURPOSE:  06 group by wfs capabilities validity global
+-- ============================================================
 
 CREATE OR REPLACE VIEW stats_and_metrics._06_group_by_wfs_capabilities_validity_global
  AS
@@ -369,7 +405,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._06_group_by_wfs_capabilities_validity_
   ORDER BY count desc;
 
 
--- Count the URLs by they WMS/WFS Capabilities XML document validity and group also by organization
+-- ============================================================
+-- VIEW: stats_and_metrics._07_group_by_wms_capabilities_validity_and_entity
+-- PURPOSE:  07 group by wms capabilities validity and entity
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._07_group_by_wms_capabilities_validity_and_entity
  AS
  WITH a AS (
@@ -400,6 +440,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._07_group_by_wms_capabilities_validity_
     ping_average
    FROM temp
   ORDER BY entity, count desc;
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._08_group_by_wfs_capabilities_validity_and_entity
+-- PURPOSE:  08 group by wfs capabilities validity and entity
+-- ============================================================
 
 CREATE OR REPLACE VIEW stats_and_metrics._08_group_by_wfs_capabilities_validity_and_entity
  AS
@@ -433,7 +479,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._08_group_by_wfs_capabilities_validity_
   ORDER BY entity, count desc;
 
 
--- Count the URLs by they WMS/WFS Capabilities XML document validity and group also by domain
+-- ============================================================
+-- VIEW: stats_and_metrics._09_group_by_wms_capabilities_validity_and_domain
+-- PURPOSE:  09 group by wms capabilities validity and domain
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._09_group_by_wms_capabilities_validity_and_domain
  AS
  WITH a AS (
@@ -463,6 +513,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._09_group_by_wms_capabilities_validity_
     ping_average
    FROM temp
   ORDER BY uri_domain, count DESC;
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._10_group_by_wfs_capabilities_validity_and_domain
+-- PURPOSE:  10 group by wfs capabilities validity and domain
+-- ============================================================
 
 CREATE OR REPLACE VIEW stats_and_metrics._10_group_by_wfs_capabilities_validity_and_domain
  AS
@@ -495,7 +551,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._10_group_by_wfs_capabilities_validity_
   ORDER BY uri_domain, count DESC;
 
 
--- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity 
+-- ============================================================
+-- VIEW: stats_and_metrics._11_group_by_wms_gdal_info_validity_global
+-- PURPOSE:  11 group by wms gdal info validity global
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._11_group_by_wms_gdal_info_validity_global
  AS
  WITH a AS (
@@ -521,6 +581,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._11_group_by_wms_gdal_info_validity_glo
     ping_average
    FROM temp
   ORDER BY count DESC;
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._12_group_by_wfs_ogr_info_validity_global
+-- PURPOSE:  12 group by wfs ogr info validity global
+-- ============================================================
 
 CREATE OR REPLACE VIEW stats_and_metrics._12_group_by_wfs_ogr_info_validity_global
  AS
@@ -566,7 +632,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._12_group_by_wfs_ogr_info_validity_glob
   ORDER BY count DESC;
 
 
--- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by organization
+-- ============================================================
+-- VIEW: stats_and_metrics._13_group_by_wms_gdal_info_validity_and_entity
+-- PURPOSE:  13 group by wms gdal info validity and entity
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._13_group_by_wms_gdal_info_validity_and_entity
  AS
  WITH a AS (
@@ -596,7 +666,13 @@ CREATE OR REPLACE VIEW stats_and_metrics._13_group_by_wms_gdal_info_validity_and
     ping_average
    FROM temp
   ORDER BY entity, count DESC;
-  
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._14_group_by_wfs_ogr_info_validity_and_entity
+-- PURPOSE:  14 group by wfs ogr info validity and entity
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._14_group_by_wfs_ogr_info_validity_and_entity
  AS
  WITH a AS (
@@ -628,7 +704,11 @@ CREATE OR REPLACE VIEW stats_and_metrics._14_group_by_wfs_ogr_info_validity_and_
   ORDER BY entity, count DESC;
 
 
--- Count the URLs by they WMS and WFS gdal_info/ogr_info response validity and group also by domain
+-- ============================================================
+-- VIEW: stats_and_metrics._15_group_by_wms_gdal_info_validity_and_domain
+-- PURPOSE:  15 group by wms gdal info validity and domain
+-- ============================================================
+
 CREATE OR REPLACE VIEW stats_and_metrics._15_group_by_wms_gdal_info_validity_and_domain
  AS
  WITH a AS (
@@ -658,6 +738,12 @@ CREATE OR REPLACE VIEW stats_and_metrics._15_group_by_wms_gdal_info_validity_and
     ping_average
    FROM temp
   ORDER BY uri_domain, count DESC;
+
+
+-- ============================================================
+-- VIEW: stats_and_metrics._16_group_by_wfs_ogr_info_validity_and_domain
+-- PURPOSE:  16 group by wfs ogr info validity and domain
+-- ============================================================
 
 CREATE OR REPLACE VIEW stats_and_metrics._16_group_by_wfs_ogr_info_validity_and_domain
  AS
