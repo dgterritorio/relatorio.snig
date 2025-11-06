@@ -11,7 +11,7 @@ mkdir -p "$METADATA_DIR"
 # Function to attempt downloads given an input list of UUIDs
 download_records() {
   local input_file="$1"
-  : > "$FAILED_LOG"  # clear old log
+  : > "$FAILED_LOG"  # Clear old log
 
   while IFS="$" read -r uuid other_fields; do
     [[ -z "$uuid" ]] && continue
@@ -31,13 +31,13 @@ download_records() {
   done < "$input_file"
 }
 
-# First pass — from main CSV
+# First pass — process all UUIDs from the main CSV
 echo "---- First pass ----"
 download_records "$INPUT_CSV"
 
-# Retry loop
+# Retry loop — reattempt failed downloads
 RETRY_COUNT=0
-MAX_RETRIES=10  # stop if it's looping too much
+MAX_RETRIES=10  # Stop if too many retries
 
 while [[ -s "$FAILED_LOG" && $RETRY_COUNT -lt $MAX_RETRIES ]]; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
@@ -51,6 +51,7 @@ while [[ -s "$FAILED_LOG" && $RETRY_COUNT -lt $MAX_RETRIES ]]; do
   download_records "$TMP_RETRY_LIST"
 done
 
+# Final summary
 echo
 if [[ -s "$FAILED_LOG" ]]; then
   echo "⚠️  Some downloads still failed after $RETRY_COUNT attempts."
@@ -58,5 +59,3 @@ if [[ -s "$FAILED_LOG" ]]; then
 else
   echo "✅ All downloads successful after $RETRY_COUNT attempts!"
 fi
-
-done < "$BASEFOLDER/CSW_RECORDS_CSV/csw_records_csv.csv"
