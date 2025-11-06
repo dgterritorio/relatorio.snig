@@ -24,8 +24,8 @@ process_chunk() {
     local payload_file_cdgs="download_csw_records_payload_cdgs_${start}.txt"
 
     # Prepare payload file
-    cp "$SCRIPT_DIR/01_download_csw_records_payload_template.txt" "$BASEFOLDER/$payload_file"
-    cp "$SCRIPT_DIR/01_download_csw_records_payload_cdgs_template.txt" "$BASEFOLDER/$payload_file_cdgs"
+    cp "$SCRIPT_DIR/csw_payloads/01_download_csw_records_payload_template.txt" "$BASEFOLDER/$payload_file"
+    cp "$SCRIPT_DIR/csw_payloads/01_download_csw_records_payload_cdgs_template.txt" "$BASEFOLDER/$payload_file_cdgs"
 
     sed -i 's/XXX/'$start'/' "$BASEFOLDER/$payload_file"
     sed -i 's/YYY/'$step'/' "$BASEFOLDER/$payload_file"
