@@ -16,13 +16,18 @@ output_file="$BASEFOLDER/step1.csv"
 
 > "$output_file"
 
-while IFS='$' read -r col1 col2 col3 col4 col5 col6 col7 col8; do
-    # Loop over all possible URL columns (col4..col8)
-    for url in "$col4" "$col5" "$col6" "$col7" "$col8"; do
-        # Skip empty URLs
+while IFS= read -r line; do
+    IFS='$' read -r -a cols <<< "$line"
+
+    col1="${cols[0]}"
+    col2="${cols[1]}"
+    col3="${cols[2]}"
+
+    # Loop from 3 to end (bash arrays are zero-indexed)
+    for ((i=3; i<${#cols[@]}; i++)); do
+        url="${cols[$i]}"
         [ -z "$url" ] && continue
 
-        # Identify service type
         additional_field="OTHER"
         if echo "$url" | grep -iq "wms"; then
             additional_field="WMS"
@@ -34,10 +39,10 @@ while IFS='$' read -r col1 col2 col3 col4 col5 col6 col7 col8; do
             additional_field="OWS"
         fi
 
-        # Write one row per URL
         echo "$col1\$${col2}\$${col3}\$${url}\$${additional_field}" >> "$output_file"
     done
 done < "$input_file"
+
 
 echo "[STEP 1] Created $output_file"
 
