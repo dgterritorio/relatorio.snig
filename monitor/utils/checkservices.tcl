@@ -35,36 +35,36 @@ proc ::ngis::print_help {} {
 
 where recognized options are
 
-  * --stalerecs check stale services status records. By default service status
-                records last checked before 24h (this value can be changed with
-                options '--nhours' and '--ndays'
+  --stalerecs check stale services status records. By default service status
+              records last checked before 24h (this value can be changed with
+              options '--nhours' and '--ndays'
 
-  * --newrecs   starts a check run that searches for service record just registered
-                by the harvesting procedure
+  --newrecs   starts a check run that searches for service record just registered
+              by the harvesting procedure
 
-  * --http0     searches for service status records of the url_status_codes tests that
-                for some reason returned an invalid HTTP status code 0
+  --http0     searches for service status records of the url_status_codes tests that
+              for some reason returned an invalid HTTP status code 0
 
-  * --gids      Comma separated list of service records gids to be checked
+  --gids      Comma separated list of service records gids to be checked
 
-  * --eids      Comma separated list of entity eid to be checked
+  --eids      Comma separated list of entity eid to be checked
 
-  * --host      Comma separated list of host names to be checked
+  --host      Comma separated list of host names to be checked
 
-                The three options --host, --eids, --gids selection results are or'ed and
-                therefore the selected record set is the union of them 
+              The three options --host, --eids, --gids selection results are or'ed and
+              therefore the selected record set is the union of them 
 
-  * --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
-                the limit is disabled
+  --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
+              the limit is disabled
 
-  * --min-wait  
-    --max-wait Minimum and maximum time (in seconds) between subsequent job sequence checks.
-               The actual wait time is generated randomly between these extrema. Setting
-               only the minimum forces constant rate of checks
+  --min-wait  
+  --max-wait Minimum and maximum time (in seconds) between subsequent job sequence checks.
+             The actual wait time is generated randomly between these extrema. Setting
+             only the minimum forces constant rate of checks
 
-  * --max-jobs Maximum number of jobs in every job sequence (default 20). If the search
-               rules select for example 110 records these are checked in 5 20 jobs sequences
-               and a final 10 jobs sequence}
+  --max-jobs Maximum number of jobs in every job sequence (default 20). If the search
+             rules select for example 110 records these are checked in 5 20 jobs sequences
+             and a final 10 jobs sequence}
 } 
 
 set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" \
@@ -207,7 +207,7 @@ if {($fun == "stalerecs") || ($fun == "http0recs")} {
 set clauses_l {}
 if {$eid != 0} { lappend clauses_l "ul.eid IN ($eid)" }
 if {$gids != ""} { lappend clauses_l "ul.gid IN ($gids)" }
-if {$hosts != ""} { 
+if {$hosts != ""} {
     set hostname_regexp { substring( ul.uri from '.*://([^/]*)' )}
     lappend clauses_l "$hostname_regexp in ($hosts)"
 }

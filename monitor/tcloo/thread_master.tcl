@@ -11,6 +11,7 @@ catch {::ngis::ThreadMaster destroy }
     variable max_threads_number
     variable idle_thread_queue
     variable running_threads
+    variable chores_thread_id
 
     constructor {mtn} {
         set max_threads_number      $mtn
@@ -18,6 +19,7 @@ catch {::ngis::ThreadMaster destroy }
         set thread_list             {}
         set idle_thread_queue       [::struct::queue]
         array set running_threads   {}
+        set chores_thread_id        ""
     }
 
     destructor {
@@ -35,6 +37,7 @@ catch {::ngis::ThreadMaster destroy }
 
         set thread_id [thread::create {
             source tcl/tasks_procedures.tcl
+            source tcl/chores.tcl
 
             ::ngis::logger emit "thread [thread::id] started"
             ::thread::wait
@@ -86,6 +89,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method running_threads {} { return [array names running_threads] }
+
     method idle_threads {{remove false}} {
         if {$remove} {
             set method get
@@ -94,6 +98,18 @@ catch {::ngis::ThreadMaster destroy }
         }
 
         return [$idle_thread_queue $method [$idle_thread_queue size]]
+    }
+
+    method run_chores {} {
+        if {$chores_thread_id == ""} {
+            set chores_thread_id [my get_available_thread]
+            thread::send -async $chores_thread_id [list ::ngis::chores::exec_chores [::thread::id] [self]]
+        }
+    }
+
+    method chores_completed {} {
+        my move_to_idle $chores_thread_id
+        set chores_thread_id ""
     }
 
     method broadcast {cmd} {

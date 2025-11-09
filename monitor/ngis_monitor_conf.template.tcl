@@ -23,6 +23,7 @@ namespace eval ::ngis {
     variable task_timeout       30
     variable max_workers_number 50
     variable batch_num_jobs     10
+    variable chores_wait_time   60
 
     variable debug_task_delay   5000
     variable task_delay         100

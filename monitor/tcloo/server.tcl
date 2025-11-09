@@ -278,9 +278,11 @@ package require ngis::utils
                                     -server [namespace code [list my accept_tcp_connection]] $::ngis::tcpport]
             ::ngis::logger emit "server listening on tcp socket '$tcp_channel'"
         }
+
         # the job_controller_object has a global accessible and defined name
 
         set job_controller [my create_job_controller $max_workers]
+        after 1000 $job_controller schedule_chores
 
         vwait ::wait_for_events
 
