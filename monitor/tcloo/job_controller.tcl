@@ -65,6 +65,11 @@ namespace eval ::ngis {
             }
         }
 
+
+        method start_chores_thread {} {
+            $thread_master start_timed_chores [self]
+        }
+
         method job_sequences {} {
             return [concat $sequence_list $pending_sequences]
         }
@@ -119,14 +124,6 @@ namespace eval ::ngis {
         method move_thread_to_idle {thread_id} {
             $thread_master move_to_idle $thread_id
             my RescheduleRoundRobin
-        }
-
-        method schedule_chores {} {
-            if {[$thread_master thread_is_available]} {
-                ::ngis::logger emit "demanding chores to be executed"
-                $thread_master run_chores
-            }
-            after [expr 1000 * $::ngis::chores_wait_time] [list [self] schedule_chores]
         }
 
         # -- running_jobs_tot

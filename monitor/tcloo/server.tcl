@@ -282,7 +282,7 @@ package require ngis::utils
         # the job_controller_object has a global accessible and defined name
 
         set job_controller [my create_job_controller $max_workers]
-        after 1000 $job_controller schedule_chores
+        $job_controller start_chores_thread
 
         vwait ::wait_for_events
 

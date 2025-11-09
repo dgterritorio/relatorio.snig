@@ -33,11 +33,49 @@ catch {::ngis::ThreadMaster destroy }
         return [list [array size running_threads] [$idle_thread_queue size]]
     }
 
+    method start_timed_chores {jc} {
+
+        set chores_thread_id [thread::create {
+            set snig_monitor_dir [file normalize [file dirname [info script]]]
+
+            # this is important
+            cd $snig_monitor_dir
+
+            set snig_monitor_dir_pos [lsearch $auto_path $snig_monitor_dir]
+            if {$snig_monitor_dir_pos < 0} {
+                set auto_path [concat $snig_monitor_dir $auto_path]
+            } elseif {$snig_monitor_dir_pos > 0} {
+                set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
+            }
+            package require ngis::conf
+
+            set job_controller ""
+            set thread_master  ""
+            set main_thread    ""
+            set keep_going     true
+            source tcl/chores.tcl
+
+            ::ngis::logger emit "chores thread [thread::id] started"
+            while {$keep_going} { 
+                puts "---- chores executing"
+                after [expr 1000 * $::ngis::chores_wait_time]
+            }
+            ::ngis::logger emit "thread [thread::id] terminating"
+
+        }]
+
+        thread::preserve $chores_thread_id
+            
+        thread::send $chores_thread_id [list set job_controller $jc]
+        thread::send $chores_thread_id [list set thread_master [self]]
+        thread::send $chores_thread_id [list set main_thread [::thread::id]]
+
+    }
+
     method start_worker_thread {} {
 
         set thread_id [thread::create {
             source tcl/tasks_procedures.tcl
-            source tcl/chores.tcl
 
             ::ngis::logger emit "thread [thread::id] started"
             ::thread::wait
