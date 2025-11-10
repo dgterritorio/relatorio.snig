@@ -45,7 +45,8 @@ catch {::ngis::ThreadMaster destroy }
             if {$snig_monitor_dir_pos < 0} {
                 set auto_path [concat $snig_monitor_dir $auto_path]
             } elseif {$snig_monitor_dir_pos > 0} {
-                set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
+                set auto_path [concat $snig_monitor_dir \
+                    [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
             }
 
             package require ngis::conf
@@ -56,7 +57,6 @@ catch {::ngis::ThreadMaster destroy }
                 variable job_controller ""
                 variable thread_master  ""
                 variable main_thread    ""
-                variable keep_going     true
 
                 ::ngis::logger emit "starting chores thread [thread::id]"
                 load_chores [::thread::id]

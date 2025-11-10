@@ -1,6 +1,7 @@
 package require fileutil
 package require ngis::servicedb
 
+
 namespace eval ::ngis::chores {
     ::oo::class create SendHashNotification {
         variable notified_hashes
@@ -20,7 +21,7 @@ namespace eval ::ngis::chores {
         }
 
         method exec {args} {
-            ::ngis::logger emit "executing chore '[dict get [my identify] description]'"
+            ::ngis::logger debug "executing chore '[dict get [my identify] description]'"
 
             set     sql_l "SELECT ee.email,ee.manager,ee.hash,ee.eid FROM $::ngis::ENTITY_EMAIL AS ee JOIN"
             lappend sql_l "(SELECT ul.eid from $::ngis::TABLE_NAME AS ul group by ul.eid) AS eidl ON eidl.eid = ee.eid"
@@ -40,7 +41,14 @@ namespace eval ::ngis::chores {
                     }
                 }
             }
-            if {[llength $notify_services]} {
+            #::ngis::logger emit "notify services: $notify_services"
+            if {[llength $notify_services] > 0} {
+                foreach eid $notify_services {
+                    dict with notified_hashes $eid {
+                        ::ngis::logger emit "notify manager $manager at $email ($hash)"
+                        
+                    }
+                }
                 ::fileutil::writeFile $notified_hashes_fn $notified_hashes
             }
             unset notify_services
