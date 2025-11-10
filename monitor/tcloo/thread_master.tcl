@@ -47,21 +47,26 @@ catch {::ngis::ThreadMaster destroy }
             } elseif {$snig_monitor_dir_pos > 0} {
                 set auto_path [concat $snig_monitor_dir [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
             }
+
             package require ngis::conf
+            package require ngis::chores
+            package require ngis::msglogger
 
-            set job_controller ""
-            set thread_master  ""
-            set main_thread    ""
-            set keep_going     true
-            source tcl/chores.tcl
+            namespace eval ::ngis::chores {
+                variable job_controller ""
+                variable thread_master  ""
+                variable main_thread    ""
+                variable keep_going     true
 
-            ::ngis::logger emit "chores thread [thread::id] started"
-            while {$keep_going} { 
-                puts "---- chores executing"
-                after [expr 1000 * $::ngis::chores_wait_time]
+                ::ngis::logger emit "starting chores thread [thread::id]"
+                load_chores [::thread::id]
+
+                after 1000 [list [namespace current]::exec_chores [::thread::id]]
+
+                ::thread::wait
+                destroy_chores
+                ::ngis::logger emit "thread [thread::id] terminating"
             }
-            ::ngis::logger emit "thread [thread::id] terminating"
-
         }]
 
         thread::preserve $chores_thread_id

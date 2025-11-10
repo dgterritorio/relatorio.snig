@@ -2,26 +2,36 @@
 #
 #
 
-package require ngis::servicedb
-
+package require ngis::conf
 namespace eval ::ngis::chores {
-    variable registered_chores [list notify_created_hash]
+    variable registered_chores ""
 
-    proc exec_chores {master_thread tm_o} {
+    proc exec_chores {master_thread} {
+        variable registered_chores
+        ::ngis::logger emit "exec [llength $registered_chores] registered chores"
+        foreach c $registered_chores { $c exec }
+
+        after [expr 1000 * $::ngis::chores_wait_time] [list [namespace current]::exec_chores $master_thread]
+    }
+
+    proc destroy_chores {} {
         variable registered_chores
 
-        ::ngis::logger emit "executing chores"
-        foreach chore $registered_chores {
-            eval $chore
+        foreach c $registered_chores { $c destroy }
+    }
+
+    proc load_chores {master_thread} {
+        variable registered_chores
+
+        foreach cf [glob chores/*.tcl] {
+            source $cf
+            lappend registered_chores [::ngis::chores::tmp::mk_chore_obj]
         }
+        namespace delete ::ngis::chores::tmp
 
-        ::ngis::logger emit "chores executed"
-        thread::send -async $master_thread [list $tm_o chores_completed]
+        ::ngis::logger emit "chores loaded '$registered_chores'"
     }
 
-    proc notify_created_hash {} {
-
-
-
-    }
 }
+
+package provide ngis::chores 1.0
