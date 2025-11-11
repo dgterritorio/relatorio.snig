@@ -1,6 +1,5 @@
 package require fileutil
 package require ngis::servicedb
-package require ngis::utils
 
 namespace eval ::ngis::chores {
     ::oo::class create SendHashNotification {
@@ -21,7 +20,7 @@ namespace eval ::ngis::chores {
         }
 
 
-        method exec {args} {
+        method exec_chore {args} {
             ::ngis::logger debug "executing chore '[dict get [my identify] description]'"
 
             set     sql_l "SELECT ee.email,ee.manager,ee.hash,ee.eid FROM $::ngis::ENTITY_EMAIL AS ee JOIN"

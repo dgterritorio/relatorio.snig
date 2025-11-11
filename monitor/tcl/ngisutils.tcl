@@ -64,4 +64,4 @@ namespace eval ::ngis::utils {
 
 }
 
-package provide ngis::utils 1.0
+package provide ngis::choreutils 1.0

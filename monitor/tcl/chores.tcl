@@ -3,13 +3,15 @@
 #
 
 package require ngis::conf
+package require ngis::choreutils
+
 namespace eval ::ngis::chores {
     variable registered_chores ""
 
     proc exec_chores {master_thread} {
         variable registered_chores
         ::ngis::logger emit "exec [llength $registered_chores] registered chores"
-        foreach c $registered_chores { $c exec }
+        foreach c $registered_chores { $c exec_chore }
 
         after [expr 1000 * $::ngis::chores_wait_time] [list [namespace current]::exec_chores $master_thread]
     }
