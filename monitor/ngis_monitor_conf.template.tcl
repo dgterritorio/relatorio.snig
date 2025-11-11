@@ -18,6 +18,7 @@ namespace eval ::ngis {
     variable tasks_dir          [file join $snig_server_root tasks]
     variable utils_dir          [file join $snig_server_root utils]
     variable debugging          false
+    variable development        false
 
     variable task_results_queue_size 10
     variable task_timeout       30
@@ -34,6 +35,9 @@ namespace eval ::ngis {
 
     variable authorship         {NATURAL GIS LDA - P.IVA 508912032 (PT)}
     variable bug_reports        "https://github.com/dgterritorio/relatorio.snig/issues"
+    variable manager_name       "Giovanni Manghi"
+    variable manager_email      "giovanni.manghi@gmail.com"
+    variable smtprelay          localhost
 
     variable tcpaddr            "127.0.0.1"
     variable tcpport            "4422"
