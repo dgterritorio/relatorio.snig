@@ -20,6 +20,7 @@ namespace eval ::ngis::chores {
             return [dict create class [namespace current]::SendHashNotification description "Sending hash based URLs"]
         }
 
+
         method exec {args} {
             ::ngis::logger debug "executing chore '[dict get [my identify] description]'"
 
@@ -38,6 +39,11 @@ namespace eval ::ngis::chores {
                         ([dict get $notified_hashes $eid email] != [dict get $r email])} {
                         lappend notify_services $eid
                         dict set notified_hashes $eid [dict filter $r key manager email hash]
+
+                        if {[catch { ::ngis::utils::send_mail "hash_changed" $r } e einfo} {
+                            ::ngis::logger emit "error sending mail: $e" error
+                        }
+
                     }
                 }
             }
