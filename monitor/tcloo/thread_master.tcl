@@ -4,6 +4,7 @@
 package require TclOO
 package require Thread
 package require struct::queue
+package require ngis::chores
 
 catch {::ngis::ThreadMaster destroy }
 

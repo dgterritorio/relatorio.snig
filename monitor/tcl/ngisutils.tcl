@@ -10,9 +10,9 @@ namespace eval ::ngis::utils {
     variable msg_templates 
 
     array set msg_templates [list hash_changed {
-    Message for MANAGER (EMAIL)
+  Message for MANAGER (EMAIL)
 
-    SENDER_NAME
+  -- SENDER_NAME
 }]
 
     proc send_mail {template data_d} {
