@@ -45,14 +45,14 @@ where recognized options are
   --http0     searches for service status records of the url_status_codes tests that
               for some reason returned an invalid HTTP status code 0
 
-  --gids      Comma separated list of service records gids to be checked
+  --gids      Comma separated list of service record gids to be checked
 
   --eids      Comma separated list of entity eid to be checked
 
   --host      Comma separated list of host names to be checked
 
               The three options --host, --eids, --gids selection results are or'ed and
-              therefore the selected record set is the union of them 
+              therefore the selected record set is the union of their result sets
 
   --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
               the limit is disabled
@@ -113,6 +113,7 @@ if {$argc > 0} {
                 }
                 ::ngis::out "Restricting to records in $gids"
             }
+            --host -
             --hosts {
                 set arguments [lassign $arguments hosts]
                 if {[regexp {^(\w[\w\.]*)([ \t]*,[ \t]*(\w[\w\.]*))*$} $hosts] == 0} {
