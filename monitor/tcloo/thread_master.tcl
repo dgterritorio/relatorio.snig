@@ -151,11 +151,6 @@ catch {::ngis::ThreadMaster destroy }
         }
     }
 
-    method chores_completed {} {
-        my move_to_idle $chores_thread_id
-        set chores_thread_id ""
-    }
-
     method broadcast {cmd} {
         foreach rt [my running_threads] { thread::send -async $rt $cmd }
     }
