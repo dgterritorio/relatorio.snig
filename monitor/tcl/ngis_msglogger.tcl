@@ -23,7 +23,7 @@ namespace eval ::ngis::logger {
 
     proc debug {mesg} {
         if {$::ngis::debugging} {
-            emit $mesg
+            emit "\[debug\] $mesg"
         }
     }
 

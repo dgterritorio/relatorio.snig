@@ -65,6 +65,11 @@ namespace eval ::ngis {
             }
         }
 
+
+        method start_chores_thread {} {
+            $thread_master start_timed_chores [self]
+        }
+
         method job_sequences {} {
             return [concat $sequence_list $pending_sequences]
         }
@@ -153,6 +158,7 @@ namespace eval ::ngis {
                         set seq
                     }
                 }]
+
             }
 
             # we don't have anything to do here if there are no
@@ -193,7 +199,8 @@ namespace eval ::ngis {
             set seq [lindex $sequence_list $sequence_idx]
             set batch 0
 
-            my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+            my LogMessage \
+                "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
 
             set sequence_has_terminated false
             while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {

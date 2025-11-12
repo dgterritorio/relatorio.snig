@@ -4,6 +4,7 @@
 package require TclOO
 package require Thread
 package require struct::queue
+package require ngis::chores
 
 catch {::ngis::ThreadMaster destroy }
 
@@ -11,6 +12,7 @@ catch {::ngis::ThreadMaster destroy }
     variable max_threads_number
     variable idle_thread_queue
     variable running_threads
+    variable chores_thread_id
 
     constructor {mtn} {
         set max_threads_number      $mtn
@@ -18,6 +20,7 @@ catch {::ngis::ThreadMaster destroy }
         set thread_list             {}
         set idle_thread_queue       [::struct::queue]
         array set running_threads   {}
+        set chores_thread_id        ""
     }
 
     destructor {
@@ -29,6 +32,50 @@ catch {::ngis::ThreadMaster destroy }
 
     method status {} {
         return [list [array size running_threads] [$idle_thread_queue size]]
+    }
+
+    method start_timed_chores {jc} {
+
+        set chores_thread_id [thread::create {
+            set snig_monitor_dir [file normalize [file dirname [info script]]]
+
+            # this is important
+            cd $snig_monitor_dir
+
+            set snig_monitor_dir_pos [lsearch $auto_path $snig_monitor_dir]
+            if {$snig_monitor_dir_pos < 0} {
+                set auto_path [concat $snig_monitor_dir $auto_path]
+            } elseif {$snig_monitor_dir_pos > 0} {
+                set auto_path [concat $snig_monitor_dir \
+                    [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
+            }
+
+            package require ngis::conf
+            package require ngis::chores
+            package require ngis::msglogger
+
+            namespace eval ::ngis::chores {
+                variable job_controller ""
+                variable thread_master  ""
+                variable main_thread    ""
+
+                ::ngis::logger emit "starting chores thread [thread::id]"
+                load_chores [::thread::id]
+
+                after 1000 [list [namespace current]::exec_chores [::thread::id]]
+
+                ::thread::wait
+                destroy_chores
+                ::ngis::logger emit "thread [thread::id] terminating"
+            }
+        }]
+
+        thread::preserve $chores_thread_id
+            
+        thread::send $chores_thread_id [list set job_controller $jc]
+        thread::send $chores_thread_id [list set thread_master [self]]
+        thread::send $chores_thread_id [list set main_thread [::thread::id]]
+
     }
 
     method start_worker_thread {} {
@@ -86,6 +133,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method running_threads {} { return [array names running_threads] }
+
     method idle_threads {{remove false}} {
         if {$remove} {
             set method get
@@ -94,6 +142,13 @@ catch {::ngis::ThreadMaster destroy }
         }
 
         return [$idle_thread_queue $method [$idle_thread_queue size]]
+    }
+
+    method run_chores {} {
+        if {$chores_thread_id == ""} {
+            set chores_thread_id [my get_available_thread]
+            thread::send -async $chores_thread_id [list ::ngis::chores::exec_chores [::thread::id] [self]]
+        }
     }
 
     method broadcast {cmd} {
