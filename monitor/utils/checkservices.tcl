@@ -51,8 +51,8 @@ where recognized options are
 
   * --host      Comma separated list of host names to be checked
 
-                The three options --host, --eids, --gids selection results are or'ed and
-                therefore the selected record set is the union of them 
+              The three options --host, --eids, --gids selection results are or'ed and
+              therefore the selected record set is the union of their result sets
 
   * --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
                 the limit is disabled
@@ -113,6 +113,7 @@ if {$argc > 0} {
                 }
                 ::ngis::out "Restricting to records in $gids"
             }
+            --host -
             --hosts {
                 set arguments [lassign $arguments hosts]
                 if {[regexp {^(\w[\w\.]*)([ \t]*,[ \t]*(\w[\w\.]*))*$} $hosts] == 0} {
