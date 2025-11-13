@@ -3,35 +3,48 @@
 
 package require TclOO
 package require Thread
-package require struct::queue
 package require ngis::chores
+package require ngis::msglogger
 
 catch {::ngis::ThreadMaster destroy }
 
 ::oo::class create ::ngis::ThreadMaster {
     variable max_threads_number
-    variable idle_thread_queue
-    variable running_threads
     variable chores_thread_id
+
+    variable threads_acc_d
 
     constructor {mtn} {
         set max_threads_number      $mtn
-        set thread_pnt              0
-        set thread_list             {}
-        set idle_thread_queue       [::struct::queue]
         array set running_threads   {}
         set chores_thread_id        ""
+        set threads_acc_d           [dict create]
     }
 
     destructor {
-        while {[$idle_thread_queue size] > 0} {
-            thread::release [$idle_thread_queue get]
+        dict for {thr_id thr_d} $threads_acc_d {
+            thread::release $thr_id
         }
-        $idle_thread_queue destroy
+
+        ::thread::release $chores_thread_id
     }
 
+    method SpliceThreadAcc {} {
+        set running_threads_list {}
+        set idle_threads_list {}
+        dict for {thr_id thr_d} $threads_acc_d {
+            set status_def [dict get $thr_d status]
+            lappend ${status_def}_threads_list $thr_id
+        }
+        return [list $running_threads_list $idle_threads_list]
+    }
+
+    method splice {} { return [my SpliceThreadAcc] }
+
+    method get_threads_acc {} { return $threads_acc_d }
+
     method status {} {
-        return [list [array size running_threads] [$idle_thread_queue size]]
+        return [my SpliceThreadAcc]
     }
 
     method start_timed_chores {jc} {
@@ -66,7 +79,7 @@ catch {::ngis::ThreadMaster destroy }
 
                 ::thread::wait
                 destroy_chores
-                ::ngis::logger emit "thread [thread::id] terminating"
+                ::ngis::logger emit "chores thread terminating"
             }
         }]
 
@@ -81,28 +94,50 @@ catch {::ngis::ThreadMaster destroy }
     method start_worker_thread {} {
 
         set thread_id [thread::create {
-            source tcl/tasks_procedures.tcl
+            #set snig_monitor_dir [file normalize [file dirname [info script]]]
+            proc initialize {base_dir} {
+                set snig_monitor_dir $base_dir
 
+                # this is important
+                cd $snig_monitor_dir
+
+                puts [pwd]
+            }
+            set ::auto_path [concat [file join / home manghi Projects relatorio.snig monitor] $::auto_path]
+            puts $auto_path
+            package require ngis::msglogger
+            
+            set ::master_thread_id ""
             ::ngis::logger emit "thread [thread::id] started"
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
 
+            ::thread::send $::master_thread_id [list ::ngis::thread_master thread_terminates [::thread::id]]
         }]
 
         thread::preserve $thread_id
+
+        ::thread::send $thread_id [list initialize [file normalize [file join [file dirname [info script]] ".."]]]
+        ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
+        dict set threads_acc_d $thread_id [dict create nruns 0 last_run [clock seconds] status running]
         return $thread_id
 
     }
 
     method thread_is_available {} {
-        if {[$idle_thread_queue size] > 0} { return true }
-        if {[array size running_threads] < $max_threads_number} { return true }
+        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+
+        if {[llength $idle_threads_list] > 0} { return true }
+        if {[llength $running_threads_list] < $max_threads_number} { return true }
         return false
     }
 
     method get_available_thread {} {
-        if {[$idle_thread_queue size] == 0} {
-            if {[array size running_threads] < $max_threads_number} {
+        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        ::ngis::logger emit "[llength $running_threads_list] running, [llength $idle_threads_list] idle threads" debug
+        if {[llength $idle_threads_list] == 0} {
+    
+            if {[llength $running_threads_list] < $max_threads_number} {
                 set thread_id [my start_worker_thread]
                 ::ngis::logger debug "'$thread_id' started ========"
             } else {
@@ -111,37 +146,39 @@ catch {::ngis::ThreadMaster destroy }
                 return -code 1 -errorcode thread_not_available "Running threads number exceeds max_threads_number"
             }
         } else {
-            set thread_id [$idle_thread_queue get]
+            set thread_id [lindex $idle_threads_list 0]
         }
 
         my move_to_running $thread_id
 
-        ::ngis::logger emit "[array size running_threads] running, [$idle_thread_queue size] idle threads"
         return $thread_id
     }
 
+    method thread_terminates {thread_id} {
+        dict unset threads_acc_d $thread_id
+    }
+
     method move_to_idle {thread_id} {
-        if {[info exists running_threads($thread_id)]} {
-            unset running_threads($thread_id)
-        }
-        $idle_thread_queue put $thread_id
-        #puts "the idle queue has [$idle_thread_queue size] elements: [$idle_thread_queue peek [$idle_thread_queue size]]"
+        dict set threads_acc_d $thread_id status idle
     }
 
     method move_to_running {thread_id} {
-        set running_threads($thread_id) [clock seconds]
+        #set running_threads($thread_id) [clock seconds]
+        dict with threads_acc_d $thread_id {
+            set status running
+            incr nruns
+            set last_run [clock seconds]
+        }
     }
 
-    method running_threads {} { return [array names running_threads] }
+    method running_threads {} {
+        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        return $running_threads_list
+    }
 
-    method idle_threads {{remove false}} {
-        if {$remove} {
-            set method get
-        } else {
-            set method peek
-        }
-
-        return [$idle_thread_queue $method [$idle_thread_queue size]]
+    method idle_threads {} {
+        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        return $idle_threads_list
     }
 
     method run_chores {} {
@@ -156,20 +193,21 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method stop_threads {} {
-        set thread_list [array names running_threads]
-        foreach running_thread $thread_list {
+        set threads_list [my running_threads]
+        foreach running_thread $threads_list {
             thread::send -async $running_thread stop_thread
         }
 
-        return [llength $thread_list]
+        return [llength $threads_list]
     }
 
     method terminate_idle_threads {} {
-        while {[$idle_thread_queue size] > 0} {
-            thread::release [$idle_thread_queue get]
+        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        ::ngis::logger debug "[llength $idle_threads_list] threads on the idle list"
+        foreach thread_id $idle_threads_list {
+            thread::release $thread_id
         }
-        ::ngis::logger debug "[$idle_thread_queue size] threads on the idle queue"
     }
 }
-package provide ngis::threads 1.0
+package provide ngis::threads 2.0
 

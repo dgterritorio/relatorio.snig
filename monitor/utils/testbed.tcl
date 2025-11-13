@@ -66,7 +66,7 @@ set gid_rec     [::ngis::service::load_by_gid $gid]
 if {$eid != ""} {
     set service_l    [::ngis::service load_by_entity $eid]
     set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
-    set the_sequence [::ngis::JobSequence create ::job_sequence $datasource ""]
+    set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
 }
 set thread_id [$tm get_available_thread]
 set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registered_tasks]]

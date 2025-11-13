@@ -9,7 +9,19 @@ package require ngis::task
 package require Thread
 package require struct::queue
 
+
+oo::class create JobFactory {
+    superclass oo::class
+    method fromDict {d} {
+        set o [my new]
+        $o configure $d
+        return $o
+    }
+}
+
 ::oo::class create ::ngis::Job
+
+
 
 ::oo::define ::ngis::Job {
     variable sequence

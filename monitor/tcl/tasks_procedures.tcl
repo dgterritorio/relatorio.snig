@@ -1,4 +1,7 @@
-# -- 
+# -- tasks_procedures.tcl
+#
+# procedures to be executed by worker threads
+#
 
 
 package require http
@@ -31,6 +34,15 @@ proc stop_thread {} { set ::stop_signal true }
 # we assume task_d is a well formed dictionary of data describing the task    
 # as be created by calling ::ngis::tasks::mktask
 
+proc fake_long_execution {job_thread_id thread_master_o duration} {
+    ::ngis::logger emit "entering long wait....([::thread::id])"
+    after [expr $duration*1000]
+    ::ngis::logger emit "...wait terminated ([::thread::id])"
+
+    thread::send -async $job_thread_id [list $thread_master_o [::thread::id]]
+}
+
+
 proc mockup_processing {task_d job_thread_id} {
 
     dict with task_d {
@@ -59,3 +71,5 @@ proc do_task {task_d job_thread_id} {
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
 
 }
+
+package provide ngis::task_procedures 1.0
