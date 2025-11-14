@@ -29,7 +29,7 @@ catch {::ngis::ThreadMaster destroy }
         ::thread::release $chores_thread_id
     }
 
-    method SpliceThreadAcc {} {
+    method BreakThreadAccDown {} {
         set running_threads_list {}
         set idle_threads_list {}
         dict for {thr_id thr_d} $threads_acc_d {
@@ -39,12 +39,12 @@ catch {::ngis::ThreadMaster destroy }
         return [list $running_threads_list $idle_threads_list]
     }
 
-    method splice {} { return [my SpliceThreadAcc] }
+    method splice {} { return [my BreakThreadAccDown] }
 
     method get_threads_acc {} { return $threads_acc_d }
 
     method status {} {
-        return [my SpliceThreadAcc]
+        return [my BreakThreadAccDown]
     }
 
     method start_timed_chores {jc} {
@@ -94,21 +94,13 @@ catch {::ngis::ThreadMaster destroy }
     method start_worker_thread {} {
 
         set thread_id [thread::create {
-            #set snig_monitor_dir [file normalize [file dirname [info script]]]
-            proc initialize {base_dir} {
-                set snig_monitor_dir $base_dir
-
-                # this is important
-                cd $snig_monitor_dir
-
-                puts [pwd]
-            }
-            set ::auto_path [concat [file join / home manghi Projects relatorio.snig monitor] $::auto_path]
-            puts $auto_path
-            package require ngis::msglogger
-            
             set ::master_thread_id ""
-            ::ngis::logger emit "thread [thread::id] started"
+            set auto_path [concat [file normalize [file join [file dirname [info script]] ".."]] $::auto_path]]
+            package require ngis::conf
+            package require ngis::tasks_procedures
+            package require ngis::msglogger
+            set ::master_thread_id [::thread::id]
+
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
 
@@ -116,16 +108,13 @@ catch {::ngis::ThreadMaster destroy }
         }]
 
         thread::preserve $thread_id
+        dict set threads_acc_d $thread_id [dict create nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
 
-        ::thread::send $thread_id [list initialize [file normalize [file join [file dirname [info script]] ".."]]]
-        ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
-        dict set threads_acc_d $thread_id [dict create nruns 0 last_run [clock seconds] status running]
         return $thread_id
-
     }
 
     method thread_is_available {} {
-        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
 
         if {[llength $idle_threads_list] > 0} { return true }
         if {[llength $running_threads_list] < $max_threads_number} { return true }
@@ -133,7 +122,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method get_available_thread {} {
-        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
         ::ngis::logger emit "[llength $running_threads_list] running, [llength $idle_threads_list] idle threads" debug
         if {[llength $idle_threads_list] == 0} {
     
@@ -145,11 +134,10 @@ catch {::ngis::ThreadMaster destroy }
                     "Internal server error: running threads number exceeds max_threads_number"
                 return -code 1 -errorcode thread_not_available "Running threads number exceeds max_threads_number"
             }
+
         } else {
             set thread_id [lindex $idle_threads_list 0]
         }
-
-        my move_to_running $thread_id
 
         return $thread_id
     }
@@ -160,6 +148,7 @@ catch {::ngis::ThreadMaster destroy }
 
     method move_to_idle {thread_id} {
         dict set threads_acc_d $thread_id status idle
+        dict set threads_acc_d $thread_id last_run_end [clock seconds]
     }
 
     method move_to_running {thread_id} {
@@ -167,17 +156,17 @@ catch {::ngis::ThreadMaster destroy }
         dict with threads_acc_d $thread_id {
             set status running
             incr nruns
-            set last_run [clock seconds]
+            set last_run_start [clock seconds]
         }
     }
 
     method running_threads {} {
-        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
         return $running_threads_list
     }
 
     method idle_threads {} {
-        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
         return $idle_threads_list
     }
 
@@ -202,7 +191,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method terminate_idle_threads {} {
-        lassign [my SpliceThreadAcc] running_threads_list idle_threads_list 
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list 
         ::ngis::logger debug "[llength $idle_threads_list] threads on the idle list"
         foreach thread_id $idle_threads_list {
             thread::release $thread_id
