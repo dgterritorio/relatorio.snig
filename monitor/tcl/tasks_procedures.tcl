@@ -4,7 +4,7 @@
 #
 
 
-package require http 2.9
+package require http 2
 package require uri
 package require tls
 
@@ -27,17 +27,13 @@ package require ngis::job
 package require ngis::procedures
 package require ngis::taskmessages
 
-set ::stop_signal false
-
-proc stop_thread {} { set ::stop_signal true }
-
 # we assume task_d is a well formed dictionary of data describing the task    
 # as be created by calling ::ngis::tasks::mktask
 
 proc fake_long_execution {job_thread_id thread_master_o duration {callback ""}} {
-    ::ngis::logger emit "entering long wait....([::thread::id])"
+    ::ngis::logger emit "entering long wait.... ([::thread::id])"
     after [expr $duration*1000]
-    ::ngis::logger emit "...wait terminated ([::thread::id])"
+    ::ngis::logger emit "....wait terminated ([::thread::id])"
 
     thread::send -async $job_thread_id [list $thread_master_o move_to_idle [::thread::id]]
     if {$callback != ""} { thread::send -async $job_thread_id [list $callback $thread_master_o [::thread::id]] }
@@ -70,7 +66,6 @@ proc do_task {task_d job_thread_id} {
         after $::ngis::task_delay
     }
     thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed [thread::id] $task_d]
-
 }
 
 package provide ngis::tasks_procedures 1.0

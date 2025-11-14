@@ -387,7 +387,31 @@ oo::define ::ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
+    method c124 {threads_d} {
+        if {[dict size $threads_d] == 0} { return [my SingleLine "124" "No active worker threads"] }
+
+        set threads_t [lmap {thread_id thread_d} $threads_d {
+            dict with thread_d {
+                set now [clock seconds]
+                set r [list $thread_id  $status $nruns \
+                                        [::ngis::utils::delta_time_s [expr $now - $last_run_start]]   \
+                                        [::ngis::utils::delta_time_s [expr $now - $last_run_end]]]
+            }
+            set r
+        }]
+        set threads_t [concat $report_a(124.capts) $threads_t]
+        $data_matrix deserialize [list [llength $threads_t] 5 $threads_t]
+        
+        set report_txt [$report_a(five_columns) printmatrix $data_matrix]
+        set rep_width  [string length [lindex $report_txt 0]]
+
+        set fstring [::ngis::reports::get_fmt_string 124]
+        $data_matrix deserialize [list 1 1 [list [list "\[124\] $fstring"]]]
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+        return [append top_txt $report_txt]
+    }
 }
 
-package provide ngis::hrformat 0.5
+package provide ngis::hrformat 0.6
 
