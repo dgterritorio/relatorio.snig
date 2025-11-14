@@ -21,8 +21,6 @@ oo::class create JobFactory {
 
 ::oo::class create ::ngis::Job
 
-
-
 ::oo::define ::ngis::Job {
     variable sequence
     variable service_d

@@ -126,6 +126,10 @@ namespace eval ::ngis {
             my RescheduleRoundRobin
         }
 
+
+        method move_thread_to_running {thread_id} {
+            $thread_master move_to_running $thread_id
+        }
         # -- running_jobs_tot
         #
         #
@@ -221,7 +225,7 @@ namespace eval ::ngis {
                     if {[string is false [$seq post_job $thread_id]]} {
 
                         # let's return the thread back to the idle threads pool
-                        my move_thread_to_idle $thread_id
+                        #my move_thread_to_idle $thread_id
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
                         set sequence_has_terminated true
@@ -254,6 +258,7 @@ namespace eval ::ngis {
 
                         break
                     } else {
+                        my move_thread_to_running $thread_id
                         incr batch
                     }
                 }
