@@ -36,7 +36,7 @@ oo::class create JobFactory {
         set tasks_q     [::struct::queue] 
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
-        if {[dict exists $service_d jobname] == 0} { set jobname [self] }
+        if {[dict exists  $service_d jobname] == 0} { set jobname [self] }
         set job_status  created
         set timestamp   [clock seconds]
     }

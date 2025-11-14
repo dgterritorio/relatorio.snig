@@ -44,7 +44,8 @@ catch {::ngis::ThreadMaster destroy }
     method get_threads_acc {} { return $threads_acc_d }
 
     method status {} {
-        return [my BreakThreadAccDown]
+        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        return [list [llength $running_threads_list] [llength $idle_threads_list]]
     }
 
     method start_timed_chores {jc} {
@@ -62,7 +63,6 @@ catch {::ngis::ThreadMaster destroy }
                 set auto_path [concat $snig_monitor_dir \
                     [lreplace $auto_path $snig_monitor_dir_pos $snig_monitor_dir_pos]]
             }
-
             package require ngis::conf
             package require ngis::chores
             package require ngis::msglogger
@@ -75,7 +75,7 @@ catch {::ngis::ThreadMaster destroy }
                 ::ngis::logger emit "starting chores thread [thread::id]"
                 load_chores [::thread::id]
 
-                after 1000 [list [namespace current]::exec_chores [::thread::id]]
+                after 10000 [list [namespace current]::exec_chores]
 
                 ::thread::wait
                 destroy_chores
@@ -84,10 +84,10 @@ catch {::ngis::ThreadMaster destroy }
         }]
 
         thread::preserve $chores_thread_id
-            
-        thread::send $chores_thread_id [list set job_controller $jc]
-        thread::send $chores_thread_id [list set thread_master [self]]
-        thread::send $chores_thread_id [list set main_thread [::thread::id]]
+
+        thread::send $chores_thread_id [list set ::ngis::chores::job_controller $jc]
+        thread::send $chores_thread_id [list set ::ngis::chores::thread_master  [self]]
+        thread::send $chores_thread_id [list set ::ngis::chores::main_thread    [::thread::id]]
 
     }
 
@@ -95,11 +95,11 @@ catch {::ngis::ThreadMaster destroy }
 
         set thread_id [thread::create {
             set ::master_thread_id ""
-            set auto_path [concat [file normalize [file join [file dirname [info script]] ".."]] $::auto_path]]
+            set auto_path [concat [file dirname [info script]] $::auto_path]
+            #puts $::auto_path
             package require ngis::conf
             package require ngis::tasks_procedures
             package require ngis::msglogger
-            set ::master_thread_id [::thread::id]
 
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
@@ -108,7 +108,11 @@ catch {::ngis::ThreadMaster destroy }
         }]
 
         thread::preserve $thread_id
-        dict set threads_acc_d $thread_id [dict create nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
+
+        ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
+
+        dict set threads_acc_d $thread_id \
+            [dict create nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
 
         return $thread_id
     }
@@ -128,7 +132,7 @@ catch {::ngis::ThreadMaster destroy }
     
             if {[llength $running_threads_list] < $max_threads_number} {
                 set thread_id [my start_worker_thread]
-                ::ngis::logger debug "'$thread_id' started ========"
+                ::ngis::logger debug "---> '$thread_id' started ========"
             } else {
                 ::ngis::logger emit \
                     "Internal server error: running threads number exceeds max_threads_number"
@@ -138,6 +142,8 @@ catch {::ngis::ThreadMaster destroy }
         } else {
             set thread_id [lindex $idle_threads_list 0]
         }
+
+        my move_to_running $thread_id
 
         return $thread_id
     }
