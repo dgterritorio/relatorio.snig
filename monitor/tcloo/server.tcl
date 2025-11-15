@@ -279,7 +279,7 @@ package require ngis::utils
             ::ngis::logger emit "server listening on tcp socket '$tcp_channel'"
         }
 
-        # the job_controller_object has a global accessible and defined name
+        # the job_controller_object has a globally accessible and defined name
 
         set job_controller [my create_job_controller $max_workers]
         $job_controller start_chores_thread

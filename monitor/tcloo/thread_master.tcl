@@ -143,8 +143,6 @@ catch {::ngis::ThreadMaster destroy }
             set thread_id [lindex $idle_threads_list 0]
         }
 
-        my move_to_running $thread_id
-
         return $thread_id
     }
 
@@ -174,13 +172,6 @@ catch {::ngis::ThreadMaster destroy }
     method idle_threads {} {
         lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
         return $idle_threads_list
-    }
-
-    method run_chores {} {
-        if {$chores_thread_id == ""} {
-            set chores_thread_id [my get_available_thread]
-            thread::send -async $chores_thread_id [list ::ngis::chores::exec_chores [::thread::id] [self]]
-        }
     }
 
     method broadcast {cmd} {
