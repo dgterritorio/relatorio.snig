@@ -170,9 +170,9 @@ namespace eval ::ngis {
             if {[llength $sequence_list] == 0} {
                 after 100 [list $::ngis_server sync_results]
 
-                if {[llength $pending_sequences] == 0} {
-                    $thread_master terminate_idle_threads
-                }
+                #if {[llength $pending_sequences] == 0} {
+                #    $thread_master terminate_idle_threads
+                #}
                 return 
             }
 

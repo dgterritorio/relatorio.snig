@@ -19,10 +19,7 @@ namespace eval ::ngis::chores {
             return [dict create class [namespace current]::SendHashNotification description "Sending hash based URLs"]
         }
 
-
-        method exec_chore {args} {
-            ::ngis::logger debug "executing chore '[dict get [my identify] description]'"
-
+        method exec_chore {main_thread thread_master job_controller} {
             set     sql_l "SELECT ee.email,ee.manager,ee.hash,ee.eid FROM $::ngis::ENTITY_EMAIL AS ee JOIN"
             lappend sql_l "(SELECT ul.eid from $::ngis::TABLE_NAME AS ul group by ul.eid) AS eidl ON eidl.eid = ee.eid"
 
@@ -33,7 +30,7 @@ namespace eval ::ngis::chores {
                 set eid [dict get $r eid]
                 dict unset r eid
                 if {[dict exists $r hash]} {
-                    if {![dict exists $notified_hashes $eid] || \
+                    if {![dict exists $notified_hashes $eid]    || \
                         ([dict get $notified_hashes $eid hash]  != [dict get $r hash]) || \
                         ([dict get $notified_hashes $eid email] != [dict get $r email])} {
                         lappend notify_services $eid
