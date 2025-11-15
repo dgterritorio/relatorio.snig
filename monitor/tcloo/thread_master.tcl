@@ -196,6 +196,21 @@ catch {::ngis::ThreadMaster destroy }
         return [llength $threads_list]
     }
 
+    method release_stale_threads {} {
+        set to_be_terminated {}
+        dict for {thread_id thread_d} $threads_acc_d {
+            dict with thread_d {
+                if {($status == "idle") && ($nruns > 10)} {
+                    lappend to_be_terminated $thread_id
+                }
+            }
+        }
+        foreach thread_id $to_be_terminated {
+            thread::release $thread_id
+            my thread_terminates $thread_id
+        }
+    }
+
     method terminate_idle_threads {} {
         lassign [my BreakThreadAccDown] running_threads_list idle_threads_list 
         ::ngis::logger debug "[llength $idle_threads_list] threads on the idle list"

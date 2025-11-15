@@ -19,7 +19,9 @@ namespace eval ::ngis::chores {
 
         ::ngis::logger emit "exec [llength $registered_chores] registered chores"
         foreach c $registered_chores { 
-            $c exec_chore $chores_thread_id $main_thread $thread_master $job_controller
+            ::ngis::logger debug "executing chore '[dict get [$c identify] description]'"
+            $c exec_chore $main_thread $thread_master $job_controller
+            after 500
         }
 
         after [expr 1000 * $::ngis::chores_wait_time] [list [namespace current]::exec_chores]
