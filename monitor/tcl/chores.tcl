@@ -17,7 +17,7 @@ namespace eval ::ngis::chores {
         variable thread_master
         variable job_controller
 
-        ::ngis::logger emit "exec [llength $registered_chores] registered chores"
+        ::ngis::logger debug "exec [llength $registered_chores] registered chores"
         foreach c $registered_chores { 
             ::ngis::logger debug "executing chore '[dict get [$c identify] description]'"
             $c exec_chore $main_thread $thread_master $job_controller

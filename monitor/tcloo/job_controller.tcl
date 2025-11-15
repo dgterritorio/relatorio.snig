@@ -259,6 +259,7 @@ namespace eval ::ngis {
 
                         break
                     } else {
+                        $thread_master move_to_running $thread_id
                         incr batch
                     }
                 }
