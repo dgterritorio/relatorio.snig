@@ -19,6 +19,22 @@ catch {::ngis::ThreadMaster destroy }
         array set running_threads   {}
         set chores_thread_id        ""
         set threads_acc_d           [dict create]
+
+        # there is only one instance of this class in the whole monitor but
+        # by creating the shared variable threads_accounting we test its
+        # existence just to highlight the fact it's a shared variable
+
+        # For reasons I don't understand ::tsv supports a host of methods
+        # for accessing keyed variables but not to access a single
+        # scalar variable. We the create an 'account' variable with a
+        # single 'timestamp' to mark the existence of the shared database
+        #
+
+        if {![::tsv::exists account timestamp]} {
+            ::tsv::set snig timestamp [clock format [clock seconds]]
+            ::tsv::set snig account   [dict create]
+        }
+
     }
 
     destructor {
