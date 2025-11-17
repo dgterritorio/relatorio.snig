@@ -9,6 +9,16 @@ package require ngis::task
 package require Thread
 package require struct::queue
 
+
+oo::class create JobFactory {
+    superclass oo::class
+    method fromDict {d} {
+        set o [my new]
+        $o configure $d
+        return $o
+    }
+}
+
 ::oo::class create ::ngis::Job
 
 ::oo::define ::ngis::Job {
@@ -26,7 +36,7 @@ package require struct::queue
         set tasks_q     [::struct::queue] 
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
-        if {[dict exists $service_d jobname] == 0} { set jobname [self] }
+        if {[dict exists  $service_d jobname] == 0} { set jobname [self] }
         set job_status  created
         set timestamp   [clock seconds]
     }

@@ -46,6 +46,7 @@ namespace eval ::ngis {
                                             118     "Service %d (%s, type %s)"  \
                                             120     "Noop command acknoledged"  \
                                             122     "Service Records"           \
+                                            124     "Active Worker Threads"     \
                                             501     "Server internal error: %s" \
                                             502     "Stopping operations"       \
                                             503     "Missing argument for code %d" \
@@ -131,7 +132,8 @@ namespace eval ::ngis {
         set report_a(118.report)    [::report::report hr_118_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(118.report) pad $c both " " }
 
-        set report_a(122.capts)       [list {"GID" "Description" "Host" "Type" "Version"}]
+        set report_a(122.capts)     [list {"GID" "Description" "Host" "Type" "Version"}]
+        set report_a(124.capts)     [list {"Thread ID" "Status" "Runs" "Last Task Start" "Last Task End"}]
 
         proc get_fmt_string {code} {
             variable CodeMessages

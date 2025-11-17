@@ -14,18 +14,19 @@ namespace eval ::rwpage {
         }
 
         public method prepare_page {language argsqs} {
-            $this title $language "SNIG Monitor Users"
-            $this headline $language "SNIG Monitor Users"
+            $this title     $language "SNIG Monitor Users"
+            $this headline  $language "SNIG Monitor Users"
             set dbhandle [$this get_dbhandle]
 
-            set sql "SELECT userid,login,ts from testsuite.snig_users"
+            set usertable [::ngis::configuration readconf users_table]
+            set sql "SELECT userid,login,ts from $usertable"
             set users_l {}
             set session_obj      [::rwdatas::NGIS::get_session_obj]
             set current_login    [$session_obj fetch status login]
             set is_administrator [::rwdatas::NGIS::is_administrator $current_login]
 
             $dbhandle forall $sql u {
-                set edituser_link [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]]
+                set edituser_link   [::rivet::xml "edit" [list a href [::rivetweb::composeUrl edituser $u(userid)]]]
                 set deleteuser_link [::rivet::xml "delete" [list a href [::rivetweb::composeUrl deleteuser $u(userid)]]]
                 if {[regexp {(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.\d*} $u(ts) m v]} {
                     set u(ts) $v
@@ -47,7 +48,8 @@ namespace eval ::rwpage {
             set ns               [$template_o formatters_ns]
             set session_obj      [::rwdatas::NGIS::get_session_obj]
             set current_login    [$session_obj fetch status login]
-            puts [::rivet::xml "New User" [list div style "margin-bottom: 2em;"] [list a href [::rivetweb::composeUrl newuser 1]]]
+            puts [::rivet::xml "New User"   \
+                                [list div style "margin-bottom: 2em;"] [list a href [::rivetweb::composeUrl newuser 1]]]
             puts [::${ns}::mk_table {"Userid" "Login" "Created" "" ""} $users_l]
         }
     }

@@ -21,6 +21,7 @@ namespace eval ::ngis {
         variable jobs_quota
         variable shutdown_counter
         variable shutdown_signal
+        variable quota_reached_count
 
         constructor {max_workers_num} {
             set sequence_list           {}
@@ -29,6 +30,7 @@ namespace eval ::ngis {
             set pending_sequences       {}
             set round_robin_procedure   ""
             set jobs_quota              $max_workers_num
+            set quota_reached_count     0
             set shutdown_signal         false
             set stop_operations         false
         }
@@ -65,6 +67,7 @@ namespace eval ::ngis {
             }
         }
 
+        method get_thread_master {} { return $thread_master }
 
         method start_chores_thread {} {
             $thread_master start_timed_chores [self]
@@ -167,9 +170,9 @@ namespace eval ::ngis {
             if {[llength $sequence_list] == 0} {
                 after 100 [list $::ngis_server sync_results]
 
-                if {[llength $pending_sequences] == 0} {
-                    $thread_master terminate_idle_threads
-                }
+                #if {[llength $pending_sequences] == 0} {
+                #    $thread_master terminate_idle_threads
+                #}
                 return 
             }
 
@@ -183,6 +186,7 @@ namespace eval ::ngis {
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0
+                set quota_reached_count 0
             }
 
             # if there are no threads available we can return and wait for
@@ -213,6 +217,7 @@ namespace eval ::ngis {
                     # job quota value. We break out of the while loop
 
                     my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
+                    incr quota_reached_count
                     break
 
                 } else {
@@ -221,7 +226,7 @@ namespace eval ::ngis {
                     if {[string is false [$seq post_job $thread_id]]} {
 
                         # let's return the thread back to the idle threads pool
-                        my move_thread_to_idle $thread_id
+                        #my move_thread_to_idle $thread_id
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
                         set sequence_has_terminated true
@@ -254,6 +259,7 @@ namespace eval ::ngis {
 
                         break
                     } else {
+                        $thread_master move_to_running $thread_id
                         incr batch
                     }
                 }
@@ -261,9 +267,12 @@ namespace eval ::ngis {
             my LogMessage "launched $batch jobs for seq $seq" debug
 
             # there's no point to reschedule the round robin if no threads are available
+            # and all current job sequences have reached their thread quota
 
             if {[string is true [$thread_master thread_is_available]]} {
-                my RescheduleRoundRobin
+                if {$quota_reached_count < [llength $sequence_list]} {
+                    my RescheduleRoundRobin
+                }
             } else {
                 my LogMessage "thread pool exhausted" debug
             }
