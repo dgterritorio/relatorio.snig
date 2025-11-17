@@ -191,7 +191,8 @@ catch {::ngis::ThreadMaster destroy }
         set to_be_terminated {}
         dict for {thread_id thread_d} $threads_acc_d {
             dict with thread_d {
-                if {($status == "idle") && ($nruns > 10)} {
+                if {($status == "idle") && \
+                    (($nruns > 10) || (([clock seconds]-$last_run_end) > 60))} {
                     lappend to_be_terminated $thread_id
                 }
             }
