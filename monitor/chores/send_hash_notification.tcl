@@ -50,8 +50,7 @@ namespace eval ::ngis::chores {
             if {[llength $notify_services] > 0} {
                 foreach eid $notify_services {
                     dict with notified_hashes $eid {
-                        ::ngis::logger emit "notify manager $manager at $email ($hash)"
-                        
+                        ::ngis::logger emit "notify manager $manager at $email ($hash)"                       
                     }
                 }
                 ::fileutil::writeFile $notified_hashes_fn $notified_hashes
