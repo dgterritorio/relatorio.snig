@@ -30,17 +30,21 @@ catch {::ngis::ThreadMaster destroy }
         # single 'timestamp' to mark the existence of the shared database
         #
 
-        if {![::tsv::exists account timestamp]} {
+        if {![::tsv::exists snig timestamp]} {
             ::tsv::set snig timestamp [clock format [clock seconds]]
-            ::tsv::set snig account   [dict create]
         }
 
     }
 
     destructor {
-        dict for {thr_id thr_d} $threads_acc_d {
-            thread::release $thr_id
+        ::tsv::lock snig {
+            foreach tid [::tsv::keylkeys snig threads_account] {
+                ::thread::release $tid
+            }
         }
+        #dict for {thr_id thr_d} $threads_acc_d {
+        #    thread::release $thr_id
+        #}
 
         ::thread::release $chores_thread_id
     }
@@ -48,16 +52,62 @@ catch {::ngis::ThreadMaster destroy }
     method BreakThreadAccDown {} {
         set running_threads_list {}
         set idle_threads_list {}
-        dict for {thr_id thr_d} $threads_acc_d {
-            set status_def [dict get $thr_d status]
-            lappend ${status_def}_threads_list $thr_id
+
+        ::tsv::lock snig {
+            foreach tid [::tsv::keylkeys snig threads_account] {
+                set thread_d [::tsv::keylget snig thread_account $tid]
+                set status_def [dict get $thr_d status]
+                lappend [dict get $thr_d status]_threads_list $thr_id
+            }
         }
+
+
+        #dict for {thr_id thr_d} $threads_acc_d {
+        #    set status_def [dict get $thr_d status]
+        #    lappend ${status_def}_threads_list $thr_id
+        #}
         return [list $running_threads_list $idle_threads_list]
+    }
+
+    method AddNewThread {tid} {
+        ::tsv::keylset snig threads_account $tid nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle
+    }
+
+    method RemoveThread {tid} {
+        ::tsv::lock snig {
+            ::tsv::keyldel snig threads_account $tid
+        }
+    }
+
+    method ChangeThreadStatus {tid new_status} {
+        ::tsv::lock snig {
+            ::tsv::keylset snig threads_account $tid status $new_status
+            switch $new_status {
+                idle {
+                    ::tsv::keylset snig threads_account $tid last_run_end [clock seconds]
+                }
+                running {
+                    ::tsv::keylset snig threads_account $tid last_run_start [clock seconds]
+                    ::tsv::keylget snig threads_account $tid nruns nruns
+                    ::tsv::keylset snig threads_account $tid nruns [incr nruns]
+                }
+            }
+        }
     }
 
     method splice {} { return [my BreakThreadAccDown] }
 
-    method get_threads_acc {} { return $threads_acc_d }
+    method get_threads_acc {} { 
+        
+        ::tsv::lock snig {
+            set threads_acc_d [concat [lmap tid [::tsv::keylkeys snig threads_account] {
+                set thread_d [::tsv::keylget snig threads_account $tid]
+                list $tid $thread_d
+            }]]
+        }
+        return $threads_acc_d
+
+    }
 
     method status {} {
         lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
@@ -127,8 +177,7 @@ catch {::ngis::ThreadMaster destroy }
 
         ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
 
-        dict set threads_acc_d $thread_id \
-            [dict create nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
+        my AddNewThread $thread_id
 
         return $thread_id
     }
@@ -163,21 +212,24 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method thread_terminates {thread_id} {
-        dict unset threads_acc_d $thread_id
+        RemoveThread $thread_id
+        #dict unset threads_acc_d $thread_id
     }
 
     method move_to_idle {thread_id} {
-        dict set threads_acc_d $thread_id status idle
-        dict set threads_acc_d $thread_id last_run_end [clock seconds]
+        #dict set threads_acc_d $thread_id status idle
+        #dict set threads_acc_d $thread_id last_run_end [clock seconds]
+        ChangeThreadStatus $thread_id idle
     }
 
     method move_to_running {thread_id} {
         #set running_threads($thread_id) [clock seconds]
-        dict with threads_acc_d $thread_id {
-            set status running
-            incr nruns
-            set last_run_start [clock seconds]
-        }
+        #dict with threads_acc_d $thread_id {
+        #    set status running
+        #    incr nruns
+        #    set last_run_start [clock seconds]
+        #}
+        ChangeThreadStatus $thread_id running
     }
 
     method running_threads {} {
@@ -205,11 +257,15 @@ catch {::ngis::ThreadMaster destroy }
 
     method release_stale_threads {} {
         set to_be_terminated {}
-        dict for {thread_id thread_d} $threads_acc_d {
-            dict with thread_d {
-                if {($status == "idle") && \
-                    (($nruns > 10) || (([clock seconds]-$last_run_end) > 60))} {
-                    lappend to_be_terminated $thread_id
+        
+        ::tsv::lock snig {
+            foreach tid [::tsv::keylkeys snig threads_account] {
+                set thread_d [::tsv::keylget snig thread_account $tid]
+                dict with thread_d {
+                    if {($status == "idle") && \
+                        (($nruns > 10) || (([clock seconds]-$last_run_end) > 60))} {
+                        lappend to_be_terminated $thread_id
+                    }
                 }
             }
         }
