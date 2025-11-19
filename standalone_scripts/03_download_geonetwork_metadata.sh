@@ -7,6 +7,7 @@ INPUT_CSV="$BASEFOLDER/CSW_RECORDS_CSV/csw_records_csv.csv"
 METADATA_DIR="$BASEFOLDER/SNIG_GEONETWORK_METADATA"
 
 mkdir -p "$METADATA_DIR"
+rm $METADATA_DIR/$uuid.xml
 
 # Function to attempt downloads given an input list of UUIDs
 download_records() {
