@@ -36,7 +36,7 @@ namespace eval ::ngis::chores {
                         lappend notify_services $eid
                         dict set notified_hashes $eid [dict filter $r key manager email hash]
 
-                        if {[string is true $::erice::actually_sendemail]} {
+                        if {[string is true $::ngis::actually_sendemail]} {
                             if {[catch { ::ngis::utils::send_mail "hash_changed" $r } e einfo]} {
                                 ::ngis::logger emit "error sending mail: $e" error
                             }
