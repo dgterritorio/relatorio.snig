@@ -35,45 +35,49 @@ proc ::ngis::print_help {} {
 
 where recognized options are
 
-  --stalerecs check stale services status records. By default service status
-              records last checked before 24h (this value can be changed with
-              options '--nhours' and '--ndays'
+  * --stalerecs check stale services status records. By default service status
+                records last checked before 24h (this value can be changed with
+                options '--nhours' and '--ndays'
 
-  --newrecs   starts a check run that searches for service record just registered
-              by the harvesting procedure
+  * --newrecs   starts a check run that searches for service record just registered
+                by the harvesting procedure
 
-  --http0     searches for service status records of the url_status_codes tests that
-              for some reason returned an invalid HTTP status code 0
+  * --http0     searches for service status records of the url_status_codes tests that
+                for some reason returned an invalid HTTP status code 0
 
-  --gids      Comma separated list of service record gids to be checked
+  * --gids      Comma separated list of service records gids to be checked
 
-  --eids      Comma separated list of entity eid to be checked
+  * --eids      Comma separated list of entity eid to be checked
 
-  --host      Comma separated list of host names to be checked
+  * --host      Comma separated list of host names to be checked
 
-              The three options --host, --eids, --gids selection results are or'ed and
-              therefore the selected record set is the union of their result sets
+                The three options --host, --eids, --gids selection results are or'ed and
+                therefore the selected record set is the union of them 
 
-  --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
-              the limit is disabled
+  * --limit <n> Only n check jobs are launched (default 20). By passing a value 0 
+                the limit is disabled
 
-  --min-wait  
-  --max-wait Minimum and maximum time (in seconds) between subsequent job sequence checks.
-             The actual wait time is generated randomly between these extrema. Setting
-             only the minimum forces constant rate of checks
+  * --min-wait  
+    --max-wait Minimum and maximum time (in seconds) between subsequent job sequence checks.
+               The actual wait time is generated randomly between these extrema. Setting
+               only the minimum forces constant rate of checks
 
-  --max-jobs Maximum number of jobs in every job sequence (default 20). If the search
-             rules select for example 110 records these are checked in 5 20 jobs sequences
-             and a final 10 jobs sequence}
-  --stop-jobs Send a STOP command to the monitor terminating all running and pending jobs
+  * --max-jobs Maximum number of jobs in every job sequence (default 20). If the search
+               rules select for example 110 records these are checked in 5 20 jobs sequences
+               and a final 10 jobs sequence}
 } 
 
-set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul" \
-               "join testsuite.service_status ss on ss.gid = ul.gid" }
+# let's seed the random numbers generator
 
-set http0_sql       [concat $sql_base "where ss.exit_info like 'Invalid% 0'"]
-set newservice_sql  [concat $sql_base "where ss.gid is null"]
-set stalerecs_sql   [concat $sql_base "where ss.task = 'congruence'"]
+random seed [clock seconds]
+
+set sql_base { "select uri,ul.gid,description,ss.exit_info,ss.ts from testsuite.uris_long ul"}
+set sql_join { "join testsuite.service_status ss on ss.gid = ul.gid" }
+
+
+set http0_sql       [concat $sql_base $sql_join "where ss.exit_info like 'Invalid% 0'"]
+set newservice_sql  [concat $sql_base "left" $sql_join "where ss.gid is null"]
+set stalerecs_sql   [concat $sql_base $sql_join "where ss.task = 'congruence'"]
 
 # With Tcl9 these should become immutable variables
 
@@ -83,14 +87,13 @@ set limit           20
 set max_jobs_n      0
 set min_jobs_per_seq 20
 set jobs_seq_delay  5000
-set nhours          24
+set nhours          0
 set ndays           0
 set min_wait        5
 set max_wait       -1
 set eid             0
 set gids            ""
 set hosts           ""
-set force_jobs      false
 
 if {$argc > 0} {
     set arguments $argv
@@ -115,7 +118,6 @@ if {$argc > 0} {
                 }
                 ::ngis::out "Restricting to records in $gids"
             }
-            --host -
             --hosts {
                 set arguments [lassign $arguments hosts]
                 if {[regexp {^(\w[\w\.]*)([ \t]*,[ \t]*(\w[\w\.]*))*$} $hosts] == 0} {
@@ -164,13 +166,6 @@ if {$argc > 0} {
             --max-wait {
                 set arguments [lassign $arguments max_wait]
             }
-            --force {
-                set force_jobs true
-            }
-            --stop-jobs {
-                set fun stop_jobs
-                break
-            }
             default {
                 ::ngis::out "Unrecognized argument '$a'"
                 ::ngis::print_help
@@ -183,13 +178,9 @@ if {$argc > 0} {
     return
 }
 
-set connection [::ngis::clientio open_connection $::ngis::unix_socket_name]
-::ngis::clientio query_server $connection "FORMAT JSON" 104
+set con [::ngis::clientio open_connection $::ngis::unix_socket_name]
+::ngis::clientio query_server $con "FORMAT JSON" 104
 
-#
-# let's seed the random numbers generator
-
-random seed [clock seconds]
 if {$max_wait < $min_wait} {
     set max_wait [expr $min_wait + 1]
 }
@@ -202,7 +193,7 @@ set delta_t [expr 1000*($max_wait - $min_wait)]
 
 if {$ndays > 0} { 
     if {$nhours >= 24} { set nhours 0 }
-    set nhours [expr $ndays*24 + $nhours]
+    set nhours [expr $ndays*24 + $nhours] 
 }
 
 if {($fun == "stalerecs") || ($fun == "http0recs")} {
@@ -211,20 +202,12 @@ if {($fun == "stalerecs") || ($fun == "http0recs")} {
     }
 } elseif {$fun == "generic"} {
     lappend sql "WHERE ss.task = 'congruence'"
-} elseif {$fun == "stop_jobs"} {
-    set returned_message_d [::ngis::clientio query_server $connection "JOBLIST" 114]
-    set njobs [dict get $returned_message_d njobs]
-    ::ngis::out "Stoping $njobs running jobs"
-
-    ::ngis::clientio query_server $connection "STOP" 502
-    ::ngis::out "Stop command sent to server"
-    return
 }
 
 set clauses_l {}
 if {$eid != 0} { lappend clauses_l "ul.eid IN ($eid)" }
 if {$gids != ""} { lappend clauses_l "ul.gid IN ($gids)" }
-if {$hosts != ""} {
+if {$hosts != ""} { 
     set hostname_regexp { substring( ul.uri from '.*://([^/]*)' )}
     lappend clauses_l "$hostname_regexp in ($hosts)"
 }
@@ -253,16 +236,12 @@ set allrows [$resultset allrows]
 set gids_l [lmap r $allrows { dict get $r gid }]
 ::ngis::out "processing [llength $gids_l] gids"
 
-set returned_message_d [::ngis::clientio query_server $connection "JOBLIST" 114]
+set returned_message_d [::ngis::clientio query_server $con "JOBLIST" 114]
 set njobs [dict get $returned_message_d njobs]
 
-if {[string is false $force_jobs]} {
-    if {(($fun == "stalerecs") || ($fun == "http0recs")) && ($njobs > 0)} {
-        ::ngis::out "Monitor busy: refusing to start more jobs"
-        exit
-    }
-} else {
-    ::ngis::out "Forcing jobs execution"
+if {(($fun == "stalerecs") || ($fun == "http0recs")) && ($njobs > 0)} {
+    ::ngis::out "Monitor busy: refusing to start more jobs"
+    exit
 }
 
 ::ngis::out "checking [llength $gids_l] services"
@@ -278,7 +257,7 @@ while {[llength $gids_l] > 0} {
         lappend service_l $j
     }
     if {[llength $service_l]} {
-        ::ngis::clientio query_server $connection "CHECK $service_l" 102
+        ::ngis::clientio query_server $con "CHECK $service_l" 102
         ::ngis::out "Created Job Sequence for [llength $service_l] jobs"
     }
 
@@ -291,6 +270,6 @@ while {[llength $gids_l] > 0} {
 ::ngis::out "$njobs_to_process records processed for function $fun"
 
 $resultset close
-chan close $connection
+chan close $con
 ::ngis::out "Concluding task with args: $argv"
 
