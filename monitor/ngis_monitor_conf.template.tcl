@@ -38,6 +38,7 @@ namespace eval ::ngis {
     variable manager_name       "Giovanni Manghi"
     variable manager_email      "giovanni.manghi@gmail.com"
     variable smtprelay          localhost
+    variable actually_sendemail false
 
     variable tcpaddr            "127.0.0.1"
     variable tcpport            "4422"
