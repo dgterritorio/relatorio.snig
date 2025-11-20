@@ -5,6 +5,7 @@ package require TclOO
 package require Thread
 package require ngis::chores
 package require ngis::msglogger
+package require ngis::shared
 
 catch {::ngis::ThreadMaster destroy }
 
@@ -12,28 +13,10 @@ catch {::ngis::ThreadMaster destroy }
     variable max_threads_number
     variable chores_thread_id
 
-    variable threads_acc_d
-
     constructor {mtn} {
         set max_threads_number      $mtn
         array set running_threads   {}
         set chores_thread_id        ""
-        set threads_acc_d           [dict create]
-
-        # there is only one instance of this class in the whole monitor but
-        # by creating the shared variable threads_accounting we test its
-        # existence just to highlight the fact it's a shared variable
-
-        # For reasons I don't understand ::tsv supports a host of methods
-        # for accessing keyed variables but not to access a single
-        # scalar variable. We the create an 'account' variable with a
-        # single 'timestamp' to mark the existence of the shared database
-        #
-
-        if {![::tsv::exists snig timestamp]} {
-            ::tsv::set snig timestamp [clock format [clock seconds]]
-        }
-
     }
 
     destructor {
@@ -49,74 +32,8 @@ catch {::ngis::ThreadMaster destroy }
         ::thread::release $chores_thread_id
     }
 
-    method PickThreadStatus {tid} {
-        if {[::tsv::keylget snig threads_account $tid th_d]} {
-            return $th_d
-        }
-        return [dict create]
-    }
 
-    method StoreThreadStatus {tid th_d} {
-        ::tsv::keylset snig threads_account $tid $th_d
-    }
-
-    method BreakThreadAccDown {} {
-        set running_threads_list {}
-        set idle_threads_list {}
-
-        ::tsv::lock snig {
-            if {[::tsv::exists snig threads_account]} {
-                foreach tid [::tsv::keylkeys snig threads_account] {
-                    set thr_d [::tsv::keylget snig threads_account $tid]
-                    set status_def [dict get $thr_d status]
-                    lappend [dict get $thr_d status]_threads_list $tid
-                }
-            }
-        }
-
-        #dict for {thr_id thr_d} $threads_acc_d {
-        #    set status_def [dict get $thr_d status]
-        #    lappend ${status_def}_threads_list $thr_id
-        #}
-        return [list $running_threads_list $idle_threads_list]
-    }
-
-    method AddNewThread {tid} {
-        ::tsv::lock snig {
-            if {[::tsv::keylget snig threads_account $tid thread_d]} {
-                ::ngis::logger emit "Thread $tid entry exists" error
-            }
-            ::tsv::keylset snig threads_account $tid [list nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
-        }
-    }
-
-    method RemoveThread {tid} {
-        ::tsv::lock snig {
-            ::tsv::keyldel snig threads_account $tid
-        }
-    }
-
-    method ChangeThreadStatus {tid new_status} {
-        ::tsv::lock snig {
-            set thread_status [my PickThreadStatus $tid]
-
-            dict with thread_status {
-                set status $new_status
-                switch $new_status {
-                    idle {
-                        set last_run_end    [clock seconds]
-                    }
-                    running {
-                        set last_run_start  [clock seconds]
-                        incr nruns
-                    }
-                }
-            }
-            my StoreThreadStatus $tid $thread_status
-        }
-    }
-
-    method splice {} { return [my BreakThreadAccDown] }
+    method splice {} { return [::ngis::shared BreakThreadAccDown] }
 
     method get_threads_acc {} { 
         
@@ -130,13 +47,12 @@ catch {::ngis::ThreadMaster destroy }
                 set threads_acc_d [dict create]
             }
         }
-        #puts $threads_acc_d
         return $threads_acc_d
 
     }
 
     method status {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
         return [list [llength $running_threads_list] [llength $idle_threads_list]]
     }
 
@@ -192,24 +108,24 @@ catch {::ngis::ThreadMaster destroy }
             package require ngis::conf
             package require ngis::tasks_procedures
             package require ngis::msglogger
+            package require ngis::shared
 
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
-
-            ::thread::send $::master_thread_id [list ::ngis::thread_master thread_terminates [::thread::id]]
+            ::ngis::shared RemoveThread [::thread::id]
         }]
 
         thread::preserve $thread_id
 
         ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
 
-        my AddNewThread $thread_id
+        ::ngis::shared AddNewThread $thread_id
 
         return $thread_id
     }
 
     method thread_is_available {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
 
         if {[llength $idle_threads_list] > 0} { return true }
         if {[llength $running_threads_list] < $max_threads_number} { return true }
@@ -217,7 +133,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method get_available_thread {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
         ::ngis::logger emit "[llength $running_threads_list] running, [llength $idle_threads_list] idle threads" debug
         if {[llength $idle_threads_list] == 0} {
     
@@ -238,33 +154,24 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method thread_terminates {thread_id} {
-        my RemoveThread $thread_id
-        #dict unset threads_acc_d $thread_id
+        ::ngis::shared RemoveThread $thread_id
     }
 
     method move_to_idle {thread_id} {
-        #dict set threads_acc_d $thread_id status idle
-        #dict set threads_acc_d $thread_id last_run_end [clock seconds]
-        my ChangeThreadStatus $thread_id idle
+        ::ngis::shared ChangeThreadStatus $thread_id idle
     }
 
     method move_to_running {thread_id} {
-        #set running_threads($thread_id) [clock seconds]
-        #dict with threads_acc_d $thread_id {
-        #    set status running
-        #    incr nruns
-        #    set last_run_start [clock seconds]
-        #}
-        my ChangeThreadStatus $thread_id running
+        ::ngis::shared ChangeThreadStatus $thread_id running
     }
 
     method running_threads {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
         return $running_threads_list
     }
 
     method idle_threads {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
         return $idle_threads_list
     }
 
@@ -306,7 +213,7 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     method terminate_idle_threads {} {
-        lassign [my BreakThreadAccDown] running_threads_list idle_threads_list 
+        lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list 
         ::ngis::logger debug "[llength $idle_threads_list] threads on the idle list"
         foreach thread_id $idle_threads_list {
             thread::release $thread_id

@@ -22,3 +22,4 @@ package ifneeded ngis::clientio         1.0 [list source [file join $dir utils c
 package ifneeded ngis::chores           1.0 [list source [file join $dir tcl chores.tcl]]
 package ifneeded ngis::choreutils       1.0 [list source [file join $dir tcl ngisutils.tcl]]
 package ifneeded ngis::tasks_procedures 1.0 [list source [file join $dir tcl tasks_procedures.tcl]]
+package ifneeded ngis::shared           1.0 [list source [file join $dir tcl threads_shared_db.tcl]]
