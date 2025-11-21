@@ -13,10 +13,6 @@ namespace eval ::ngis::shared {
         ::tsv::set snig timestamp [clock format [clock seconds]]
     }
 
-    if {![::tsv::exists snig timestamp]} {
-        ::tsv::set snig timestamp [clock format [clock seconds]]
-    }
-
     proc AddNewThread {tid} {
         ::tsv::lock snig {
             if {[::tsv::keylget snig threads_account $tid thread_d]} {
@@ -29,6 +25,14 @@ namespace eval ::ngis::shared {
     proc RemoveThread {tid} {
         ::tsv::lock snig {
             ::tsv::keyldel snig threads_account $tid
+        }
+    }
+
+    proc ReleaseAll {} {
+        ::tsv::lock snig {
+            foreach tid [::tsv::keylkeys snig threads_account] {
+                ::thread::release $tid
+            }
         }
     }
 
