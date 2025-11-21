@@ -20,18 +20,9 @@ catch {::ngis::ThreadMaster destroy }
     }
 
     destructor {
-        ::tsv::lock snig {
-            foreach tid [::tsv::keylkeys snig threads_account] {
-                ::thread::release $tid
-            }
-        }
-        #dict for {thr_id thr_d} $threads_acc_d {
-        #    thread::release $thr_id
-        #}
-
+        ::ngis::shared ReleaseAll
         ::thread::release $chores_thread_id
     }
-
 
     method splice {} { return [::ngis::shared BreakThreadAccDown] }
 
