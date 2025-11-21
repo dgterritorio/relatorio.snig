@@ -9,13 +9,6 @@ package require ngis::taskmessages
 namespace eval ::ngis::tasks {
     variable verbose true
 
-    #variable base_tasks [list congruence     ]
-    #variable procedures [list data_congruence]
-    #variable functions  [list ""             ]
-    #variable descriptions [list "Data congruence"]
-                                #"Analyze service HTTP/HTTPS response" \
-                                #"Test service by checking response to HTTP requests (using Tcl's http package)" \
-                                #"Curl based determination of capabilities"
     variable tasks      [list]
     variable tasks_db   [dict create]
 
@@ -28,21 +21,16 @@ namespace eval ::ngis::tasks {
     # threads lest the classes are (uselessly?) endowed with serialization/
     # deserialization methods
 
-    proc mktask {t job_o {t_args ""}} {
+    proc mktask {t} {
         variable tasks_db
         variable tasks
 
         if {[dict exists $tasks_db $t]} {
-            set job_d [$job_o serialize]
-            dict unset job_d tasks
-
             set task_d [dict get $tasks_db $t]
-
             dict set task_d task   $t
             dict set task_d status ""
             dict set task_d data   ""
             dict set task_d args   ""
-            dict set task_d job    $job_d
             return $task_d
         }
         return -code 1 -errorcode invalid_task
@@ -54,11 +42,16 @@ namespace eval ::ngis::tasks {
     }
 
     proc get_task {task} {
-        variable task_db
-        if {[dict exists $task_db $task]} {
-            return [dict get $task_db $task]
+        variable tasks_db
+        if {[dict exists $tasks_db $task]} {
+            return [dict get $tasks_db $task]
         }
         return -code error -errorcode unregistered_task "Unregistered task '$task'"
+    }
+
+    proc get_tasks_db {} {
+        variable tasks_db
+        return $tasks_db
     }
 
     # -- Data access methods
@@ -143,24 +136,43 @@ namespace eval ::ngis::tasks {
             }
         }
         catch {rename [namespace current]::identify ""}
+        return
     }
 
-    proc list_registered_tasks {} {
+    proc list_registered_tasks {{tasks_l "-all"}} {
         variable tasks
         variable tasks_db
 
-        set tasks_l [lmap t $tasks { 
+        if {$tasks_l == "--all"} {
+            set tasks_l $tasks
+        }
+
+        set task_descriptors_l [lmap t $tasks_l {
             set td [dict get $tasks_db $t]
             dict with td {
-                set tlist [list $t $procedure $description [file tail $script] $language] 
+                set tlist [list $t $procedure $description [file tail $script] $language]
             }
             set tlist
         }]
-        return $tasks_l
+        return $task_descriptors_l
+    }
+
+    proc list_tasks {{task_selection_l "--all"}} {
+        variable tasks
+        variable tasks_db
+
+        # we can't rely on 'dict filter' because we actually need
+        # an ordered list of key-value lists
+        if {$task_selection_l == "--all"} {
+            set task_selection_l $tasks
+        }
+        return [lmap t $task_selection_l {
+            dict get $tasks_db $t
+        }]
     }
 
     namespace export   *
     namespace ensemble create
 }
 
-package provide ngis::task 0.3
+package provide ngis::task 1.0

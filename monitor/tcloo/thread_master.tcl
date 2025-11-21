@@ -102,13 +102,15 @@ catch {::ngis::ThreadMaster destroy }
     method start_worker_thread {} {
 
         set thread_id [thread::create {
-            set ::master_thread_id ""
+            set ::master_thread_id      ""
+            set ::stop_signal_received  false
             set auto_path [concat [file dirname [info script]] $::auto_path]
             #puts $::auto_path
             package require ngis::conf
             package require ngis::tasks_procedures
             package require ngis::msglogger
             package require ngis::shared
+            package require ngis::servicedb
 
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
@@ -118,7 +120,6 @@ catch {::ngis::ThreadMaster destroy }
         thread::preserve $thread_id
 
         ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
-
         ::ngis::shared AddNewThread $thread_id
 
         return $thread_id

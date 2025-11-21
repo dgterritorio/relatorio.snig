@@ -146,7 +146,7 @@ catch { ::ngis::JobSequence destroy }
         if {[$result_set nextdict res_d]} {
             ::ngis::logger debug "returning data for service [dict get $res_d gid] ([dict get $res_d uri])"
             set gid [dict get $res_d gid]
-            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $res_d [::ngis::tasks get_registered_tasks]]
+            set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $res_d]
             return $job_o
         }
         return ""
@@ -176,7 +176,7 @@ catch { ::ngis::JobSequence destroy }
         if { $service_rec_d == ""} { return "" }
 
         set gid [dict get $service_rec_d gid]
-        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d [::ngis::tasks get_registered_tasks]]
+        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d]]
 
         my incr_jobs_created
         return $job_o

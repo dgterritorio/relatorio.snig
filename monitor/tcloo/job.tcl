@@ -9,7 +9,6 @@ package require ngis::task
 package require Thread
 package require struct::queue
 
-
 oo::class create JobFactory {
     superclass oo::class
     method fromDict {d} {
@@ -30,13 +29,13 @@ oo::class create JobFactory {
     variable job_status
     variable timestamp
 
-    constructor {service_d_ tasks} {
+    constructor {service_d_ {tsk_l ""}} {
         set sequence    ""
-        set tasks_l     $tasks
-        set tasks_q     [::struct::queue] 
+        set tasks_q     [::struct::queue]
+        if {$tsk_l == ""} { set tasks_l [::ngis::tasks get_registered_tasks] }
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
-        if {[dict exists  $service_d jobname] == 0} { set jobname [self] }
+        set jobname     [self]
         set job_status  created
         set timestamp   [clock seconds]
     }
@@ -55,10 +54,11 @@ oo::class create JobFactory {
     }
 
     method start_job {thread_id} {
-        if {[$tasks_q size] > 0} { $tasks_q clear }
+        #if {[$tasks_q size] > 0} { $tasks_q clear }
+        #$tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
 
-        $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
-        return [my post_task $thread_id]
+        return [my schedule_job_tasks $thread_id]
+        #return [my post_task $thread_id]
     }
 
     method SetStatus {new_status} {
@@ -72,11 +72,25 @@ oo::class create JobFactory {
 
     method notify_sequence {thread_id} {
         ::ngis::logger emit "Job [self] terminates"
-        
+
         if {$sequence != ""} { $sequence job_completed [self] }
         # this call eventually reschedules the job sequence round robin
         [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
+
+    method job_tasks_completed {thread_id} {
+        my SetStatus completed
+        my notify_sequence $thread_id
+        return false
+    }
+
+    method schedule_job_tasks {thread_id} {
+        set tasks_descr_l [::ngis::tasks list_tasks $tasks_l]
+
+        ::thread::send -async $thread_id \
+            [list ::ngis::procedures::tasks_processing $tasks_descr_l [[self] serialize]]
+    }
+
 
     method post_task {thread_id} {
         if {[string equal [my status] stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {

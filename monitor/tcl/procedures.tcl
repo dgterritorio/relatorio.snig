@@ -66,22 +66,22 @@ namespace eval ::ngis::procedures {
         return [format "%.3f" [expr double($et)/1000.]]
     }
 
-    proc run_tcl {task_d} {
-
-        set script [::ngis::tasks script $task_d]
-        set tcl_proc [::ngis::tasks function $task_d]
+    proc run_tcl {task_vector job_d} {
+        #lassign $task_vector task_code script task_description tcl_proc language
+        set tcl_proc "::ngis::tasks::[dict get $task_vector function]"
+        ::ngis::logger emit "Checking Tcl command '$tcl_proc'"
         if {[info command $tcl_proc] == ""} {
-            namespace eval ::ngis::tasks [list source $script]
+            namespace eval ::ngis::tasks [list source [dict get $task_vector script]]
         }
 
-		set gid      [::ngis::tasks gid $task_d]
-        set uri_type [::ngis::tasks type $task_d]
-        set uuid     [::ngis::tasks uuid $task_d]
-        set function [::ngis::tasks function $task_d]
+		set gid		    [dict get $job_d gid]
+        set uri_type    [dict get $job_d uri_type]
+        set uuid        [dict get $job_d uuid]
+        set uuid_space  [file join $::ngis::data_root data $uri_type $uuid $gid]
+        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
+        set task_d [dict create gid $gid type $uri_type uuid $uuid job $job_d]
 
-        set uuid_space      [file join $::ngis::data_root data $uri_type $uuid $gid]
-        set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
-        if {[ catch {
+        if {[catch {
             set t1 [clock milliseconds]
             set script_results [::ngis::tasks::${function} $task_d $tmpfile_root $uuid_space]
             set t2 [clock milliseconds]
@@ -94,34 +94,34 @@ namespace eval ::ngis::procedures {
         return $script_results
     }
 
-    proc bash_script_args {task_d} {
-        set script_args [list   [::ngis::tasks gid $task_d]     \
-                                [::ngis::tasks url $task_d]     \
-                                [::ngis::tasks uuid $task_d]    \
-                                [::ngis::tasks type $task_d]    \
-                                [::ngis::tasks version $task_d]]
+    proc bash_script_args {job_d} {
+        set script_args ""
+
+        dict with job_d {
+            set script_args [list $gid $uri $uuid $uri_type $version]
+        }
 
         set script_args [join $script_args |]
         return $script_args
     }
 
-    proc run_bash {task_d} {
+    proc run_bash {task_d job_d} {
         # The task arguments are composed into a "|" separated string
-        set script_args [bash_script_args $task_d]
+        set script_args [bash_script_args $job_d]
 
         # determine the storage space for this task. The uuid_space and
         # tmpfile_root directory are passed as arguments to the script.
 
-		set gid			 [::ngis::tasks gid $task_d]
-        set uuid         [::ngis::tasks uuid $task_d]
-        set uri_type     [::ngis::tasks type $task_d]
+		set gid			 [dict get $job_d gid]
+        set uuid         [dict get $job_d uuid]
+        set uri_type     [dict get $job_d uri_type]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid $gid]
         set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
-
-        set script [::ngis::tasks script $task_d]
-        set cmd [list /usr/bin/timeout "${::ngis::task_timeout}s" /bin/bash $script "$script_args" $tmpfile_root $uuid_space]
-        ::ngis::logger debug "running command: [join $cmd " "]"
-
+        dict with task_d {
+            set script $function
+            set cmd [list /usr/bin/timeout "${::ngis::task_timeout}s" /bin/bash $script "$script_args" $tmpfile_root $uuid_space]
+            ::ngis::logger debug "running command: [join $cmd " "]"
+        }
         try {
 
             set t1 [clock milliseconds]

@@ -38,13 +38,13 @@ namespace eval ::ngis::service {
         return 1
     }
 
-    proc update_task_results {task_results_l} {
+    proc update_task_results {task_results_l job_d} {
         set values_l {}
         foreach t $task_results_l {
-            set gid    [dict get $t job gid]
+            set gid    [dict get $job_d gid]
             set task   [dict get $t task]
             set status [dict get $t status]
-            set uuid   [dict get $t job uuid]
+            set uuid   [dict get $job_d uuid]
             if {$status == ""} { break }
             lassign $status exit_status exit_info exit_trace exit_info timestamp task_duration
 

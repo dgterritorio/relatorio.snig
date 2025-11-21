@@ -69,17 +69,17 @@ if {$eid != ""} {
     set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
 }
 set thread_id [$tm get_available_thread]
-set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registered_tasks]]
+set job_o [::ngis::Job create ::job_object $gid_rec]
 
-$job_o initialize
-set q [$job_o task_queue]
+#$job_o initialize
+#set q [$job_o task_queue]
+#set task_l [$q peek [$q size]]
+#foreach t $task_l { set task_a([dict get $t task]) $t }
+set ::master_thread_id      ""
+set ::stop_signal_received  false
 
-set task_l [$q peek [$q size]]
-
-foreach t $task_l { set task_a([dict get $t task]) $t }
-
-#source tcl/tasks_procedures.tcl
-#$job_o post_task [thread::id]
+source tcl/tasks_procedures.tcl
+$job_o schedule_job_tasks [thread::id]
 
 #while {[$tm thread_is_available]} {
 #    set thread_id [$tm get_available_thread]
