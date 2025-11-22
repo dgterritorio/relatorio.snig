@@ -176,7 +176,7 @@ catch { ::ngis::JobSequence destroy }
         if { $service_rec_d == ""} { return "" }
 
         set gid [dict get $service_rec_d gid]
-        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d]]
+        set job_o [::ngis::Job create [::ngis::JobNames new_cmd $gid] $service_rec_d]
 
         my incr_jobs_created
         return $job_o

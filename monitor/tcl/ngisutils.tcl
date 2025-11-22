@@ -50,9 +50,11 @@ namespace eval ::ngis::utils {
                             set to_address   "Massimo Manghi <massimo.manghi@yahoo.it>"
                         }
 
-                        smtp::sendmessage $token -debug false -servers [list $::ngis::smtprelay] \
-                                                              -header  [list To   $to_address] \
-                                                              -header  [list From $from_address]
+                        if {[string is true $::ngis::actually_sendemail]} {
+                            smtp::sendmessage $token -debug false -servers [list $::ngis::smtprelay] \
+                                                                  -header  [list To   $to_address] \
+                                                                  -header  [list From $from_address]
+                        }
                         return -code ok
                     } else {
                         return -code error -errorcode missing_template_argument "Missing arguments to fill template"

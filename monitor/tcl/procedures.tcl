@@ -74,16 +74,16 @@ namespace eval ::ngis::procedures {
             namespace eval ::ngis::tasks [list source [dict get $task_vector script]]
         }
 
-		set gid		    [dict get $job_d gid]
-        set uri_type    [dict get $job_d uri_type]
-        set uuid        [dict get $job_d uuid]
-        set uuid_space  [file join $::ngis::data_root data $uri_type $uuid $gid]
-        set tmpfile_root [file join $::ngis::data_root tmp [thread::id]]
+		set gid		        [dict get $job_d gid]
+        set uri_type        [dict get $job_d uri_type]
+        set uuid            [dict get $job_d uuid]
+        set uuid_space      [file join $::ngis::data_root data $uri_type $uuid $gid]
+        set tmpfile_root    [file join $::ngis::data_root tmp [thread::id]]
         set task_d [dict create gid $gid type $uri_type uuid $uuid job $job_d]
 
         if {[catch {
             set t1 [clock milliseconds]
-            set script_results [::ngis::tasks::${function} $task_d $tmpfile_root $uuid_space]
+            set script_results [${tcl_proc} $task_d $tmpfile_root $uuid_space]
             set t2 [clock milliseconds]
             lappend script_results [format_elapsed_time [expr $t2 - $t1]]
         } e einfo] } {

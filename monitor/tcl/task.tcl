@@ -111,7 +111,8 @@ namespace eval ::ngis::tasks {
                     set identity [exec /bin/bash $script identify]
                     lassign $identity task description
                     lappend tasks $task
-                    dict set tasks_db $task [dict create function    $script \
+                    dict set tasks_db $task [dict create task        $task \
+                                                         function    $script \
                                                          script      $script \
                                                          description $description \
                                                          procedure   run_bash \
@@ -123,7 +124,8 @@ namespace eval ::ngis::tasks {
                     set identity [eval [namespace current]::identify]
                     lassign $identity task function description
                     lappend tasks $task
-                    dict set tasks_db $task [dict create function    $function \
+                    dict set tasks_db $task [dict create task        $task \
+                                                         function    $function \
                                                          script      $script \
                                                          description $description \
                                                          procedure   run_tcl \
@@ -139,7 +141,7 @@ namespace eval ::ngis::tasks {
         return
     }
 
-    proc list_registered_tasks {{tasks_l "-all"}} {
+    proc list_registered_tasks {{tasks_l "--all"}} {
         variable tasks
         variable tasks_db
 

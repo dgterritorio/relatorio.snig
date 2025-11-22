@@ -35,6 +35,7 @@ oo::class create JobFactory {
         if {$tsk_l == ""} { set tasks_l [::ngis::tasks get_registered_tasks] }
         set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
+        if {![dict exists $service_d version]} { dict set service_d version none }
         set jobname     [self]
         set job_status  created
         set timestamp   [clock seconds]
@@ -78,7 +79,7 @@ oo::class create JobFactory {
         [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
     }
 
-    method job_tasks_completed {thread_id} {
+    method job_tasks_have_completed {thread_id} {
         my SetStatus completed
         my notify_sequence $thread_id
         return false
@@ -88,9 +89,8 @@ oo::class create JobFactory {
         set tasks_descr_l [::ngis::tasks list_tasks $tasks_l]
 
         ::thread::send -async $thread_id \
-            [list ::ngis::procedures::tasks_processing $tasks_descr_l [[self] serialize]]
+            [list ::ngis::procedures::start_tasks_processing $tasks_descr_l [[self] serialize]]
     }
-
 
     method post_task {thread_id} {
         if {[string equal [my status] stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {

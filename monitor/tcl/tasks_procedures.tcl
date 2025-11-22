@@ -61,6 +61,7 @@ namespace eval ::ngis::procedures {
             set status [::ngis::procedures::${procedure} $task_vector $job_d]
             ::ngis::logger emit "status returned '$status'"
         }
+
         #if {[string is true $::ngis::debugging]} {
         #    after $::ngis::debug_task_delay
         #} else {
@@ -75,16 +76,39 @@ namespace eval ::ngis::procedures {
 
     proc tasks_processing {job_tasks_l job_d} {
         variable task_results_l
+
+        if {[string is true $::stop_signal_received]} {
+            if {[llength $task_results_l] > 0} {
+                ::ngis::service::update_task_results $task_results_l $job_d
+            }
+            return
+        }
+
         set task_d_l [lassign $job_tasks_l task_vector]
+        ::ngis::logger emit "task_vector: $task_vector" debug
 
-        lappend task_results_l [do_task $task_vector $job_d]
+        set task [dict get $task_vector task]
+        set status [do_task $task_vector $job_d]
+        lappend task_results_l [dict create status $status task $task {*}[dict filter $job_d key gid uuid]]
 
-        if {([llength $task_d_l] == 0) || $::stop_signal_received} {
+        if {([llength $task_d_l] == 0)} {
+            if {[string is true $::ngis::debugging]} {
+                foreach r $task_results_l { ::ngis::logger emit "task_result: $r" debug }
+            }
             ::ngis::service::update_task_results $task_results_l $job_d
-            ::thread::send -async $job_thread_id [list $job_name tasks_have_completed [thread::id]]
+            ::thread::send -async $::master_thread_id [list [dict get $job_d jobname] job_tasks_have_completed [thread::id]]
         } else {
             after 100 [list [namespace current]::tasks_processing $task_d_l $job_d]
         }
+    }
+
+    proc start_tasks_processing {job_tasks_l job_d} {
+        variable task_results_l
+
+        set task_results_l {}
+        ::ngis::logger emit "job_d: $job_d" debug
+
+        after 100 [list [namespace current]::tasks_processing $job_tasks_l $job_d]
     }
 
 }
