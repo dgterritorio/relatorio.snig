@@ -33,24 +33,16 @@ package require ngis::taskmessages
 namespace eval ::ngis::procedures {
     variable task_results_l ""
 
-    proc fake_long_execution {job_thread_id thread_master_o duration {callback ""}} {
-        ::ngis::logger emit "entering long wait.... ([::thread::id])"
-        after [expr $duration*1000]
-        ::ngis::logger emit "....wait terminated ([::thread::id])"
+    proc mockup_processing {job_tasks_l job_d} {
 
-        thread::send -async $job_thread_id [list $thread_master_o move_to_idle [::thread::id]]
-        if {$callback != ""} { thread::send -async $job_thread_id [list $callback $thread_master_o [::thread::id]] }
-    }
-
-
-    proc mockup_processing {task_d job_thread_id} {
+        lassign $job_tasks_l task_d
 
         dict with task_d {
             ::ngis::logger emit "mockup processing of task $task for job [dict get $job jobname]"
             after 5000
             set status [::ngis::tasks::make_ok_result]
         }
-        thread::send -async $job_thread_id [list [::ngis::tasks job_name $task_d] task_completed $task_d]
+        ::thread::send -async $::master_thread_id [list [dict get $job_d jobname] job_tasks_have_completed [thread::id]]
 
     }
 
@@ -79,7 +71,7 @@ namespace eval ::ngis::procedures {
 
         if {[string is true $::stop_signal_received]} {
             if {[llength $task_results_l] > 0} {
-                ::ngis::service::update_task_results $task_results_l $job_d
+                ::ngis::service::update_task_results $task_results_l
             }
             return
         }
@@ -95,7 +87,7 @@ namespace eval ::ngis::procedures {
             if {[string is true $::ngis::debugging]} {
                 foreach r $task_results_l { ::ngis::logger emit "task_result: $r" debug }
             }
-            ::ngis::service::update_task_results $task_results_l $job_d
+            ::ngis::service::update_task_results $task_results_l
             ::thread::send -async $::master_thread_id [list [dict get $job_d jobname] job_tasks_have_completed [thread::id]]
         } else {
             after 100 [list [namespace current]::tasks_processing $task_d_l $job_d]

@@ -105,12 +105,14 @@ catch {::ngis::ThreadMaster destroy }
             set ::master_thread_id      ""
             set ::stop_signal_received  false
             set auto_path [concat [file dirname [info script]] $::auto_path]
-            #puts $::auto_path
+
             package require ngis::conf
             package require ngis::tasks_procedures
             package require ngis::msglogger
             package require ngis::shared
             package require ngis::servicedb
+
+            proc stop_thread {} { set ::stop_signal_received true }
 
             ::thread::wait
             ::ngis::logger emit "thread [thread::id] terminating"
