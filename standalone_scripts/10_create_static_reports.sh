@@ -138,13 +138,373 @@ while IFS="|" read -r gid entity manager email eid; do
 
     echo "</table>" >> "$OUTPUT"
 
+
+
     # -----------------------------------------------------------------------
     # The next sections repeat the same structure for WMS, WFS, GDALINFO, OGRINFO
     # and other validation tests. Each section generates an HTML table based on SQL output.
     # Indentation has been normalized, and comments were added above each main block.
     # -----------------------------------------------------------------------
 
-    # ... (rest of repeated SQL/report generation blocks remain unchanged but properly indented)
+    # -----------------------------------------------------------------------
+    # SECTION 2: HTTP status codes
+    # -----------------------------------------------------------------------
+    echo "<h2>Códigos de estado HTTP</h2>" >> "$OUTPUT"
+    echo "<table><tr><th>Código de saída</th><th>Definição</th><th>Número</th><th>Duração média</th></tr>" >> "$OUTPUT"
+
+    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+        WITH a AS (
+            SELECT
+                CASE
+                    WHEN a.exit_info = 'Curl got nothing from the server' THEN 'Empty response'
+                    WHEN a.exit_info = 'An error occurred during the SSL/TLS handshake' THEN 'SSL error'
+                    WHEN a.exit_info LIKE 'http_status_code: 200%' THEN '200'
+                    WHEN a.exit_info = 'Invalid HTTP status code 0' THEN 'Status code 0'
+                    WHEN a.exit_info = 'Failure in receiving network data' THEN 'Network error'
+                    WHEN a.exit_info = 'Failed to connect to host' THEN 'Cannot connect to host'
+                    WHEN a.exit_info = 'Peer certificate cannot be authenticated with known CA certificates' THEN 'Certificates error'
+                    WHEN a.exit_info LIKE 'Success with http code 200 after redir%' THEN '200 after 301/302 redirect'
+                    WHEN a.exit_info = 'Invalid HTTP status code 301 after redir' THEN 'Error HTTP status code after redirect'
+                    WHEN a.exit_info = 'Invalid HTTP status code 302 after redir' THEN 'Error HTTP status code after redirect'
+                    WHEN a.exit_info LIKE 'Invalid HTTP status code%' AND a.exit_info NOT IN ('Invalid HTTP status code 301 after redir', 'Invalid HTTP status code 302 after redir') THEN RIGHT(a.exit_info, 3)
+                    ELSE a.exit_info
+                END AS status_code,
+                COUNT(*) AS count,
+                ROUND(avg(a.task_duration)::numeric, 3) AS ping_average
+            FROM testsuite.service_status a
+            JOIN testsuite.uris_long b ON a.gid = b.gid
+            WHERE a.task = 'url_status_codes' AND b.entity = '${entity_esc}'
+            GROUP BY 1
+        ),
+        temp AS (
+            SELECT ROW_NUMBER() OVER () AS gid,
+                   a.status_code,
+                   CASE a.status_code
+                       WHEN 'Empty response' THEN 'Empty response'
+                       WHEN 'SSL error' THEN 'SSL error'
+                       WHEN '000' THEN 'Timeout'
+                       WHEN 'task execution times out after 20 secs' THEN 'Timeout'
+                       WHEN 'URL status code check failed on a 20 secs timeout error' THEN 'Timeout'
+                       WHEN '200' THEN 'OK'
+                       WHEN '200 after 301/302 redirect' THEN 'OK after redirect'
+                       WHEN '201' THEN 'Created'
+                       WHEN '202' THEN 'Accepted'
+                       WHEN '204' THEN 'No Content'
+                       WHEN '301' THEN 'Moved Permanently'
+                       WHEN '302' THEN 'Found'
+                       WHEN 'Error HTTP status code after redirect' THEN 'Error after redirect'
+                       WHEN '400' THEN 'Bad Request'
+                       WHEN '401' THEN 'Unauthorized'
+                       WHEN '403' THEN 'Forbidden'
+                       WHEN '404' THEN 'Not Found'
+                       WHEN '500' THEN 'Internal Server Error'
+                       WHEN '502' THEN 'Bad Gateway'
+                       WHEN '503' THEN 'Service Unavailable'
+                       WHEN '504' THEN 'Gateway Timeout'
+                       WHEN '499' THEN 'Client Closed Request'
+                       WHEN 'Error resolving the URL host name' THEN 'Hostname unknown'
+                       WHEN 'Network error' THEN 'Network error'
+                       WHEN 'Cannot connect to host' THEN 'Cannot connect to host'
+                       WHEN 'Certificates error' THEN 'Certificates error'
+                       WHEN 'Status code 0' THEN 'To be investigated'
+                       ELSE '' END AS definition,
+                   a.count,
+                   a.ping_average
+            FROM a
+        )
+        SELECT gid, status_code, definition, count, ping_average FROM temp ORDER BY count DESC;
+    " | while IFS="|" read -r http_gid status_code definition count avg; do
+    color=""
+    case "$status_code" in
+        "200")
+            color="background-color:#c6efce;" ;;
+        "200 after 301/302 redirect")
+            color="background-color:#ffeb9c;" ;;
+        *)
+            color="background-color:#ffc7ce;" ;;
+    esac
+
+
+    # --- Duration color only for OK or OK after redirect ---
+    color_avg=""
+    def_lower=$(echo "$definition" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$def_lower" == "ok" || "$def_lower" == "ok after redirect" ]]; then
+        # Ensure numeric value
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"   # green
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"   # yellow
+        else
+            color_avg="background-color:#ffc7ce;"   # red
+        fi
+    fi
+echo "<tr><td>${status_code}</td><td style='${color}'>${definition}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+    done
+    echo "</table>" >> "$OUTPUT"
+
+
+    # -----------------------------------------------------------------------
+    # SECTION 3: WMS Capabilities
+    # -----------------------------------------------------------------------
+    echo "<h2>Validade da resposta ao pedido WMS \"GetCapabilities\"</h2><table><tr><th>Código de saída</th><th>Definição</th><th>Número</th><th>Duração média</th></tr>" >> "$OUTPUT"
+
+    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+        WITH c AS (
+            SELECT
+                a.exit_info AS status_code,
+                a.exit_status,
+                COUNT(*) AS count,
+                ROUND(avg(a.task_duration)::numeric, 3) AS ping_average
+            FROM testsuite.service_status a
+            JOIN testsuite.uris_long b ON a.gid = b.gid
+            WHERE a.task = 'wms_capabilities' AND b.entity = '${entity_esc}'
+            GROUP BY a.exit_info, a.exit_status
+        ),
+        temp AS (
+            SELECT ROW_NUMBER() OVER () AS gid,
+                   c.status_code,
+                   c.exit_status AS definition,
+                   c.count,
+                   c.ping_average
+            FROM c
+        )
+        SELECT gid, status_code, definition, count, ping_average
+        FROM temp
+        ORDER BY count DESC;
+    " | while IFS="|" read -r gid_wms status_code exit_status count avg; do
+    color=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" ]]; then
+        color="background-color:#c6efce;"
+    elif [[ "$def_lower" == "warning" ]]; then
+        color="background-color:#ffeb9c;"
+    elif [[ "$def_lower" == "error" ]]; then
+        color="background-color:#ffc7ce;"
+    fi
+
+
+
+    # --- Duration color only for OK or OK after redirect ---
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        # Ensure numeric value
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"   # green
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"   # yellow
+        else
+            color_avg="background-color:#ffc7ce;"   # red
+        fi
+    fi
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+    done
+    echo "</table>" >> "$OUTPUT"
+    
+
+    # -----------------------------------------------------------------------
+    # SECTION 4: WFS Capabilities
+    # -----------------------------------------------------------------------
+    echo "<h2>Validade da resposta ao pedido WFS \"GetCapabilities\"</h2><table><tr><th>Código de saída</th><th>Definição</th><th>Número</th><th>Duração média</th></tr>" >> "$OUTPUT"
+
+    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+        WITH c AS (
+            SELECT
+                a.exit_info AS status_code,
+                a.exit_status,
+                COUNT(*) AS count,
+                ROUND(avg(a.task_duration)::numeric, 3) AS ping_average
+            FROM testsuite.service_status a
+            JOIN testsuite.uris_long b ON a.gid = b.gid
+            WHERE a.task = 'wfs_capabilities' AND b.entity = '${entity_esc}'
+            GROUP BY a.exit_info, a.exit_status
+        ),
+        temp AS (
+            SELECT ROW_NUMBER() OVER () AS gid,
+                   c.status_code,
+                   c.exit_status AS definition,
+                   c.count,
+                   c.ping_average
+            FROM c
+        )
+        SELECT gid, status_code, definition, count, ping_average
+        FROM temp
+        ORDER BY count DESC;
+    " | while IFS="|" read -r gid_wfs status_code exit_status count avg; do
+
+    color=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" ]]; then
+        color="background-color:#c6efce;"
+    elif [[ "$def_lower" == "warning" ]]; then
+        color="background-color:#ffeb9c;"
+    elif [[ "$def_lower" == "error" ]]; then
+        color="background-color:#ffc7ce;"
+    fi
+
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+    done
+    echo "</table>" >> "$OUTPUT"
+
+
+    # -----------------------------------------------------------------------
+    # SECTION 5: WMS gdalinfo
+    # -----------------------------------------------------------------------
+    echo "<h2>Validade da resposta ao pedido WMS GDALINFO</h2><table><tr><th>Código de saída</th><th>Definição</th><th>Número</th><th>Duração média</th></tr>" >> "$OUTPUT"
+
+    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+         WITH c AS (
+         SELECT a.exit_info AS status_code,
+            a.exit_status,
+            count(*) AS count,
+            ROUND(avg(a.task_duration)::numeric, 3) AS ping_average
+           FROM testsuite.service_status a
+                   JOIN testsuite.uris_long b ON a.gid = b.gid
+          WHERE a.task::text = 'wms_gdal_info'::text AND b.entity = '${entity_esc}'
+          GROUP BY a.exit_info, a.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            c.status_code,
+            c.exit_status AS definition,
+            c.count,
+            c.ping_average
+           FROM c
+        )
+                 SELECT gid,
+                        status_code,
+                        definition,
+                        count,
+                        ping_average
+                   FROM temp
+                  ORDER BY count DESC;
+    " | while IFS="|" read -r gid_wms status_code exit_status count avg; do
+
+    color=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" ]]; then
+        color="background-color:#c6efce;"
+    elif [[ "$def_lower" == "warning" ]]; then
+        color="background-color:#ffeb9c;"
+    elif [[ "$def_lower" == "error" ]]; then
+        color="background-color:#ffc7ce;"
+    fi
+
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+    done
+    echo "</table>" >> "$OUTPUT"
+
+
+    # -----------------------------------------------------------------------
+    # SECTION 6: WFS ogrinfo
+    # -----------------------------------------------------------------------
+    echo "<h2>Validade da resposta ao pedido WFS OGRINFO</h2><table><tr><th>Código de saída</th><th>Definição</th><th>Número</th><th>Duração média</th></tr>" >> "$OUTPUT"
+
+    psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" -t -A -F"|" -c "
+         WITH c AS (
+         SELECT a.exit_info AS status_code,
+            a.exit_status,
+            count(*) AS count,
+            ROUND(avg(a.task_duration)::numeric, 3) AS ping_average
+           FROM testsuite.service_status a
+                   JOIN testsuite.uris_long b ON a.gid = b.gid
+          WHERE a.task::text = 'wfs_ogr_info'::text AND b.entity = '${entity_esc}'
+          GROUP BY a.exit_info, a.exit_status
+        ), temp AS (
+         SELECT row_number() OVER () AS gid,
+            c.status_code,
+            c.exit_status AS definition,
+            c.count,
+            c.ping_average
+           FROM c
+        )
+                 SELECT gid,
+                        status_code,
+                        definition,
+                        count,
+                        ping_average
+                   FROM temp
+                  ORDER BY count DESC;
+    " | while IFS="|" read -r gid_wfs status_code exit_status count avg; do
+
+    color=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" ]]; then
+        color="background-color:#c6efce;"
+    elif [[ "$def_lower" == "warning" ]]; then
+        color="background-color:#ffeb9c;"
+    elif [[ "$def_lower" == "error" ]]; then
+        color="background-color:#ffc7ce;"
+    fi
+
+
+    color_avg=""
+    def_lower=$(echo "$exit_status" | tr '[:upper:]' '[:lower:]')
+    if [[ "$def_lower" == "ok" || "$def_lower" == "warning" ]]; then
+        if [[ ! "$avg" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            avg=0
+        fi
+
+        if (( $(echo "$avg <= 1" | bc -l) )); then
+            color_avg="background-color:#c6efce;"
+        elif (( $(echo "$avg <= 5" | bc -l) )); then
+            color_avg="background-color:#ffeb9c;"
+        else
+            color_avg="background-color:#ffc7ce;"
+        fi
+    fi
+
+
+        echo "<tr><td>${status_code}</td><td style='${color}'>${exit_status}</td><td>${count}</td><td style='${color_avg}'>${avg}</td></tr>" >> "$OUTPUT"
+    done
+    echo "</table>" >> "$OUTPUT"
+
 
     # -----------------------------------------------------------------------
     # FINAL SECTION: Detailed results table
