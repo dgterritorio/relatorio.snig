@@ -269,6 +269,25 @@ oo::define ngis::JsonFormat {
                 }
                 $json_o array_close
             }
+            124 {
+                $json_o string title string $fstring
+                set threads_d [lindex $args 0]
+                set nthreads  [dict size $threads_d]
+                $json_o string nthreads integer $nthreads
+                if {$nthreads > 0} {
+                    $json_o string threads array_open
+                    dict for {thid thread_d} $threads_d {
+#                        puts "$thid -> $thread_d"
+                        dict with thread_d {
+                            $json_o map_open string nruns integer $nruns
+                            $json_o string "Last Run Start" string [clock format $last_run_start -format "%Y-%m-%d %T"]
+                            $json_o string "Last Run End"   string [clock format $last_run_end -format "%Y-%m-%d %T"]
+                            $json_o string "Status" string $status map_close
+                        }
+                    }
+                    $json_o array_close
+                }
+            }
             501 {
                 $json_o string message string "Server internal error"
                 if {[llength $args] > 0} {
