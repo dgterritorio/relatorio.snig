@@ -22,7 +22,12 @@ namespace eval ::ngis::shared {
             if {[::tsv::keylget snig threads_account $tid thread_d]} {
                 ::ngis::logger emit "Thread $tid entry exists" error
             }
-            ::tsv::keylset snig threads_account $tid [list nruns 0 last_run_start [clock seconds] last_run_end [clock seconds] status idle]
+            ::tsv::keylset snig threads_account $tid [list  nruns   0     \
+                                                            last_run_start [clock seconds] \
+                                                            last_run_end   [clock seconds] \
+                                                            status  idle \
+                                                            gid     ""   \
+                                                            task    none]
         }
     }
 
@@ -70,6 +75,8 @@ namespace eval ::ngis::shared {
                 switch $new_status {
                     idle {
                         set last_run_end    [clock seconds]
+                        set task            none
+                        set gid             ""
                     }
                     running {
                         set last_run_start  [clock seconds]
@@ -79,6 +86,31 @@ namespace eval ::ngis::shared {
             }
             ::ngis::shared StoreThreadStatus $tid $thread_status
         }
+    }
+
+    proc SetThreadTask {tid gid task} {
+        ::tsv::lock snig {
+            set thread_status [::ngis::shared PickThreadStatus $tid]
+            dict set thread_status task $task
+            dict set thread_status gid  $gid
+            ::ngis::shared StoreThreadStatus $tid $thread_status
+        }
+    }
+
+    proc get_threads_database {} { 
+        
+        ::tsv::lock snig {
+            if {[::tsv::exists snig threads_account]} {
+                set threads_acc_d [dict create]
+                foreach tid [::tsv::keylkeys snig threads_account] {
+                    dict set threads_acc_d $tid [::tsv::keylget snig threads_account $tid]
+                }
+            } else {
+                set threads_acc_d [dict create]
+            }
+        }
+        return $threads_acc_d
+
     }
 
     namespace export *

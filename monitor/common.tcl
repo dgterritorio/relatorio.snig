@@ -90,11 +90,18 @@ namespace eval ::ngis {
         set ncolumns 4
         set report_a(four_columns) [::report::report hr_four_columns $ncolumns style simpletable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(four_columns) pad $c both " " }
-        # 4 column report --------------------------
+        # 5 column report --------------------------
         set ncolumns 5
         set report_a(five_columns) [::report::report hr_five_columns $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(five_columns) pad $c both " " }
-
+        # 6 column report --------------------------
+        set ncolumns 6
+        set report_a(six_columns) [::report::report hr_six_columns $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(six_columns) pad $c both " " }
+        # 7 column report --------------------------
+        set ncolumns 7
+        set report_a(seven_columns) [::report::report hr_seven_columns $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(seven_columns) pad $c both " " }
 
         # Job sequences status report
         set ncolumns 6
@@ -114,12 +121,6 @@ namespace eval ::ngis {
         set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
-        # Jobs
-        set ncolumns 6
-        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Task" "Running"}]
-        set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
-        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
-
         # Entities
         set ncolumns 3
         set report_a(108.capts)     [list {"Eid" "Description" "Records"}]
@@ -132,8 +133,11 @@ namespace eval ::ngis {
         set report_a(118.report)    [::report::report hr_118_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(118.report) pad $c both " " }
 
+        # Jobs
+        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Task" "Running"}]
         set report_a(122.capts)     [list {"GID" "Description" "Host" "Type" "Version"}]
-        set report_a(124.capts)     [list {"Thread ID" "Status" "Runs" "Last Task Start" "Last Task End"}]
+        # Threads
+        set report_a(124.capts)     [list {"Thread ID" "Status" "GID" "Task" "Runs" "Last Task Start" "Last Task End"}]
 
         proc get_fmt_string {code} {
             variable CodeMessages

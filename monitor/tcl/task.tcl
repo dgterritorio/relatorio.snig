@@ -164,7 +164,10 @@ namespace eval ::ngis::tasks {
         variable tasks_db
 
         # we can't rely on 'dict filter' because we actually need
-        # an ordered list of key-value lists
+        # a definite and predictably ordered list of key-value lists
+        # and it's the filter subcommand is not documented to preserve
+        # the key order order when using the 'key' filter mode
+
         if {$task_selection_l == "--all"} {
             set task_selection_l $tasks
         }

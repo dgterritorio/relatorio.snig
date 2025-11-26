@@ -250,7 +250,7 @@ oo::define ::ngis::HRFormat {
         }
 
         $data_matrix deserialize [list [llength $jobs_t] 6 $jobs_t]
-        set report_txt [$report_a(114.report) printmatrix $data_matrix]
+        set report_txt [$report_a(six_columns) printmatrix $data_matrix]
         set rep_width [string length [lindex $report_txt 0]]
 
         set fstring [::ngis::reports::get_fmt_string 114]
@@ -393,16 +393,16 @@ oo::define ::ngis::HRFormat {
         set threads_t [lmap {thread_id thread_d} $threads_d {
             dict with thread_d {
                 set now [clock seconds]
-                set r [list $thread_id  $status $nruns \
-                                        [::ngis::utils::delta_time_s [expr $now - $last_run_start]]   \
-                                        [::ngis::utils::delta_time_s [expr $now - $last_run_end]]]
+                set r [list $thread_id $status $gid $task $nruns \
+                                       [::ngis::utils::delta_time_s [expr $now - $last_run_start]]   \
+                                       [::ngis::utils::delta_time_s [expr $now - $last_run_end]]]
             }
             set r
         }]
         set threads_t [concat $report_a(124.capts) $threads_t]
-        $data_matrix deserialize [list [llength $threads_t] 5 $threads_t]
+        $data_matrix deserialize [list [llength $threads_t] 7 $threads_t]
         
-        set report_txt [$report_a(five_columns) printmatrix $data_matrix]
+        set report_txt [$report_a(seven_columns) printmatrix $data_matrix]
         set rep_width  [string length [lindex $report_txt 0]]
 
         set fstring [::ngis::reports::get_fmt_string 124]
@@ -413,5 +413,5 @@ oo::define ::ngis::HRFormat {
     }
 }
 
-package provide ngis::hrformat 0.6
+package provide ngis::hrformat 0.7
 

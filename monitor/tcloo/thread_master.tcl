@@ -35,22 +35,6 @@ catch {::ngis::ThreadMaster destroy }
 
     method splice {} { return [::ngis::shared BreakThreadAccDown] }
 
-    method get_threads_acc {} { 
-        
-        ::tsv::lock snig {
-            if {[::tsv::exists snig threads_account]} {
-                set threads_acc_d [dict create]
-                foreach tid [::tsv::keylkeys snig threads_account] {
-                    dict set threads_acc_d $tid [::tsv::keylget snig threads_account $tid]
-                }
-            } else {
-                set threads_acc_d [dict create]
-            }
-        }
-        return $threads_acc_d
-
-    }
-
     method status {} {
         lassign [::ngis::shared BreakThreadAccDown] running_threads_list idle_threads_list
         return [list [llength $running_threads_list] [llength $idle_threads_list]]
@@ -104,6 +88,7 @@ catch {::ngis::ThreadMaster destroy }
         set thread_id [thread::create {
             set ::master_thread_id      ""
             set ::stop_signal_received  false
+            set ::tasks_l               ""
             set auto_path [concat [file dirname [info script]] $::auto_path]
 
             package require ngis::conf
@@ -115,13 +100,17 @@ catch {::ngis::ThreadMaster destroy }
             proc stop_thread {} { set ::stop_signal_received true }
 
             ::thread::wait
+
+            ::ngis::service close_connector
             ::ngis::logger emit "thread [thread::id] terminating"
             ::ngis::shared RemoveThread [::thread::id]
+
         }]
 
         thread::preserve $thread_id
 
         ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
+        ::thread::send $thread_id [list set ::tasks_l $::ngis::tasks::tasks]
         ::ngis::shared AddNewThread $thread_id
 
         return $thread_id

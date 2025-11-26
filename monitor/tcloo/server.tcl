@@ -129,58 +129,6 @@ package require ngis::utils
         return $whos_l
     }
 
-    # -- task results procedures
-
-    method post_task_results {task_results} {
-        $task_results_queue put $task_results
-        if {([$task_results_queue size] >= $::ngis::task_results_queue_size) && \
-            ($task_results_chore == "")} {
-            set task_results_chore [after 100 [list [self] sync_results]]
-        }
-    }
-
-    method post_task_results_cleanup {gid tasks_to_purge_l} {
-        after 100 [[self] remove_results $gid $tasks_to_purge_l]
-    }
-
-    method sync_results {} {
-        set task_results_chore ""
-        set results_queue   $task_results_queue
-
-        if {[$results_queue size] == 0} { return }
-
-        # hideous behavior of struct::queue: if it's
-        # holding one element that can be represented as a list, 
-        # subcommand 'get' returns a flat list of elements,
-        # not a 1 element list.  It's documented, but nonetheless
-        # a despicable way Tcllib's struct::queue works
-
-        if {[$results_queue size] == 1} {
-            set results_l [list [$results_queue get]]
-        } else {
-            set results_l [$results_queue get [$results_queue size]]
-        }
-
-        if {[catch {
-            ::ngis::logger emit "storing [llength $results_l] results"
-            set t1 [clock milliseconds]
-            ::ngis::service::update_task_results $results_l
-            set t2 [clock milliseconds]
-
-            ::ngis::logger emit "[llength $results_l] results stored in [expr $t2 - $t1]ms"
-        } e einfo]} {
-            ::ngis::logger emit "error syncing results: $e"
-            ::ngis::logger emit "===== error_info ====="
-            foreach l [split $einfo "\n"] { ::ngis::logger emit $l }
-        }
-    }
-
-    method remove_results {gid tasks_to_purge_l} {
-        ::ngis::logger emit "removing [llength $tasks_to_purge_l] results for gid '$gid'"
-        ::ngis::service remove_task_results $gid $tasks_to_purge_l
-    }
-
-
     # chan_is_readable --
     #
     # socket I/O callback. The Tcl channel reference 'con' is the key to access

@@ -282,6 +282,8 @@ oo::define ngis::JsonFormat {
                             $json_o map_open string nruns integer $nruns
                             $json_o string "Last Run Start" string [clock format $last_run_start -format "%Y-%m-%d %T"]
                             $json_o string "Last Run End"   string [clock format $last_run_end -format "%Y-%m-%d %T"]
+                            $json_o string "GID" string $gid
+                            $json_o string "Task" string $task
                             $json_o string "Status" string $status map_close
                         }
                     }
