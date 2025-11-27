@@ -25,10 +25,6 @@ catch {::ngis::ThreadMaster destroy }
                 ::thread::release $tid
             }
         }
-        #dict for {thr_id thr_d} $threads_acc_d {
-        #    thread::release $thr_id
-        #}
-
         ::thread::release $chores_thread_id
     }
 
@@ -89,6 +85,7 @@ catch {::ngis::ThreadMaster destroy }
             set ::master_thread_id      ""
             set ::stop_signal_received  false
             set ::tasks_l               ""
+            set ::release_thread_asap   false
             set auto_path [concat [file dirname [info script]] $::auto_path]
 
             package require ngis::conf
@@ -99,10 +96,23 @@ catch {::ngis::ThreadMaster destroy }
 
             proc stop_thread {} { set ::stop_signal_received true }
 
+            # for now this procedure is called to release idle threads
+            # but we don't assume the thread to be idle in order to
+            # have a method to force threads exit in any state
+
+            proc demand_thread_exit {} {
+                stop_thread
+                set ::release_thread_asap true
+                set thread_d [::ngis::shared::PickThreadStatus [::thread::id]]
+                if {[dict get $thread_d status] == "exiting"} {
+                    ::thread::release
+                }
+            }
+
             ::thread::wait
 
             ::ngis::service close_connector
-            ::ngis::logger emit "thread [thread::id] terminating"
+            ::ngis::logger emit "thread [::thread::id] terminating"
             ::ngis::shared RemoveThread [::thread::id]
 
         }]
@@ -131,7 +141,7 @@ catch {::ngis::ThreadMaster destroy }
     
             if {[llength $running_threads_list] < $max_threads_number} {
                 set thread_id [my start_worker_thread]
-                ::ngis::logger debug "---> '$thread_id' started ========"
+                ::ngis::logger debug "---> '$thread_id' <---"
             } else {
                 ::ngis::logger emit \
                     "Internal server error: running threads number exceeds max_threads_number"
@@ -147,14 +157,6 @@ catch {::ngis::ThreadMaster destroy }
 
     method thread_terminates {thread_id} {
         ::ngis::shared RemoveThread $thread_id
-    }
-
-    method move_to_idle {thread_id} {
-        ::ngis::shared ChangeThreadStatus $thread_id idle
-    }
-
-    method move_to_running {thread_id} {
-        ::ngis::shared ChangeThreadStatus $thread_id running
     }
 
     method running_threads {} {
@@ -178,30 +180,6 @@ catch {::ngis::ThreadMaster destroy }
         }
 
         return [llength $threads_list]
-    }
-
-    method release_stale_threads {} {
-        set to_be_terminated {}
-        
-        ::tsv::lock snig {
-            if {[::tsv::exists snig threads_account]} {
-                foreach tid [::tsv::keylkeys snig threads_account] {
-                    set thread_d [::tsv::keylget snig threads_account $tid]
-                    dict with thread_d {
-                        if {($status == "idle") && \
-                            (($nruns > 10) || (([clock seconds]-$last_run_end) > 60))} {
-                            lappend to_be_terminated $tid
-                            set status exiting
-                        }
-                    }
-                    ::tsv::keylset snig threads_account $tid $thread_d
-                }
-            }
-            foreach thread_id $to_be_terminated {
-                thread::release $thread_id
-                #my thread_terminates $thread_id
-            }
-        }
     }
 
     method terminate_idle_threads {} {

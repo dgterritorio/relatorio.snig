@@ -25,7 +25,7 @@ namespace eval ::ngis::shared {
             ::tsv::keylset snig threads_account $tid [list  nruns   0     \
                                                             last_run_start [clock seconds] \
                                                             last_run_end   [clock seconds] \
-                                                            status  idle \
+                                                            status  created \
                                                             gid     ""   \
                                                             task    none]
         }
@@ -36,7 +36,6 @@ namespace eval ::ngis::shared {
             ::tsv::keyldel snig threads_account $tid
         }
     }
-
 
     proc PickThreadStatus {tid} {
         if {[::tsv::keylget snig threads_account $tid th_d]} {
@@ -50,8 +49,9 @@ namespace eval ::ngis::shared {
     }
 
     proc BreakThreadAccDown {} {
-        set running_threads_list {}
-        set idle_threads_list {}
+        set running_threads_list    {}
+        set idle_threads_list       {}
+        set created_threads_list    {}
 
         ::tsv::lock snig {
             if {[::tsv::exists snig threads_account]} {
@@ -63,7 +63,7 @@ namespace eval ::ngis::shared {
             }
         }
 
-        return [list $running_threads_list $idle_threads_list]
+        return [list $running_threads_list $idle_threads_list $created_threads_list]
     }
 
     proc ChangeThreadStatus {tid new_status} {
@@ -94,6 +94,31 @@ namespace eval ::ngis::shared {
             dict set thread_status task $task
             dict set thread_status gid  $gid
             ::ngis::shared StoreThreadStatus $tid $thread_status
+        }
+    }
+
+    proc release_stale_threads {} {
+        set to_be_terminated {}
+        
+        ::tsv::lock snig {
+            if {[::tsv::exists snig threads_account]} {
+                foreach tid [::tsv::keylkeys snig threads_account] {
+                    set thread_d [::tsv::keylget snig threads_account $tid]
+                    dict with thread_d {
+                        if {($status == "idle") && \
+                            (($nruns > 10) || (([clock seconds]-$last_run_end) > 60))} {
+                            lappend to_be_terminated $tid
+                            set status exiting
+                        }
+                    }
+                    ::tsv::keylset snig threads_account $tid $thread_d
+                }
+            }
+            foreach thread_id $to_be_terminated {
+                #thread::release $thread_id
+                ::thread::send -async $thread_id { demand_thread_exit }
+                #my thread_terminates $thread_id
+            }
         }
     }
 

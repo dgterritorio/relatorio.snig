@@ -71,10 +71,14 @@ namespace eval ::ngis::procedures {
         variable task_results_l
         variable tasks_to_execute_l
 
-        if {[string is true $::stop_signal_received]} {
+        set interrupt_operations [expr [string is true $::stop_signal_received] || \
+                                       [string is true $::release_thread_asap]]
+
+        if {$interrupt_operations} {
             if {[llength $task_results_l] > 0} {
                 ::ngis::service::update_task_results $task_results_l
             }
+            if {[string is true $::release_thread_asap]} { ::thread::release }
             return
         }
 
@@ -84,8 +88,8 @@ namespace eval ::ngis::procedures {
         set task_d_l           [lassign $job_tasks_l task_vector]
         set tasks_to_execute_l [lassign $tasks_to_execute_l task]
         
-        ::ngis::logger emit "task_vector: $task_vector" debug
-
+        ::ngis::logger emit "task: '$task' vector: $task_vector" debug
+        ::ngis::logger emit "remaining tasks_to_execute: $tasks_to_execute_l" debug
         ::ngis::shared::SetThreadTask [::thread::id] [dict get $job_d gid] $task 
 
         set status [do_task $task_vector $job_d]
@@ -95,16 +99,16 @@ namespace eval ::ngis::procedures {
                     [dict create status $status task $task {*}[dict filter $job_d key gid uuid]]
         }
 
-        if {([llength $task_d_l] == 0) || ($outcome == "error")} {
+        if {([llength $task_d_l] == 0) || ($outcome == "error") || $interrupt_operations} {
             if {[string is true $::ngis::debugging]} {
                 foreach r $task_results_l { ::ngis::logger emit "task_result: $r" debug }
             }
-
             ::ngis::service::update_task_results $task_results_l
             if {[llength $tasks_to_execute_l] > 0} {
                 ::ngis::service::remove_service_status_records [dict get $job_d gid] $tasks_to_execute_l
             }
             ::thread::send -async $::master_thread_id [list [dict get $job_d jobname] job_tasks_have_completed [thread::id]]
+            if {[string is true $::release_thread_asap]} { ::thread::release }
         } else {
             after 100 [list [namespace current]::tasks_processing $task_d_l $job_d]
         }
@@ -121,8 +125,8 @@ namespace eval ::ngis::procedures {
 
         set task_results_l {}
         set tasks_to_execute_l $::tasks_l
-        ::ngis::logger emit "tasks_to_exectute: $tasks_to_execute_l" debug
 
+        ::ngis::logger emit "tasks_to_execute: $tasks_to_execute_l" debug
         ::ngis::logger emit "job_d: $job_d" debug
 
         after 100 [list [namespace current]::tasks_processing $job_tasks_l $job_d]
