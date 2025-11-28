@@ -40,7 +40,7 @@ catch { ::ngis::JobSequence destroy }
     method completed_jobs {} { return $num_of_completed_jobs }
 
     method delete_jobs {} {
-        ::ngis::logger emit "[self] cleaning up finished jobs"
+        ::ngis::logger emit "[self] cleaning up [llength $jobs_to_destroy] finished jobs"
         foreach j $jobs_to_destroy { $j destroy }
     }
 
@@ -59,6 +59,8 @@ catch { ::ngis::JobSequence destroy }
         }
 
         set running_jobs [lreplace $running_jobs $j $j]
+
+        [$::ngis_server get_job_controller] suggest_round_robin_rescheduling
     }
 
     method running_jobs_count {} {
@@ -77,19 +79,14 @@ catch { ::ngis::JobSequence destroy }
 
         set new_job [my get_next_result]
         if {$new_job == ""} {
-
             return false
-
         } else {
-
             $new_job set_sequence [self]
 
             ::ngis::logger emit "starting $new_job ([$new_job get_property description])"
             lappend running_jobs $new_job
-
             $new_job start_job $thread_id
             return true
-
         }
     }
 

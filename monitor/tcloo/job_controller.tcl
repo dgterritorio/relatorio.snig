@@ -49,6 +49,10 @@ namespace eval ::ngis {
             }
         }
 
+        method suggest_round_robin_rescheduling {} {
+            my RescheduleRoundRobin
+        }
+
         # -- LoadBalancer
         #
         # implements a flat policy of threads quota among sequences

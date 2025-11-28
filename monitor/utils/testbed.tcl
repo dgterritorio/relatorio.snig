@@ -22,11 +22,12 @@ package require ngis::threads
 package require ngis::sequence
 package require ngis::jobcontroller
 package require ngis::procedures
+package require ngis::task_procedures
 
 package require ngis::hrformat
 
 set arguments $argv
-set gid 212032
+set gid ""
 set eid ""
 while {[llength $arguments]} {
 
@@ -51,35 +52,19 @@ set ::ngis_server [::ngis::Server create ::ngis_server]
 
 set jcontroller [::ngis_server create_job_controller 50]
 set tm           ::ngis::thread_master
-set gid_rec     [::ngis::service::load_by_gid $gid]
-
-# faking a sequence
-#::oo::define ::ngis::JobSequence {
-#    method job_completed {job_o} {
-#        puts "$job_o has completed"
-#    }
-#}
 
 #set entity "Instituto Nacional de Estatística, I.P."
 #puts "building the job sequence for $entity"
 
-if {$eid != ""} {
+if {$gid != ""} {
+    set service_l    [list [::ngis::service::load_by_gid $gid]]
+} elseif {$eid != ""} {
     set service_l    [::ngis::service load_by_entity $eid]
-    set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
-    set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
 }
-set thread_id [$tm get_available_thread]
-set job_o [::ngis::Job create ::job_object $gid_rec]
+set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
+set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
 
-#$job_o initialize
-#set q [$job_o task_queue]
-#set task_l [$q peek [$q size]]
-#foreach t $task_l { set task_a([dict get $t task]) $t }
-set ::master_thread_id      ""
-set ::stop_signal_received  false
-
-source tcl/tasks_procedures.tcl
-$job_o schedule_job_tasks [thread::id]
+$jcontroller post_sequence $the_sequence
 
 #while {[$tm thread_is_available]} {
 #    set thread_id [$tm get_available_thread]

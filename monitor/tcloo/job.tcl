@@ -60,18 +60,10 @@ oo::class create JobFactory {
         my SetStatus stop_signal_received
     }
 
-    method notify_sequence {thread_id} {
-        ::ngis::logger emit "Job [self] terminates"
-
-        if {$sequence != ""} { $sequence job_completed [self] }
-        # this call eventually reschedules the job sequence round robin
-        #[$::ngis_server get_job_controller] move_thread_to_idle $thread_id
-    }
-
     method job_tasks_have_completed {thread_id} {
         my SetStatus completed
-        my notify_sequence $thread_id
         ::ngis::shared ChangeThreadStatus $thread_id idle
+        if {$sequence != ""} { $sequence job_completed [self] }
 
         set assigned_thread_id ""
         return false
