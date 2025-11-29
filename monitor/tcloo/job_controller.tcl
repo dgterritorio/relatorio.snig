@@ -32,7 +32,6 @@ namespace eval ::ngis {
             set jobs_quota              $max_workers_num
             set quota_reached_count     0
             set shutdown_signal         false
-            set stop_operations         false
         }
 
         destructor {
@@ -48,6 +47,10 @@ namespace eval ::ngis {
                 my LogMessage "rescheduling job sequences round robin" debug
                 set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
+        }
+
+        method suggest_round_robin_rescheduling {} {
+            my RescheduleRoundRobin
         }
 
         # -- LoadBalancer
@@ -124,11 +127,6 @@ namespace eval ::ngis {
             my RescheduleRoundRobin
         }
 
-        method move_thread_to_idle {thread_id} {
-            $thread_master move_to_idle $thread_id
-            my RescheduleRoundRobin
-        }
-
         # -- running_jobs_tot
         #
         #
@@ -163,18 +161,7 @@ namespace eval ::ngis {
                 }]
 
             }
-
-            # we don't have anything to do here if there are no
-            # active job sequences on 'sequence_list'
-
-            if {[llength $sequence_list] == 0} {
-                after 100 [list $::ngis_server sync_results]
-
-                #if {[llength $pending_sequences] == 0} {
-                #    $thread_master terminate_idle_threads
-                #}
-                return 
-            }
+            if {[llength $sequence_list] == 0} { return }
 
             # the sequence_idx (index) could have been incremented
             # at the end of the previous run of sequence_roundrobin.
@@ -225,9 +212,7 @@ namespace eval ::ngis {
                     set thread_id [$thread_master get_available_thread]
                     if {[string is false [$seq post_job $thread_id]]} {
 
-                        # let's return the thread back to the idle threads pool
-                        #my move_thread_to_idle $thread_id
-
+                        ::ngis::shared ChangeThreadStatus $thread_id idle
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
                         set sequence_has_terminated true
 
@@ -259,7 +244,7 @@ namespace eval ::ngis {
 
                         break
                     } else {
-                        $thread_master move_to_running $thread_id
+                        ::ngis::shared ChangeThreadStatus $thread_id running
                         incr batch
                     }
                 }

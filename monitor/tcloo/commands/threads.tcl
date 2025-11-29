@@ -3,12 +3,13 @@
 # Returns information on the current working threads
 #
 
+package require ngis::shared
+
 namespace eval ::ngis::client_server {
 
     ::oo::class create ThreadsList {
         method exec {args} {
-            set tm [[$::ngis_server get_job_controller] get_thread_master]
-            return [list c124 [$tm get_threads_acc]]
+            return [list c124 [::ngis::shared::get_threads_database]]
         }
     }
 
