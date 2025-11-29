@@ -32,6 +32,14 @@ namespace eval ::ngis::shared {
         }
     }
 
+    proc ReleaseAll {} {
+        ::tsv::lock snig {
+            foreach tid [::tsv::keylkeys snig threads_account] {
+                ::thread::release $tid
+            }
+        }
+    }
+
     proc PickThreadStatus {tid} {
         if {[::tsv::keylget snig threads_account $tid th_d]} {
             return $th_d
