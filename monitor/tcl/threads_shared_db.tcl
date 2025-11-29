@@ -7,12 +7,7 @@
 package require Thread
 package require ngis::msglogger
 
-
 namespace eval ::ngis::shared {
-    if {![::tsv::exists snig timestamp]} {
-        ::tsv::set snig timestamp [clock format [clock seconds]]
-    }
-
     if {![::tsv::exists snig timestamp]} {
         ::tsv::set snig timestamp [clock format [clock seconds]]
     }
