@@ -8,7 +8,7 @@ namespace eval ::ngis {
     variable SERVICE_STATUS     "testsuite.service_status"
     variable ENTITY_EMAIL       "testsuite.entities_email_reports"
     variable PORT               "5432"
-    variable COLUMN_NAMES       "gid,uuid,uri,entity,description,uri_type,version"
+    variable COLUMN_NAMES       "gid,uuid,uri,uri_original,entity,description,uri_type,version"
     variable SERVICE_LOG        "testsuite.service_log"
     variable TIMEZONE           "Europe/Lisbon"
 

@@ -22,7 +22,7 @@ package require ngis::threads
 package require ngis::sequence
 package require ngis::jobcontroller
 package require ngis::procedures
-package require ngis::task_procedures
+package require ngis::tasks_procedures
 
 package require ngis::hrformat
 
@@ -48,23 +48,27 @@ while {[llength $arguments]} {
 
 ::ngis::tasks build_tasks_database ./tasks
 
-set ::ngis_server [::ngis::Server create ::ngis_server]
-
-set jcontroller [::ngis_server create_job_controller 50]
-set tm           ::ngis::thread_master
+set ::ngis_server   [::ngis::Server create ::ngis_server]
+set jcontroller     [::ngis_server create_job_controller 50]
+set tm              ::ngis::thread_master
 
 #set entity "Instituto Nacional de Estatística, I.P."
 #puts "building the job sequence for $entity"
 
 if {$gid != ""} {
-    set service_l    [list [::ngis::service::load_by_gid $gid]]
+    set service_l [list [::ngis::service::load_by_gid $gid]]
 } elseif {$eid != ""} {
-    set service_l    [::ngis::service load_by_entity $eid]
+    set service_l [::ngis::service load_by_entity $eid]
 }
-set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
-set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
 
-$jcontroller post_sequence $the_sequence
+if {[info exists service_l] && [llength $service_l] > 0} {
+    set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
+    set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
+
+    puts "created $datasource datasource for sequence $the_sequence"
+
+    #$jcontroller post_sequence $the_sequence
+}
 
 #while {[$tm thread_is_available]} {
 #    set thread_id [$tm get_available_thread]

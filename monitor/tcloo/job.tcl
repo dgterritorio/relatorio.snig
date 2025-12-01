@@ -31,7 +31,7 @@ oo::class create JobFactory {
     constructor {service_d_ {tsk_l ""}} {
         set sequence    ""
         if {$tsk_l == ""} { set tasks_l [::ngis::tasks get_registered_tasks] }
-        set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
+        set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_original uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
         if {![dict exists $service_d version]} { dict set service_d version none }
         set jobname     [self]
