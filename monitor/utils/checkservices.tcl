@@ -81,9 +81,9 @@ set stalerecs_sql   [concat $sql_base $sql_join "where ss.task = 'congruence'"]
 
 # With Tcl9 these should become immutable variables
 
-set fun             generic
+set fun             stalerecs
 set sql             $sql_base
-set limit           20
+set limit           0
 set max_jobs_n      0
 set min_jobs_per_seq 20
 set jobs_seq_delay  5000
