@@ -225,31 +225,40 @@ oo::define ngis::JsonFormat {
                 }
             }
             118 {
-                set service_d [lindex $args 0]
-                dict with service_d {
-                    $json_o string message string [format $fstring $gid $description $uri_type]
-                    $json_o string tasks array_open
+                set services_l [lindex $args 0]
+                $json_o string results array_open
+                foreach service_d $services_l {
+                    dict with service_d {
+                        $json_o map_open
+                        $json_o string message string [format $fstring $gid $description $uri_type]
+                        $json_o string gid integer $gid
+                        $json_o string message string $description
+                        $json_o string type string $uri_type
+                        $json_o string tasks array_open
 
-                    #puts "..........\n$tasks\n........."
+                        #puts "..........\n$tasks\n........."
 
-                    if {[info exists tasks]} {
-                        foreach t [::ngis::tasks::list_registered_tasks] {
-                            lassign $t task procedure tdescr filename language
+                        if {[info exists tasks]} {
+                            foreach t [::ngis::tasks::list_registered_tasks] {
+                                lassign $t task procedure tdescr filename language
 
-                            if {[dict exists $tasks $task]} {
-                                set tasks_data [dict get $tasks $task]
-                                $json_o map_open string "task" string $task
-                                foreach k {exit_status exit_info ts} {
-                                    $json_o string $k string [dict get $tasks_data $k]
-                                }
-                                $json_o map_close
-                            } else {
-                                continue
-                            } 
+                                if {[dict exists $tasks $task]} {
+                                    set tasks_data [dict get $tasks $task]
+                                    $json_o map_open string "task" string $task
+                                    foreach k {exit_status exit_info ts} {
+                                        $json_o string $k string [dict get $tasks_data $k]
+                                    }
+                                    $json_o map_close
+                                } else {
+                                    continue
+                                } 
+                            }
                         }
+                        $json_o array_close
+                        $json_o map_close
                     }
-                    $json_o array_close
                 }
+                $json_o array_close
             }
             122 {
                 set services_l [lindex $args 0]

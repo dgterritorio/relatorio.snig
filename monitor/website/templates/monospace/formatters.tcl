@@ -98,7 +98,7 @@ proc service_info {service_d} {
 
 proc service_tasks {service_d} {
     variable hr_formatter
-    return [center_report [$hr_formatter c118 $service_d $::ngis::registered_tasks]]
+    return [center_report [$hr_formatter c118 [list $service_d] $::ngis::registered_tasks]]
 }
 
 proc service_table {service_d} {

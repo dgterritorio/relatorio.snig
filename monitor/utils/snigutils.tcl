@@ -135,6 +135,7 @@ namespace eval ::ngis::utils {
                 }
 
             } else {
+
                 switch $class {
                     entities {
                         # ::ngis::service list_entities returns a list of 3-element descriptors
@@ -146,10 +147,12 @@ namespace eval ::ngis::utils {
                         lappend resources_l {*}[::ngis::service service_data $a]
                     }
                 }
+
             }
         }
 
-        if {([llength $gids_l] == 0) && ([llength $eids_l] == 0) && \
+        if {([llength $gids_l] == 0) && \
+            ([llength $eids_l] == 0) && \
             ([llength $resources_l] == 0)} {
             return [list ERR "109" "No valid records found"]
         }

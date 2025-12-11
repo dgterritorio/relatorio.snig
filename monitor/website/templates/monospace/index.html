@@ -13,8 +13,8 @@
     set template_o [::rivetweb::RWTemplate::template $::rivetweb::template_key]
     set ns [$template_o formatters_ns]
     if {![info exists ::snig_header]} { 
-        set hr [string repeat "-" 132]
-        set snig_header [fileutil::cat [file join $::rivetweb::base_templates monospace monospace_header.txt]]
+        set ::hr [string repeat "-" 132]
+        set ::snig_header [fileutil::cat [file join $::rivetweb::base_templates monospace monospace_header.txt]]
     }
 
     set snig_header_l [split $::snig_header "\n"]
@@ -23,9 +23,7 @@
         puts -nonewline $padding
         puts $l
     }
-    puts $hr
-?><div id="headline"><?= [$::rivetweb::current_page headline $::rivetweb::language] ?></div>
-<?= $hr ?></pre>
+?><div id="headline"><?= "\n${::hr}\n[$::rivetweb::current_page headline $::rivetweb::language]\n${::hr}" ?></div></pre>
 <div id="banner"><?
     #set menu_d [[::rwdatas::UrlHandler::current_handler] menu_list $::rivetweb::current_page]
     set menu_d $::rivetweb::pagemenus
