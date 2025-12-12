@@ -8,7 +8,6 @@ namespace eval ::ngis::chores {
         }
 
         method exec_chore {main_thread thread_master job_controller} {
-            #::thread::send -async $main_thread [list $thread_master release_stale_threads]
             ::ngis::shared::release_stale_threads
         }
     }

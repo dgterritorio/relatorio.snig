@@ -213,6 +213,7 @@ namespace eval ::ngis {
                     if {[string is false [$seq post_job $thread_id]]} {
 
                         ::ngis::shared ChangeThreadStatus $thread_id idle
+
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
                         set sequence_has_terminated true
 
@@ -289,4 +290,4 @@ namespace eval ::ngis {
     }
 }
 
-package provide ngis::jobcontroller 1.0
+package provide ngis::jobcontroller 1.1

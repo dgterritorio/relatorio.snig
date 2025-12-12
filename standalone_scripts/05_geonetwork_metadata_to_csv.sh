@@ -36,16 +36,16 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
  -v "//gmd:MD_Metadata/gmd:characterSet/gmd:MD_CharacterSetCode/@codeListValue" -o '$' \
  -v "//gmd:hierarchyLevel/gmd:MD_ScopeCode/@codeListValue" -o '$' \
  -v "//gmd:hierarchyLevelName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \

@@ -7,7 +7,7 @@ package ifneeded ngis::task             1.0 [list source [file join $dir tcl tas
 package ifneeded ngis::taskmessages     1.0 [list source [file join $dir tcl task_messages.tcl]]
 package ifneeded ngis::servicedb        1.0 [list source [file join $dir tcl service_db.tcl]]
 package ifneeded ngis::sequence         1.0 [list source [file join $dir tcloo sequence.tcl]]
-package ifneeded ngis::jobcontroller    1.0 [list source [file join $dir tcloo job_controller.tcl]]
+package ifneeded ngis::jobcontroller    1.1 [list source [file join $dir tcloo job_controller.tcl]]
 package ifneeded ngis::server           1.0 [list source [file join $dir tcloo server.tcl]]
 package ifneeded ngis::client           1.0 [list source [file join $dir tcloo client.tcl]]
 package ifneeded ngis::threads          2.0 [list source [file join $dir tcloo thread_master.tcl]]

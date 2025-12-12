@@ -17,6 +17,16 @@ oo::class create JobFactory {
     }
 }
 
+
+oo::class create JobFactory {
+    superclass oo::class
+    method fromDict {d} {
+        set o [my new]
+        $o configure $d
+        return $o
+    }
+}
+
 ::oo::class create ::ngis::Job
 
 ::oo::define ::ngis::Job {

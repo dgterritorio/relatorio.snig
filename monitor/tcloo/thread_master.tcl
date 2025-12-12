@@ -13,10 +13,13 @@ catch {::ngis::ThreadMaster destroy }
     variable max_threads_number
     variable chores_thread_id
 
+    variable threads_acc_d
+
     constructor {mtn} {
         set max_threads_number      $mtn
         array set running_threads   {}
         set chores_thread_id        ""
+        set threads_acc_d           [dict create]
     }
 
     destructor {
@@ -110,6 +113,7 @@ catch {::ngis::ThreadMaster destroy }
             ::ngis::logger emit "thread [::thread::id] terminating"
             ::ngis::shared RemoveThread [::thread::id]
 
+            ::thread::send $::master_thread_id [list ::ngis::thread_master thread_terminates [::thread::id]]
         }]
 
         thread::preserve $thread_id
