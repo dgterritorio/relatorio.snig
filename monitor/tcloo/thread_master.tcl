@@ -112,8 +112,6 @@ catch {::ngis::ThreadMaster destroy }
             ::ngis::service close_connector
             ::ngis::logger emit "thread [::thread::id] terminating"
             ::ngis::shared RemoveThread [::thread::id]
-
-            ::thread::send $::master_thread_id [list ::ngis::thread_master thread_terminates [::thread::id]]
         }]
 
         thread::preserve $thread_id
@@ -152,10 +150,6 @@ catch {::ngis::ThreadMaster destroy }
         }
 
         return $thread_id
-    }
-
-    method thread_terminates {thread_id} {
-        ::ngis::shared RemoveThread $thread_id
     }
 
     method running_threads {} {
