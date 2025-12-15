@@ -79,7 +79,7 @@ while IFS="|" read -r gid entity manager email eid; do
         s/__/_/g;
     ')
 
-    OUTPUT="/tmp/${eid}_${entity_sanitized}_$(date +%d%m%Y).html"
+    OUTPUT="/tmp/${eid}_${entity_sanitized}_$(date +%Y%m%d).html"
 
     # -----------------------------------------------------------------------
     # Write HTML header and general info
