@@ -7,33 +7,41 @@
 package require TclOO
 package require ngis::task
 package require Thread
-package require struct::queue
+
+oo::class create JobFactory {
+    superclass oo::class
+    method fromDict {d} {
+        set o [my new]
+        $o configure $d
+        return $o
+    }
+}
 
 ::oo::class create ::ngis::Job
 
 ::oo::define ::ngis::Job {
     variable sequence
     variable service_d
-    variable tasks_q
     variable tasks_l
     variable jobname
     variable job_status
     variable timestamp
+    variable assigned_thread_id
 
-    constructor {service_d_ tasks} {
+    constructor {service_d_ {tsk_l ""}} {
         set sequence    ""
-        set tasks_l     $tasks
-        set tasks_q     [::struct::queue] 
-        set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_type version jobname]
+        if {$tsk_l == ""} { set tasks_l [::ngis::tasks get_registered_tasks] }
+        set service_d   [dict filter $service_d_ key gid uuid entity description uri uri_original uri_type version jobname]
         if {![dict exists $service_d description]} { dict set service_d description "" }
-        if {[dict exists $service_d jobname] == 0} { set jobname [self] }
+        if {![dict exists $service_d version]} { dict set service_d version none }
+        set jobname     [self]
         set job_status  created
         set timestamp   [clock seconds]
+        set assigned_thread_id ""
     }
 
     destructor { }
  
-    method task_queue {} { return $tasks_q }
     method status {} { return $job_status }
     method status_ts {} { return $timestamp }
 
@@ -63,10 +71,7 @@ package require struct::queue
     }
 
     method start_job {thread_id} {
-        if {[$tasks_q size] > 0} { $tasks_q clear }
-
-        $tasks_q put {*}[lmap t $tasks_l { ::ngis::tasks mktask $t [self] }]
-        return [my post_task $thread_id]
+        return [my schedule_job_tasks $thread_id]
     }
 
     method SetStatus {new_status} {
@@ -75,77 +80,28 @@ package require struct::queue
     }
 
     method stop_job {} {
+        ::thread::send -async $assigned_thread_id { stop_thread }
         my SetStatus stop_signal_received
     }
 
-    method notify_sequence {thread_id} {
-        ::ngis::logger emit "Job [self] terminates"
-        
+    method job_tasks_have_completed {thread_id} {
+        my SetStatus completed
+        ::ngis::shared ChangeThreadStatus $thread_id idle
         if {$sequence != ""} { $sequence job_completed [self] }
-        # this call eventually reschedules the job sequence round robin
-        [$::ngis_server get_job_controller] move_thread_to_idle $thread_id
+
+        set assigned_thread_id ""
+        return false
     }
 
-    method post_task {thread_id} {
-        if {[string equal [my status] stop_signal_received] || [catch { set task_d [$tasks_q get] } e einfo]} {
+    method schedule_job_tasks {thread_id} {
 
-            my SetStatus completed
+        set assigned_thread_id $thread_id
+        set tasks_descr_l [::ngis::tasks list_tasks $tasks_l]
 
-            # the queue is empty, tasks are completed and
-            # the job sequence the job belongs to is notified
-            # that we are done with our tasks
+        ::thread::send -async $assigned_thread_id \
+            [list ::ngis::procedures::start_tasks_processing $tasks_descr_l [[self] serialize]]
+        my SetStatus running
 
-            my notify_sequence $thread_id
-            return false
-
-        } else {
-
-            set task_name [dict get $task_d task]
-            my SetStatus $task_name
-
-            ::ngis::logger emit "posting task '$task_name' for job [self]"
-
-			# The last argument is the thread id of the caller (returned by ::thread::id)
-			# as the worker thread needs to know the thread id of the sender in order
-			# to send back the task results
-
-            thread::send -async $thread_id [list do_task $task_d [thread::id]]
-            return true
-
-        }
-    }
-
-    method task_completed {thread_id task_d} {
-        set task_result ""
-        dict with task_d {
-            ::ngis::logger emit "task '$task' for job '[self]' ends with status '$status' (tid: $thread_id)"
-
-            set task_result $status
-            lassign $task_result code
-
-            if {$code == "not_applicable"} {
-                ::ngis::logger emit "task not applicable. Results not posted"
-            } else {
-                $::ngis_server post_task_results $task_d
-
-                # on an error code we interrupt the job
-
-                if {$code == "error"} {
-                    set tasks_results_to_remove [lrange $tasks_l [lsearch $tasks_l $task]+1 end]
-                    if {[llength $tasks_results_to_remove] > 0} {
-                        $::ngis_server post_task_results_cleanup [my gid] $tasks_results_to_remove
-                    }
-                    my notify_sequence $thread_id
-                    return 
-                }
-            }
-
-            # we don't need to change the job status here as we're not sending
-            # deferred commands to the event loop before calling post_task (which
-            # determines the new status
-
-            my post_task $thread_id
-        }
     }
 
     method serialize {} {

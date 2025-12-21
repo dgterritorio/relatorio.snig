@@ -26,7 +26,7 @@ set ::ngis_server [::ngis::Server create ::ngis_server]
 
 # temporarily we place the cs protocol map in the global namespace
 
-set cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map $snig_monitor_dir -verbose true]
+set ::ngis::ProtocolMap::cs_protocol [::ngis::ClientServerProtocolMap::build_proto_map $snig_monitor_dir -verbose true]
 
 # load the task database
 

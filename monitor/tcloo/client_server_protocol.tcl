@@ -26,9 +26,7 @@ oo::define ngis::Protocol {
     constructor {} {
         set hr_formatter    [::ngis::HRFormat   create [::ngis::Formatters new_cmd hr]]
         set json_formatter  [::ngis::JsonFormat create [::ngis::Formatters new_cmd json]]
-
-        # setting the default
-        set formatter $hr_formatter
+        set formatter       $hr_formatter
     }
 
     destructor { }
@@ -55,9 +53,13 @@ oo::define ngis::Protocol {
 
     method parse_exec_cmd {cmd_line} {
         set cmd_line [string trim $cmd_line]
-        puts "msg >$cmd_line< ([string length $cmd_line])"
-        if {[regexp -nocase {^(\w+)\s*.*$} $cmd_line m cmd] == 0} {
-            return "101: unrecognized or invalid command '$cmd_line'"
+        ::ngis::logger debug "msg >$cmd_line< ([string length $cmd_line])"
+
+        # we strictly require commands to be uppercase words made of latin
+        # alphabet characters. No spaces, tabs, special or punctuation characters
+
+        if {[regexp -nocase {^([A-Z0-9]+)\s*.*$} $cmd_line m cmd] == 0} {
+            return "101: Invalid command line '$cmd_line'"
         } else {
             
             # we require the protocol command to be strictly uppercase for
@@ -67,8 +69,8 @@ oo::define ngis::Protocol {
                 set arguments ""
             }
 
-            if {[dict exists $::cs_protocol $cmd]} {
-                set cmd_o [dict get $::cs_protocol $cmd]
+            if {[dict exists $::ngis::ProtocolMap::cs_protocol $cmd]} {
+                set cmd_o [dict get $::ngis::ProtocolMap::cs_protocol $cmd]
 
                 # we can't write the following line in compact form
                 # as [eval $formatter [$cmd_o exec {*}$arguments]]
@@ -78,7 +80,7 @@ oo::define ngis::Protocol {
                 return [eval $formatter $proto_msg]
             }
 
-            puts "arguments: '$arguments' (nargs: [llength $arguments])"
+            ::ngis::logger debug "arguments: '$arguments' (nargs: [llength $arguments])"
             switch $cmd {
                 NOOP {
                     return [$formatter c120]
@@ -104,4 +106,4 @@ namespace eval ::ngis::Protocol {
     proc mkprotocol {} { return [::ngis::Protocol new] }
 }
 
-package provide ngis::protocol 2.0
+package provide ngis::protocol 2.1

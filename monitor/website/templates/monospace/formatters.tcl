@@ -54,8 +54,14 @@ proc entity_service_recs {rows_l entity_description} {
 
 ###################################
 #
-# utility functions to manipulate 
+# utility functions to manipulate centering and
+# table indentation within a <pre>...</pre> element
 #
+
+# report_width
+#
+# returns the report width. Since an character table is
+# a rectangular table
 
 proc report_width {rep_t} {
     return [string length [lindex [split $rep_t "\n"] 0]]
@@ -92,7 +98,7 @@ proc service_info {service_d} {
 
 proc service_tasks {service_d} {
     variable hr_formatter
-    return [center_report [$hr_formatter c118 $service_d $::ngis::registered_tasks]]
+    return [center_report [$hr_formatter c118 [list $service_d] $::ngis::registered_tasks]]
 }
 
 proc service_table {service_d} {
@@ -107,7 +113,6 @@ proc navigation_bar {rowcount urls} {
     variable snig_nav_bar
     variable snig_nav_matrix 
 
-    #set block_size [::ngis::conf::readconf service_recs_limit]
     set links_l [lmap symb [list \u00ab \u2039 \u203A \u00bb] u $urls {
         if {$u == ""} {
             set symb

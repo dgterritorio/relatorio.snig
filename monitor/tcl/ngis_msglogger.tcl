@@ -1,30 +1,35 @@
+# ngis_msglogger.tcl --
+#
+#
+#
+
 package require syslog
 package require ngis::conf
 
 namespace eval ::ngis::logger {
     variable nmsg -1
 
-    proc emit {mesg} {
+    proc emit {mesg {severity info}} {
         variable nmsg
 
         set mesg "[incr nmsg] - $mesg"
 
         if {[info exists ::tcl_interactive] && $::tcl_interactive} {
-            syslog -perror -ident snig -facility user info $mesg
+            syslog -perror -ident snig -facility user $severity $mesg
         } else {
-            syslog -ident snig -facility user info $mesg
+            syslog -ident snig -facility user $severity $mesg
         }
     }
 
     proc debug {mesg} {
         if {$::ngis::debugging} {
-            emit $mesg
+            emit "\[debug\] $mesg"
         }
     }
 
     proc reset {} {
         variable nmsg
-        set nmsg 0
+        set nmsg -1
     }
 
     namespace export emit reset debug

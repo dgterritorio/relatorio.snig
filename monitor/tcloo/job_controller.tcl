@@ -21,6 +21,7 @@ namespace eval ::ngis {
         variable jobs_quota
         variable shutdown_counter
         variable shutdown_signal
+        variable quota_reached_count
 
         constructor {max_workers_num} {
             set sequence_list           {}
@@ -29,8 +30,8 @@ namespace eval ::ngis {
             set pending_sequences       {}
             set round_robin_procedure   ""
             set jobs_quota              $max_workers_num
+            set quota_reached_count     0
             set shutdown_signal         false
-            set stop_operations         false
         }
 
         destructor {
@@ -41,11 +42,15 @@ namespace eval ::ngis {
             ::ngis::logger $method "\[JOB_CONTROLLER\] $aMsg"
         }
 
-        method RescheduleRoundRobin {{multiple 1}} {
+        method RescheduleRoundRobin {} {
             if {$round_robin_procedure == ""} {
-                my LogMessage "rescheduling job sequences round robin with delay multiplicator = $multiple" debug
-                set round_robin_procedure [after [expr $multiple * $::ngis::rescheduling_delay] [list [self] sequence_roundrobin]]
+                my LogMessage "rescheduling job sequences round robin" debug
+                set round_robin_procedure [after $::ngis::rescheduling_delay [list [self] sequence_roundrobin]]
             }
+        }
+
+        method suggest_round_robin_rescheduling {} {
+            my RescheduleRoundRobin
         }
 
         # -- LoadBalancer
@@ -65,6 +70,12 @@ namespace eval ::ngis {
             }
         }
 
+        method get_thread_master {} { return $thread_master }
+
+        method start_chores_thread {} {
+            $thread_master start_timed_chores [self]
+        }
+
         method job_sequences {} {
             return [concat $sequence_list $pending_sequences]
         }
@@ -74,7 +85,6 @@ namespace eval ::ngis {
         }
 
         method wait_for_operations_shutdown {} {
-
             set jc_sequence_number [my sequence_number_tot]
 
             if {([incr shutdown_counter -1] == 0) || ($jc_sequence_number == 0)} {
@@ -105,7 +115,8 @@ namespace eval ::ngis {
             }
             set sequence_list [list]
 
-            my RescheduleRoundRobin 1
+            my RescheduleRoundRobin
+
         }
 
         method post_sequence {job_sequence} {
@@ -113,12 +124,7 @@ namespace eval ::ngis {
             lappend sequence_list $job_sequence
             my LogMessage "Sequence list length: [llength $sequence_list]" debug
             my LoadBalancer
-            my RescheduleRoundRobin 1
-        }
-
-        method move_thread_to_idle {thread_id} {
-            $thread_master move_to_idle $thread_id
-            my RescheduleRoundRobin 1
+            my RescheduleRoundRobin
         }
 
         # -- running_jobs_tot
@@ -153,29 +159,21 @@ namespace eval ::ngis {
                         set seq
                     }
                 }]
+
             }
+            if {[llength $sequence_list] == 0} { return }
 
-            # we don't have anything to do here if there are no
-            # active job sequences on 'sequence_list'
-
-            if {[llength $sequence_list] == 0} {
-                after 100 [list $::ngis_server sync_results]
-
-                if {[llength $pending_sequences] == 0} {
-                    $thread_master terminate_idle_threads
-                }
-                return 
-            }
-
-            # the sequence_idx (index) could have in case been incremented
+            # the sequence_idx (index) could have been incremented
             # at the end of the previous run of sequence_roundrobin.
-            # We wrap it if the value has overrun the sequence_list size.
+            # We wrap it if the value has reached the sequence_list size.
             # It's correct to wrap the 'sequence_idx' value *before*
-            # scheduling new jobs because new sequences may have been
-            # posted after sequence_roundrobin was last run
+            # scheduling new jobs because new sequences could be
+            # posted after sequence_roundrobin returns control to
+            # the event loop
 
             if {$sequence_idx >= [llength $sequence_list]} {
                 set sequence_idx 0
+                set quota_reached_count 0
             }
 
             # if there are no threads available we can return and wait for
@@ -192,8 +190,10 @@ namespace eval ::ngis {
             set seq [lindex $sequence_list $sequence_idx]
             set batch 0
 
-            my LogMessage "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
+            my LogMessage \
+                "attempting to launch $::ngis::batch_num_jobs jobs (threads available: [$thread_master thread_is_available])" debug
 
+            set sequence_has_terminated false
             while {[$thread_master thread_is_available] && ($batch < $::ngis::batch_num_jobs)} {
 
                 # we must check whether a sequence is eligible to be scheduled
@@ -204,6 +204,7 @@ namespace eval ::ngis {
                     # job quota value. We break out of the while loop
 
                     my LogMessage "$seq reached job quota ([$seq running_jobs_count] / $jobs_quota)" debug
+                    incr quota_reached_count
                     break
 
                 } else {
@@ -211,37 +212,40 @@ namespace eval ::ngis {
                     set thread_id [$thread_master get_available_thread]
                     if {[string is false [$seq post_job $thread_id]]} {
 
-                        # let's return the thread back to the idle threads pool
-                        my move_thread_to_idle $thread_id
+                        ::ngis::shared ChangeThreadStatus $thread_id idle
 
                         set sequence_list [lreplace $sequence_list $sequence_idx $sequence_idx]
+                        set sequence_has_terminated true
 
                         my LogMessage "sequence_list after removal of index $sequence_idx" debug
                         my LogMessage "$sequence_list" debug
 
                         if {[$seq running_jobs_count] == 0} {
 
-                            # the sequence has terminated its jobs. We don't
-                            # need to increment sequence_idx, since lreplace
-                            # shifts sequences on the list to the right of
-                            # the current index sequence
+                            # we are done with this job sequence
 
                             my LogMessage "destroying seq $seq" debug
                             $seq destroy
 
                         } else {
 
-                            # the sequence turned down the just allocated thread
-                            # and that means it has no more service records to be checked.
-                            # We move the sequence into the pending sequences list.
+                            # There are still job running within the 
+                            # sequence therefore we move it into the
+                            # pending sequences list.
 
                             lappend pending_sequences $seq
                             my LogMessage "$seq moved to pending list" debug
 
                         }
+
+                        # sequence_list size has changed then we call the
+                        # load balancer to determine the new thread quota
+
                         my LoadBalancer
+
                         break
                     } else {
+                        ::ngis::shared ChangeThreadStatus $thread_id running
                         incr batch
                     }
                 }
@@ -249,29 +253,33 @@ namespace eval ::ngis {
             my LogMessage "launched $batch jobs for seq $seq" debug
 
             # there's no point to reschedule the round robin if no threads are available
+            # and all current job sequences have reached their thread quota
 
             if {[string is true [$thread_master thread_is_available]]} {
-                my RescheduleRoundRobin
+                if {$quota_reached_count < [llength $sequence_list]} {
+                    my RescheduleRoundRobin
+                }
             } else {
                 my LogMessage "thread pool exhausted" debug
             }
 
-            # if we got here it means at least one job was launched. Thus we
-            # move to the next sequence when the round robin procedure gets
-            # rescheduled
+            # we don't need to increment sequence_idx if this run resulted
+            # in the job sequence being removed from sequence_list
 
-            incr sequence_idx
+            if {[string is false $sequence_has_terminated]} { incr sequence_idx }
         }
         
-		# -- status
-		#
-		# returns two forms of data:
+        # -- status
+        #
+        # Returns two forms of data:
+        #
         #    + argument jobs (default): returns the list of current 
         #               running sequences, the total number of jobs and
         #               the list of pending_sequences
         #    + argument thread_master: returns the status of the
         #               monitor thread master
-		#
+        #
+
         method status {{argument "jobs"}} {
             if {$argument == "jobs"} {
                 return [list $sequence_list [my running_jobs_tot] $pending_sequences]
@@ -282,4 +290,4 @@ namespace eval ::ngis {
     }
 }
 
-package provide ngis::jobcontroller 1.0
+package provide ngis::jobcontroller 1.1

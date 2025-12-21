@@ -1,10 +1,12 @@
 package require ngis::common
 package require ngis::utils
 
+
 proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_l ""} {table_html_attrs ""}} {
 
     set nrows       [llength $table_body_rows_l]
     set ncolumns    [llength [lindex $table_body_rows_l 0]]
+    set table_head_html ""
     if {$html_attributes_l == ""} {
         set html_attributes_l [lrepeat $nrows [lrepeat $ncolumns ""]]
     }
@@ -16,24 +18,29 @@ proc mk_table {table_captions_l table_body_rows_l {top_cap ""} {html_attributes_
     }
 
     set captions_html_l [lmap t $table_captions_l { ::rivet::xml $t th }]
-    set table_head_html ""
     if {[llength $captions_html_l] > 0} {
-        set table_head_html "<thead>${top_cap_html}[join $captions_html_l ""]</thead>"
+        set captions_head_html [::rivet::xml [join $captions_html_l ""] tr]
+    } else {
+        set captions_head_html ""
+    }
+
+    if {($top_cap_html != "") || ($table_head_html != "")} {
+        set table_head_html [::rivet::xml [join [list $top_cap_html $captions_head_html] "\n"] thead]
     }
 
     set table_body_l [lmap r $table_body_rows_l r_attr $html_attributes_l {
-        ::rivet::xml [join [lmap e $r c_attr $r_attr {
-
-            ::rivet::xml $e [list td {*}$c_attr]
-
-        }] ""] tr
+        #::ngis::log "tbl row: $r"
+        #::ngis::log "attr row: $r_attr"
+        
+        ::rivet::xml [join [lmap e $r c_attr $r_attr {  ::rivet::xml $e [list td {*}$c_attr] }] ""] tr
     }]
     set table_body_html [::rivet::xml [join $table_body_l "\n"] tbody]
-    return [::rivet::xml "${table_head_html}\n${table_body_html}" [list table class "table-wrapper" {*}$table_html_attrs]]
+    return [::rivet::xml [join [list $table_head_html $table_body_html] "\n"] [list table class "table-wrapper" {*}$table_html_attrs]]
+
 }
 
 proc entities_table {rows_l} {
-    return [mk_table [list "eid" "entity definition" "service record"] $rows_l ""]
+    return [mk_table [list "eid" "Entity Definition" "Services" ""] $rows_l ""]
 }
 
 proc entity_service_recs {rows_l entity_description} {
@@ -43,13 +50,13 @@ proc entity_service_recs {rows_l entity_description} {
             set host    [dict get $uri_d host]
 
             if {![info exists version]} { set version "" }
+            if {![info exists description]} { set description "undefined description" }
             set r [list $gid $description $host $uri_type $version]
         }
         set r
     }]
     return [mk_table {*}$::ngis::reports::report_a(122.capts) $services_t "\[122\] $entity_description"]
 }
-
 
 proc service_info {service_d} {
 
@@ -68,6 +75,7 @@ proc service_info {service_d} {
 proc service_tasks {service_d} {
 
     set css_classes_l {}
+    set task_t {}
     if {[dict exists $service_d tasks]} {
         set tasks_d [dict get $service_d tasks]
         set task_t [lmap t $::ngis::registered_tasks {
@@ -116,8 +124,6 @@ proc generate_banner {language menu} {
 }
 
 proc navigation_bar {rowcount urls} {
-
-    #set block_size [::ngis::conf::readconf service_recs_limit]
     set links_l [lmap symb [list \u00ab \u2039 \u203A \u00bb] u $urls {
         if {$u == ""} {
             ::rivet::xml $symb td

@@ -5,27 +5,57 @@
 
 package require rwpage
 package require ngis::configuration
-package require DIO 2.0
-package require dio_Tdbc 2.0
+package require DIO
+package require dio_Tdbc
 
 namespace eval ::rwpage {
 
     ::itcl::class SnigPage {
         inherit RWPage
 
-        constructor {key} {RWPage::constructor $key} { }
+        private variable dbuser
+        private variable dbhost
+        private variable dbname
+        private variable dbpasswd
+        private variable dbms_driver
+
+        private variable dbhandle
+
+
+        constructor {key} {RWPage::constructor $key} {
+            foreach v {dbuser dbhost dbname dbpasswd dbms_driver} {
+                ::ngis::configuration readconf $v $v
+            }
+            set dbhandle ""
+        }
 
         public method refresh {timereference} { return false }
-        public method get_dbhandle {} { return $dbhandle }
+
+        public method get_dbhandle {} {
+            if {$dbhandle == "" } {
+                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
+                set dbhandle    [eval $connectcmd]
+            }
+            return $dbhandle
+        }
+
+        public method close_dbhandle {} {
+            $dbhandle destroy
+            set dbhandle ""
+        }
 
         public method js {} { }
+
+        public method prepare_page {language argsqs} {
+            $this title $language "[$this key]: [info object class $this]"
+        }
 
         public method prepare {language argsqs} {
             RWPage::prepare $language $argsqs
 
+            set page $this
             ::try {
                 $this prepare_page $language $argsqs
-                set page $this
             } on error {e opts} {
 
                 if {[info command error_page] != ""} {
@@ -36,14 +66,16 @@ namespace eval ::rwpage {
                 set page_text "<b>$e</b> (code $errorCode)"
                 set pobj [::rwpage::RWBasicPage ::#auto $errorCode]
                 set error_page $pobj
-
+                append page_text "<pre>"
                 dict for {k v} $opts {
-                    append page_text "<pre><b>$k</b>: <pre>$v</pre>\n"
+                    append page_text "<b>$k</b>: <b>$v</b>\n"
                 }
+                append page_text "</pre>"
 
                 $pobj pagetext $::rivetweb::language $page_text "Error: $errorCode"
                 set error_page $pobj
                 set page       $pobj
+
             } finally {
                 #close_db_connection
             }

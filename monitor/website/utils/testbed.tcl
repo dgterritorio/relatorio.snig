@@ -6,20 +6,20 @@ if {$dot < 0} {
     set auto_path [concat "." [lreplace $auto_path $dot $dot]]
 }
 
+package require Itcl
 package require ngis::configuration
+package require dio::formatters 1.1
 package require DIO 
 package require dio_Tdbc
 
-::ngis::conf init
+source "/usr/lib/tcltk/rivet3/rivet-tcl/lempty.tcl"
 
-source "/home/manghi/apache2/lib/rivet3/rivet-tcl/lempty.tcl"
-
-::ngis::conf readconf dbuser
-::ngis::conf readconf dbhost
-::ngis::conf readconf dbname
-::ngis::conf readconf dbpasswd
-::ngis::conf readconf dbms_driver
-::ngis::conf readconf entities_table
+::ngis::configuration readconf dbuser
+::ngis::configuration readconf dbhost
+::ngis::configuration readconf dbname
+::ngis::configuration readconf dbpasswd
+::ngis::configuration readconf dbms_driver
+::ngis::configuration readconf entities_table
 
 set connectcmd [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
 set ::dbms [eval $connectcmd]

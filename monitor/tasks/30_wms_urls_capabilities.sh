@@ -19,7 +19,7 @@ if [ ! -d $uuid_space ]; then
 fi
 capabilities_fn="${uuid_space}/wms-capabilities-${version}.xml"
 
-curl --max-time $TIMEOUT --output $capabilities_fn -X GET "$url"
+curl --location --max-redirs 5 --max-time $TIMEOUT --output $capabilities_fn -X GET "$url"
 curl_rcode="$?"
 
 if [ $curl_rcode -ne 0 ]; then

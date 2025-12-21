@@ -225,31 +225,40 @@ oo::define ngis::JsonFormat {
                 }
             }
             118 {
-                set service_d [lindex $args 0]
-                dict with service_d {
-                    $json_o string message string [format $fstring $gid $description $uri_type]
-                    $json_o string tasks array_open
+                set services_l [lindex $args 0]
+                $json_o string results array_open
+                foreach service_d $services_l {
+                    dict with service_d {
+                        $json_o map_open
+                        $json_o string message string [format $fstring $gid $description $uri_type]
+                        $json_o string gid integer $gid
+                        $json_o string message string $description
+                        $json_o string type string $uri_type
+                        $json_o string tasks array_open
 
-                    #puts "..........\n$tasks\n........."
+                        #puts "..........\n$tasks\n........."
 
-                    if {[info exists tasks]} {
-                        foreach t [::ngis::tasks::list_registered_tasks] {
-                            lassign $t task procedure tdescr filename language
+                        if {[info exists tasks]} {
+                            foreach t [::ngis::tasks::list_registered_tasks] {
+                                lassign $t task procedure tdescr filename language
 
-                            if {[dict exists $tasks $task]} {
-                                set tasks_data [dict get $tasks $task]
-                                $json_o map_open string "task" string $task
-                                foreach k {exit_status exit_info ts} {
-                                    $json_o string $k string [dict get $tasks_data $k]
-                                }
-                                $json_o map_close
-                            } else {
-                                continue
-                            } 
+                                if {[dict exists $tasks $task]} {
+                                    set tasks_data [dict get $tasks $task]
+                                    $json_o map_open string "task" string $task
+                                    foreach k {exit_status exit_info ts} {
+                                        $json_o string $k string [dict get $tasks_data $k]
+                                    }
+                                    $json_o map_close
+                                } else {
+                                    continue
+                                } 
+                            }
                         }
+                        $json_o array_close
+                        $json_o map_close
                     }
-                    $json_o array_close
                 }
+                $json_o array_close
             }
             122 {
                 set services_l [lindex $args 0]
@@ -268,6 +277,27 @@ oo::define ngis::JsonFormat {
                     }
                 }
                 $json_o array_close
+            }
+            124 {
+                $json_o string title string $fstring
+                set threads_d [lindex $args 0]
+                set nthreads  [dict size $threads_d]
+                $json_o string nthreads integer $nthreads
+                if {$nthreads > 0} {
+                    $json_o string threads array_open
+                    dict for {thid thread_d} $threads_d {
+#                        puts "$thid -> $thread_d"
+                        dict with thread_d {
+                            $json_o map_open string nruns integer $nruns
+                            $json_o string "Last Run Start" string [clock format $last_run_start -format "%Y-%m-%d %T"]
+                            $json_o string "Last Run End"   string [clock format $last_run_end -format "%Y-%m-%d %T"]
+                            $json_o string "GID" string $gid
+                            $json_o string "Task" string $task
+                            $json_o string "Status" string $status map_close
+                        }
+                    }
+                    $json_o array_close
+                }
             }
             501 {
                 $json_o string message string "Server internal error"

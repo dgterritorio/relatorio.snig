@@ -3,29 +3,31 @@ package require fileutil
 
 ::rivet::apache_log_error info "auto_path: $auto_path"
 
+package require ngis::configuration
 package require MessagePrinter
 package require ngis::logger
-package require ngis::configuration
 package require ngis::roothandler
+package require ngis::content_fence
+package require ngis::users
 package require ngis::login
 package require ngis::page
-package require Session
-package require ngis::protocol
-package require ngis::conf
 package require ngis::servicedb
 package require Thread
 package require ngis::ancillary_io_thread
 package require ngis::ancillary_io
 package require json
+package require ngis::common
+package require ngis::reports
+package require ngis::entitymap
+package require ngis::entityhandler
 
+::rivetweb::init StaticContentFence top -nopkg
+::rivetweb::init Users   top -nopkg
 ::rivetweb::init Marshal top -nopkg
 ::rivetweb::init Login   top -nopkg
-
-set snig_header [exec /usr/bin/figlet "S.N.I.G."]
+::rivetweb::init Entity  top -nopkg
 
 set ::rivetweb::handler_script [fileutil::cat [file join $rweb_root tcl before.tcl]]
-
-::ngis::conf init
 
 namespace eval ::ngis {
     variable registered_tasks
@@ -34,15 +36,15 @@ namespace eval ::ngis {
     variable messagebox
     # define the web server jQuery path
 
-    set jquery_host [::ngis::conf::readconf jquery_root]
-    set jquery_uri  [::ngis::conf::readconf jquery_uri]
+    set jquery_host [::ngis::configuration readconf jquery_root]
+    set jquery_uri  [::ngis::configuration readconf jquery_uri]
     set jquery_url  [join [list $jquery_host $jquery_uri] "/"]
 
     ::rivet::apache_log_error info "jQuery path formed from '$jquery_host' and '$jquery_uri'"
     
     # defining the production system cssprogressive counter
 
-    set cssprogressive [::ngis::conf::readconf cssprogressive]
+    set cssprogressive [::ngis::configuration readconf cssprogressive]
 
     # starting the ancillary thread
 
@@ -55,5 +57,18 @@ namespace eval ::ngis {
     set registered_tasks [ancillary::connection_init $ancillary::thread_id]
     set messagebox [MessagePrinter [namespace current]::#auto]
 
+    if {[::ngis::configuration readconf development]} {
+        source utils/dump_stack.tcl
+    }
 }
+
+set dbhandle [::rwdatas::NGIS::attempt_db_connect]
+set website  [::ngis::configuration::readconf website]
+set hostname [$dbhandle list "SELECT * from testsuite.website_status where hostname='$website'"]
+if {$hostname == ""} {
+    array set global_a [list hostname $website]
+    $dbhandle insert [::ngis::configuration::readconf website_global_status] global_a
+}
+
+::ngis::reports::init
 ::rivet::apache_log_error info "rivetweb.tcl successfully terminates"

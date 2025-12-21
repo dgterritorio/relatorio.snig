@@ -24,10 +24,18 @@ namespace eval ::ngis::service {
                                      -host      $::ngis::HOST]
     }
 
+    proc close_connector {} {
+        variable connector
+
+        if {$connector == ""} { return }
+        $connector close
+        set connector ""
+    }
+
     proc exec_sql_query {sql} {
         variable connector
 
-        if {$connector == ""} { 
+        if {$connector == ""} {
             set connector [eval [get_connector]]      
         }
         set sql_st [$connector prepare $sql]
@@ -38,33 +46,56 @@ namespace eval ::ngis::service {
         return 1
     }
 
+    proc remove_service_status_records {gid tasks_l} {
+        if {[llength $tasks_l] == 1} {
+            set task [lindex $tasks_l 0]
+            exec_sql_query "DELETE FROM $::ngis::SERVICE_STATUS where gid = $gid AND task = '$task'"
+        } elseif {[llength $tasks_l] > 1} {
+            set tasks_l [join [lmap t $tasks_l { format "'%s'" $t }] ","]
+            exec_sql_query "DELETE FROM $::ngis::SERVICE_STATUS where gid = $gid AND task IN ($tasks_l)"
+        }
+    }
+
     proc update_task_results {task_results_l} {
         set values_l {}
         foreach t $task_results_l {
-            set gid    [dict get $t job gid]
+            set gid    [dict get $t gid]
             set task   [dict get $t task]
             set status [dict get $t status]
-            set uuid   [dict get $t job uuid]
+            set uuid   [dict get $t uuid]
             if {$status == ""} { break }
             lassign $status exit_status exit_info exit_trace exit_info timestamp task_duration
-            lappend values_l "($gid,timezone('$::ngis::TIMEZONE',to_timestamp($timestamp)),'$task','$exit_status','$exit_info','$uuid',$task_duration)"
+            if {$exit_status == "not_applicable"} { continue }
+
+            # escaping single quotes in exit_info
+
+            set exit_info [string map [list "'" "''"] $exit_info]
+            lappend values_l \
+                "($gid,timezone('$::ngis::TIMEZONE',to_timestamp($timestamp)),'$task','$exit_status','$exit_info','$uuid',$task_duration)"
         }
 
-        set    sql "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info,uuid,task_duration) "
-        append sql "VALUES [join $values_l ","] "
-        append sql "ON CONFLICT (gid,task) DO UPDATE SET "
-        append sql "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task, "
-        append sql "exit_status = EXCLUDED.exit_status,exit_info = EXCLUDED.exit_info, "
-        append sql "task_duration = EXCLUDED.task_duration"
-        puts $sql
-        set query_res [exec_sql_query $sql]
-        $query_res close
-
-        set    sql "INSERT INTO $::ngis::SERVICE_LOG (gid,ts,task,exit_status,exit_info,uuid,task_duration) "
-        append sql "VALUES [join $values_l ","] "
+        set sql [join [list \
+            "INSERT INTO $::ngis::SERVICE_STATUS (gid,ts,task,exit_status,exit_info,uuid,task_duration)" \
+            "VALUES [join $values_l ,] ON CONFLICT (gid,task) DO UPDATE SET" \
+            "gid = EXCLUDED.gid, ts = EXCLUDED.ts, task = EXCLUDED.task," \
+            "exit_status = EXCLUDED.exit_status, exit_info = EXCLUDED.exit_info," \
+            "task_duration = EXCLUDED.task_duration"] " "]
+        ::ngis::logger emit "$sql"
         #puts $sql
-        set query_res [exec_sql_query $sql]
-        $query_res close
+        if {[catch {
+            set query_res [exec_sql_query $sql]
+            $query_res close
+
+            set    sql "INSERT INTO $::ngis::SERVICE_LOG (gid,ts,task,exit_status,exit_info,uuid,task_duration) "
+            append sql "VALUES [join $values_l ","] "
+            #puts $sql
+            set query_res [exec_sql_query $sql]
+            $query_res close
+        } e einfo]} {
+            ::ngis::logger emit "error syncing results: $e" error
+            ::ngis::logger emit "===== error_info =====" error
+            foreach l [split $einfo "\n"] { ::ngis::logger emit $l error }
+        }
     }
 
     proc load_by_gid {service_gid} {
@@ -163,11 +194,9 @@ namespace eval ::ngis::service {
         }
         $query_result close
         return -code error -errorcode invalid_gid $result
-
     }
 
     proc entity_service_records_sql {entity {limit ALL} {offset 0}} {
-
         set columns [lmap c [split $::ngis::COLUMN_NAMES ","] {
             list "ul.${c}"
         }]
@@ -182,7 +211,6 @@ namespace eval ::ngis::service {
         }
 
         lappend sql "ORDER BY ul.uri,ul.gid LIMIT $limit OFFSET $offset"
-
         return [join $sql " "]
     }
 
@@ -243,9 +271,9 @@ namespace eval ::ngis::service {
 
         set snig_entities {}
         $query_result foreach -as dicts e {
-            if {![dict exists $e description]} {
-                dict set e description "Undefined description"
-            }
+            #if {![dict exists $e description]} {
+            #    dict set e description "Undefined description"
+            #}
             lappend snig_entities $e
         }
         $query_result close

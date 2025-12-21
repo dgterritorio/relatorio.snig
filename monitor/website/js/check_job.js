@@ -17,9 +17,9 @@ function check_job (msdelay) {
 
     $.ajax(
     {
-        url:    '<?= [::rivetweb::composeUrl cmd JOBLIST] ?>', 
-        method: 'GET',           // HTTP method (GET, POST, etc.)
-        dataType: 'json',        // Expected response type
+        url:        '<?= [::rivetweb::composeUrl cmd JOBLIST] ?>', 
+        method:     'GET',              // HTTP method (GET, POST, etc.)
+        dataType:   'json',             // Expected response type
         success: function (response) {
             // Update the UI based on the response
             if (response.njobs > 0)

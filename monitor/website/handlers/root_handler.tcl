@@ -10,9 +10,8 @@ package require rwpagebroker
 package require rwlogger
 package require rwmenu
 package require rwlink
-package require ngis::conf::generator
-package require ngis::configuration
 package require ngis::utils
+package require Session 1.1
 
 namespace eval ::rwdatas {
 
@@ -34,7 +33,13 @@ namespace eval ::rwdatas {
 
         public proc attempt_db_connect {} {
             if {![info exists dbhandle]} {
-                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser -db $dbname -host $dbhost -pass $dbpasswd]
+                foreach v {dbuser dbhost dbname dbpasswd dbms_driver} {
+                    ::ngis::configuration readconf $v $v
+                }
+                set connectcmd  [list ::DIO::handle {*}$dbms_driver -user $dbuser \
+                                                                    -db   $dbname \
+                                                                    -host $dbhost \
+                                                                    -pass $dbpasswd]
                 set ::dbms      [eval $connectcmd]
                 set dbhandle    $::dbms
             }
@@ -48,6 +53,11 @@ namespace eval ::rwdatas {
             }
         }
 
+        public proc get_dbhandle {} {
+            if {[info exists dbhandle]} { return $dbhandle }
+            return -code error -errorcode undefined_database_handle "Database Handle Undefined"
+        }
+
         public proc get_session_obj {args} {
 
             # the common variable 'session_obj' is used to
@@ -55,26 +65,23 @@ namespace eval ::rwdatas {
             # initialized
 
             if {![info exists session_obj]} {
-
-                foreach v {dbuser dbhost dbname dbpasswd} {
-                    ::ngis::conf::readconf $v $v
-                }
                 set error_page  ""
-                set dbms_driver [::ngis::conf::readconf dbms_driver]
-
                 set dbhandle [attempt_db_connect]
-                set session_obj [Session ::SESSION  -dioObject              $dbhandle   \
-                                                    -debugMode              0           \
-                                                    -gcMaxLifetime          [expr 7200 + 3600]    \
-                                                    -sessionLifetime        [expr 3600 + 3600]    \
-                                                    -sessionRefreshInterval 1800    \
-                                                    -entropyFile            /dev/urandom \
-                                                    -entropyLength          10      \
-                                                    -gcProbability          2       \
+                set session_obj [Session ::SESSION  -dioObject              $dbhandle       \
+                                                    -debugMode              0               \
+                                                    -gcMaxLifetime          [expr 7200 + 3600] \
+                                                    -sessionLifetime        [expr 3600 + 3600] \
+                                                    -sessionRefreshInterval 1800            \
+                                                    -entropyFile            /dev/urandom    \
+                                                    -entropyLength          10              \
+                                                    -gcProbability          2               \
                                                     -sessionTable           "testsuite.rivet_session" \
                                                     -sessionCacheTable      "testsuite.rivet_session_cache" \
                                                     -scrambleCode           [clock format [clock seconds] -format "%S"]]
 
+                if {[::ngis::configuration readconf session_debug]} {
+                    $session_obj configure -debugMode 1 -debugFile [open "/tmp/session-[::rivet::thread_id].log" w]
+                }
             }
 
             return $session_obj
@@ -82,20 +89,40 @@ namespace eval ::rwdatas {
 
         public proc is_logged {} {
             set session_obj [get_session_obj]
-            set login_d [$session_obj load status]
+            set login_d     [$session_obj load status]
             if {[dict exists $login_d logged]} {
                 return [dict get $login_d logged]
             }
             return 0
         }
 
-        public proc check_password {login password} {
-            ::ngis::conf::readconf users_table users_table
+        public proc is_administrator {current_login} {
+            set admin [::ngis::configuration readconf administrative_login]
+            return [string equal $current_login $admin]
+        }
 
-            set tdbc_res [::ngis::service::exec_sql_query \
-                "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+        public proc check_password {login password {userid_v userid}} {
+            upvar 1 $userid_v userid
+            ::ngis::configuration readconf users_table users_table
 
-            return [$tdbc_res rowcount]
+            set dbhandle [attempt_db_connect]
+            set sqlres [$dbhandle exec \
+                    "select userid from testsuite.snig_users where login='$login' and password = crypt('$password',password)"]
+            set found  [expr [$sqlres numrows] == 1]
+            if {$found} {
+                set userid [$sqlres next -list]
+            }
+            $sqlres destroy
+            return $found
+        }
+
+        public method destroy {} {
+            if {([llength [UrlHandler::registered_handlers]] == 1) && [info exists session_obj]} {
+                if {[::ngis::configuration readconf session_debug]} {
+                    close [$session_obj cget -debugFile]
+                }
+                unset session_obj
+            }
         }
 
         # Instance methods
@@ -103,6 +130,9 @@ namespace eval ::rwdatas {
         public method init {args} {
             chain {*}$args
             set banner_menu ""
+
+            # this call barely creates the session object when the first handler is
+            # initialized and is ineffective for any other subsequent call
 
             get_session_obj
         }
@@ -131,7 +161,7 @@ namespace eval ::rwdatas {
                 $banner_menu destroy
             }
 
-            set home_link [$::rivetweb::linkmodel create $this "" [dict create en "Home" pt "Home"] \
+            set home_link [$::rivetweb::linkmodel create $this "" [dict create en "Home" pt "Página inicial"] \
                                                                "" [dict create en "SNIG Homepage"]]
             set banner_menu [::rwmenu::RWMenu ::rwmenu::#auto "banner" root normal]
             $banner_menu assign title "" ""
@@ -152,15 +182,23 @@ namespace eval ::rwdatas {
                 }
             }
 
-            set linkobj [$lm create $this "" [dict create en "Connections"] \
-                                             [list displayrep 112] ""]
-            $banner_menu add_link $linkobj
-            set linkobj [$lm create $this "" [dict create en "Jobs"] \
-                                             [list displayrep 114] ""]
-            $banner_menu add_link $linkobj
-
             if {[is_logged]} {
-                set linkobj [$lm create $this "" [dict create en "Logout"] \
+                set linkobj [$lm create $this "" [dict create en "Statistics" pt "Estatisticas"] \
+                                                 [list show statistics] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Active Connections" pt "Conexões ativas"] \
+                                                 [list displayrep 112] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Jobs" pt "Tarefas"] \
+                                                 [list displayrep 114] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Create User" pt "Criar Utilizador"] \
+                                                 [list newuser 1] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "User List" pt "Lista de Utilizadores"] \
+                                                 [list userlist 1] ""]
+                $banner_menu add_link $linkobj
+                set linkobj [$lm create $this "" [dict create en "Logout" pt "Sair"] \
                                                  [list logout 1] ""]
                 $banner_menu add_link $linkobj
             }
@@ -184,7 +222,7 @@ namespace eval ::rwdatas {
         }
 
         public method willHandle {arglist keyvar} {
-            upvar $keyvar key 
+            upvar $keyvar key
 
             if {$::rivetweb::is_homepage} {
                 set key snig_homepage

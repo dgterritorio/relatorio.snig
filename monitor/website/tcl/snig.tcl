@@ -24,7 +24,11 @@ namespace eval ::rwpage {
             set entities [::ngis::service::list_entities "%"]
             set entities [lmap e $entities {
                 lassign $e eid description count
-                list $eid [::rivet::xml $description [list a href [::rivetweb::composeUrl eid $eid]]] $count
+                set ent_form_url [::rivet::xml Manage [list a href [::rivetweb::composeUrl viewent $eid]]]
+                set ent_stats_url [::rivet::xml Statistics [list a href [::rivetweb::composeUrl statseid $eid]]]
+                list $eid [::rivet::xml $description [list a href [::rivetweb::composeUrl eid $eid]]] $count \
+                                                                                                $ent_form_url \
+                                                                                                $ent_stats_url
             }]
 
         }
@@ -36,5 +40,6 @@ namespace eval ::rwpage {
             puts [${ns}::entities_table $entities]
         }
     }
+
 }
 

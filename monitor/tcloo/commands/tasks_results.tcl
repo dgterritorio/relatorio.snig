@@ -6,34 +6,34 @@ package require ngis::task
 namespace eval ::ngis::client_server {
 
     ::oo::class create TaskResults {
+
         method exec {args} {
+
             # unlike QSERVICE command QTASK accepts only one argument
             # and it must be the gid of the associated service
-            set parsed_results [lassign [::ngis::utils::resource_check_parser $args "services"] res_status]
-            if {$res_status == "OK"} {
 
-                # for this protocol command we are interested only in the gid value
-                # returned by resource_check_parser and we don't even consider the
-                # last 2 lists of parsed results
+            # set parsed_results [lassign [::ngis::utils::resource_check_parser $args "services"] res_status]
 
-                lassign $parsed_results gids_l
+            # to avoid to call ::ngis::service service_data twice for any record for which a
+            # description pattern is provided (as done within resource_check_parser) we assume
+            # arguments are either integer or description strings
 
-                # ::ngis::service::service_data returns a *list* of service records
-                # even when this list is made of a single element. In this case
-                # we expect to get just one service record
-
-                return [list c118 {*}[::ngis::service service_data [lindex $gids_l 0]] [::ngis::tasks::list_registered_tasks]]
-
-            } else {
-
-                # in case of error resource_check_parser may return a 109 error
-                # It's stored in the 'code' variable
-
-                lassign $parsed_results code a
-                return [list c${code} $a]
-
+            set services_l {}
+            foreach a $args {
+                set s_l [::ngis::service service_data $a]
+                if {[llength $s_l] > 0} {
+                    lappend services_l {*}$s_l
+                }
             }
+
+            if {[llength $services_l] > 0} {
+                return [list c118 $services_l [::ngis::tasks::list_registered_tasks]]
+            } else {
+                return [list c109 "No valid records found"]
+            }
+
         }
+
     }
 
     namespace eval tmp {

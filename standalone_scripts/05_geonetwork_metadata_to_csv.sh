@@ -17,6 +17,16 @@ do
 
     echo "Processing $filename"
 
+
+if xmlstarlet sel -N gmd="http://www.isotc211.org/2005/gmd" \
+                  -N srv="http://www.isotc211.org/2005/srv" \
+                  -t -v "//gmd:identificationInfo/srv:SV_ServiceIdentification" $f 2>/dev/null | grep -q .; then
+    title_xpath="//gmd:identificationInfo/srv:SV_ServiceIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString"
+else
+    title_xpath="//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString"
+fi
+
+
 xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isotc211.org/2005/gco -N gts=http://www.isotc211.org/2005/gts -N srv=http://www.isotc211.org/2005/srv -N gmx=http://www.isotc211.org/2005/gmx \
  -T -t \
  -m "//gmd:fileIdentifier" -v "gco:CharacterString" -o '$' \
@@ -26,16 +36,16 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
  -v "//gmd:MD_Metadata/gmd:characterSet/gmd:MD_CharacterSetCode/@codeListValue" -o '$' \
  -v "//gmd:hierarchyLevel/gmd:MD_ScopeCode/@codeListValue" -o '$' \
  -v "//gmd:hierarchyLevelName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
- -v "//gmd:contact[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:facsimile/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:deliveryPoint/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:city/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:postalCode/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:country/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString" -o '$' \
+ -v "(//gmd:contact)[1]/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:individualName/gco:CharacterString" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString" -o '$' \
  -v "//gmd:contact[2]/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/gmd:CI_Telephone/gmd:voice[1]/gco:CharacterString" -o '$' \
@@ -72,7 +82,7 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
  -v "//gmd:referenceSystemInfo[6]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
  -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString" -o '$' \
  -v "//gmd:referenceSystemInfo[7]/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:codeSpace/gco:CharacterString" -o '$' \
- -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString" -o '$' \
+ -v "$title_xpath" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[1]/gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode" -o '$' \
  -v "//gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date[2]/gmd:CI_Date/gmd:date/gco:Date" -o '$' \
@@ -278,4 +288,4 @@ xmlstarlet select -N gmd=http://www.isotc211.org/2005/gmd -N gco=http://www.isot
 echo "" >> "$BASEFOLDER/snig_geonetwork_records_csv.csv"
 done
 
-awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/snig_geonetwork_records_csv_urls.csv"
+awk -F'$' '{print $1"$"$7"$"$52"$"$169"$"$175"$"$181"$"$187"$"$193"$"$199"$"$205"$"$211"$"$217"$"$223"$"$229"$"$235"$"$241}' "$BASEFOLDER/snig_geonetwork_records_csv.csv" > "$BASEFOLDER/geonetwork_records_urls_wide.csv"

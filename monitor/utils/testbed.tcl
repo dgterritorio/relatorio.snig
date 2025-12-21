@@ -1,4 +1,5 @@
-#!/usr/bin/tclsh
+#!/usr/bin/tclsh8.6
+
 # -- testbed.tcl
 #
 #
@@ -21,11 +22,12 @@ package require ngis::threads
 package require ngis::sequence
 package require ngis::jobcontroller
 package require ngis::procedures
+package require ngis::tasks_procedures
 
 package require ngis::hrformat
 
 set arguments $argv
-set gid 9000
+set gid ""
 set eid ""
 while {[llength $arguments]} {
 
@@ -46,41 +48,27 @@ while {[llength $arguments]} {
 
 ::ngis::tasks build_tasks_database ./tasks
 
-set ::ngis_server [::ngis::Server create ::ngis_server]
-
-set jcontroller [::ngis_server create_job_controller 50]
-set tm           ::ngis::thread_master
-set gid_rec     [::ngis::service::load_by_gid $gid]
-
-# faking a sequence
-#::oo::define ::ngis::JobSequence {
-#    method job_completed {job_o} {
-#        puts "$job_o has completed"
-#    }
-#}
+set ::ngis_server   [::ngis::Server create ::ngis_server]
+set jcontroller     [::ngis_server create_job_controller 50]
+set tm              ::ngis::thread_master
 
 #set entity "Instituto Nacional de Estatística, I.P."
 #puts "building the job sequence for $entity"
 
-if {$eid != ""} {
-    set service_l    [::ngis::service load_by_entity $eid]
+if {$gid != ""} {
+    set service_l [list [::ngis::service::load_by_gid $gid]]
+} elseif {$eid != ""} {
+    set service_l [::ngis::service load_by_entity $eid]
+}
+
+if {[info exists service_l] && [llength $service_l] > 0} {
     set datasource   [::ngis::PlainJobList create ::jbsequenceds $service_l]
-    set the_sequence [::ngis::JobSequence create ::job_sequence $datasource ""]
+    set the_sequence [::ngis::JobSequence  create ::job_sequence $datasource ""]
+
+    puts "created $datasource datasource for sequence $the_sequence"
+
+    #$jcontroller post_sequence $the_sequence
 }
-set thread_id [$tm get_available_thread]
-set job_o [::ngis::Job create ::job_object $gid_rec [::ngis::tasks get_registered_tasks]]
-
-$job_o initialize
-set q [$job_o task_queue]
-
-set task_l [$q peek [$q size]]
-
-foreach t $task_l {
-    set task_a([dict get $t task]) $t
-}
-
-#source tcl/tasks_procedures.tcl
-#$job_o post_task [thread::id]
 
 #while {[$tm thread_is_available]} {
 #    set thread_id [$tm get_available_thread]

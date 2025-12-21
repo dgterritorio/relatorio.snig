@@ -6,8 +6,9 @@ namespace eval ::ngis {
     variable TABLE_NAME         "testsuite.uris_long"
     variable ENTITY_TABLE_NAME  "testsuite.entities"
     variable SERVICE_STATUS     "testsuite.service_status"
+    variable ENTITY_EMAIL       "testsuite.entities_email_reports"
     variable PORT               "5432"
-    variable COLUMN_NAMES       "gid,uuid,uri,entity,description,uri_type,version"
+    variable COLUMN_NAMES       "gid,uuid,uri,uri_original,entity,description,uri_type,version"
     variable SERVICE_LOG        "testsuite.service_log"
     variable TIMEZONE           "Europe/Lisbon"
 
@@ -17,11 +18,13 @@ namespace eval ::ngis {
     variable tasks_dir          [file join $snig_server_root tasks]
     variable utils_dir          [file join $snig_server_root utils]
     variable debugging          false
+    variable development        false
 
     variable task_results_queue_size 10
     variable task_timeout       30
     variable max_workers_number 50
     variable batch_num_jobs     10
+    variable chores_wait_time   60
 
     variable debug_task_delay   5000
     variable task_delay         100
@@ -32,9 +35,13 @@ namespace eval ::ngis {
 
     variable authorship         {NATURAL GIS LDA - P.IVA 508912032 (PT)}
     variable bug_reports        "https://github.com/dgterritorio/relatorio.snig/issues"
+    variable manager_name       "Giovanni Manghi"
+    variable manager_email      "giovanni.manghi@gmail.com"
+    variable smtprelay          localhost
+    variable actually_sendemail false
 
     variable tcpaddr            "127.0.0.1"
     variable tcpport            "4422"
 }
 
-package provide ngis::conf 1.1
+package provide ngis::conf 1.2

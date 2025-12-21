@@ -46,9 +46,11 @@ namespace eval ::ngis {
                                             118     "Service %d (%s, type %s)"  \
                                             120     "Noop command acknoledged"  \
                                             122     "Service Records"           \
+                                            124     "Active Worker Threads"     \
                                             501     "Server internal error: %s" \
                                             502     "Stopping operations"       \
-                                            503     "Missing argument for code %d"]
+                                            503     "Missing argument for code %d" \
+                                            505     "Connection to Monitor Error" ]
 
         variable report_top
         set report_top [::report::report hr_report_top 1 style captionedtable]
@@ -88,11 +90,18 @@ namespace eval ::ngis {
         set ncolumns 4
         set report_a(four_columns) [::report::report hr_four_columns $ncolumns style simpletable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(four_columns) pad $c both " " }
-        # 4 column report --------------------------
+        # 5 column report --------------------------
         set ncolumns 5
         set report_a(five_columns) [::report::report hr_five_columns $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(five_columns) pad $c both " " }
-
+        # 6 column report --------------------------
+        set ncolumns 6
+        set report_a(six_columns) [::report::report hr_six_columns $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(six_columns) pad $c both " " }
+        # 7 column report --------------------------
+        set ncolumns 7
+        set report_a(seven_columns) [::report::report hr_seven_columns $ncolumns style captionedtable]
+        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(seven_columns) pad $c both " " }
 
         # Job sequences status report
         set ncolumns 6
@@ -112,12 +121,6 @@ namespace eval ::ngis {
         set report_a(112.report)    [::report::report hr_112_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(112.report) pad $c both " " }
 
-        # Jobs
-        set ncolumns 6
-        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Task" "Running"}]
-        set report_a(114.report)    [::report::report hr_114_data $ncolumns style captionedtable]
-        for {set c 0} {$c < $ncolumns} {incr c} { $report_a(114.report) pad $c both " " }
-
         # Entities
         set ncolumns 3
         set report_a(108.capts)     [list {"Eid" "Description" "Records"}]
@@ -130,7 +133,11 @@ namespace eval ::ngis {
         set report_a(118.report)    [::report::report hr_118_data $ncolumns style captionedtable]
         for {set c 0} {$c < $ncolumns} {incr c} { $report_a(118.report) pad $c both " " }
 
-        set report_a(122.capts)       [list {"GID" "Description" "Host" "Type" "Version"}]
+        # Jobs
+        set report_a(114.capts)     [list {"GID" "Description" "URL Type" "Version" "Task" "Running"}]
+        set report_a(122.capts)     [list {"GID" "Description" "Host" "Type" "Version"}]
+        # Threads
+        set report_a(124.capts)     [list {"Thread ID" "Status" "GID" "Task" "Runs" "Last Task Start" "Last Task End"}]
 
         proc get_fmt_string {code} {
             variable CodeMessages
@@ -148,6 +155,10 @@ namespace eval ::ngis {
                                    uuid        uuid]
         }
 
+    }
+
+    namespace eval ProtocolMap {
+        variable cs_protocol [dict create]
     }
 
     namespace eval Sequences {
@@ -240,7 +251,7 @@ namespace eval ::ngis {
     }
 
     namespace eval CLIAliases {
-        variable aliases [dict create ? HELP JL JOBLIST SX SHUTDOWN X EXIT]
+        variable aliases [dict create ? HELP JL JOBLIST SX SHUTDOWN X EXIT LT REGTASK]
 
         proc resolve_alias {cmd} {
             variable aliases

@@ -250,7 +250,7 @@ oo::define ::ngis::HRFormat {
         }
 
         $data_matrix deserialize [list [llength $jobs_t] 6 $jobs_t]
-        set report_txt [$report_a(114.report) printmatrix $data_matrix]
+        set report_txt [$report_a(six_columns) printmatrix $data_matrix]
         set rep_width [string length [lindex $report_txt 0]]
 
         set fstring [::ngis::reports::get_fmt_string 114]
@@ -309,57 +309,62 @@ oo::define ::ngis::HRFormat {
     # --------------------------------------------------------------
     # C118 procedures
 
-    method c118 {service_d registered_tasks} {
+    method c118 {services_l registered_tasks} {
         #lassign $args service_d 
         #puts "==========\n$service_d\n========="
         #puts $service_d
-        if {[dict size $service_d] == 0} { return [my SingleLine "118" "No service found"] }
+        if {[llength $services_l] == 0} { return [my SingleLine "118" "No service found"] }
 
-        # let's extract a few information out of the service
-        # a description is guaranteed to exit for a service record
-        # built by ::ngis::service::service_data
+        set reports_l {}
 
-        set description [dict get $service_d description]
+        foreach service_d $services_l {
 
-        if {[dict exists $service_d tasks]} {
-            set tasks_d [dict get $service_d tasks]
-            set task_t [lmap t $registered_tasks {
-                lassign $t task procedure tdescr filename language
+            # let's extract a few information out of the service
+            # a description is guaranteed to exit for a service record
+            # built by ::ngis::service::service_data
 
-                if {[dict exists $tasks_d $task]} {
-                    set tasks_data [dict get $tasks_d $task]
+            set description [dict get $service_d description]
+            set gid         [dict get $service_d gid]
 
-                    set exit_status [dict get $tasks_data exit_status]
-                    set column_real_width 10
-                    set status_pad_len [expr int(($column_real_width - [string length $exit_status]) / 2)]
-                    set pad [string repeat " " $status_pad_len]
-                    set exit_status "${pad}${exit_status}${pad}"
-                    if {[string length $exit_status] < $column_real_width} { append exit_status " " }
-                    set exit_status [my highlight $exit_status $exit_status]
+            if {[dict exists $service_d tasks]} {
+                set tasks_d [dict get $service_d tasks]
+                set task_t [lmap t $registered_tasks {
+                    lassign $t task procedure tdescr filename language
 
-                    list $tdescr $exit_status [dict get $tasks_data exit_info] [dict get $tasks_data ts]
-                } else {
-                    continue
-                }
-            }]
+                    if {[dict exists $tasks_d $task]} {
+                        set tasks_data [dict get $tasks_d $task]
 
-            #puts $task_t
+                        set exit_status [dict get $tasks_data exit_status]
+                        set column_real_width 10
+                        set status_pad_len [expr int(($column_real_width - [string length $exit_status]) / 2)]
+                        set pad [string repeat " " $status_pad_len]
+                        set exit_status "${pad}${exit_status}${pad}"
+                        if {[string length $exit_status] < $column_real_width} { append exit_status " " }
+                        set exit_status [my highlight $exit_status $exit_status]
 
-            set task_t [concat $report_a(118.capts) $task_t]
+                        list $tdescr $exit_status [dict get $tasks_data exit_info] [dict get $tasks_data ts]
+                    } else {
+                        continue
+                    }
+                }]
 
-            $data_matrix deserialize [list [llength $task_t] 4 $task_t]
-            set report_txt [$report_a(118.report) printmatrix $data_matrix]
-            set rep_width [string length [lindex $report_txt 0]]
+                #puts $task_t
 
-            $data_matrix deserialize [list 1 1 [list [list "\[118\] $description"]]]
-            $report_top size 0 [expr $rep_width - 4]
-            set top_txt [$report_top printmatrix $data_matrix]
-            return [append top_txt $report_txt]
-        } else {
+                set task_t [concat $report_a(118.capts) $task_t]
 
-            return [my SingleLine "118" "No tasks performed on this service"]
+                $data_matrix deserialize [list [llength $task_t] 4 $task_t]
+                set report_txt [$report_a(118.report) printmatrix $data_matrix]
+                set rep_width [string length [lindex $report_txt 0]]
 
+                $data_matrix deserialize [list 1 1 [list [list "\[118\] $description ($gid)"]]]
+                $report_top size 0 [expr $rep_width - 4]
+                set top_txt [$report_top printmatrix $data_matrix]
+                lappend reports_l [append top_txt $report_txt]
+            } else {
+                return [my SingleLine "118" "No tasks performed on service $gid '$description'"]
+            }
         }
+        return [join $reports_l "\n"]
     }
 
     method c122 {services_l ent_description} {
@@ -387,7 +392,31 @@ oo::define ::ngis::HRFormat {
         return [append top_txt $report_txt]
     }
 
+    method c124 {threads_d} {
+        if {[dict size $threads_d] == 0} { return [my SingleLine "124" "No active worker threads"] }
+
+        set threads_t [lmap {thread_id thread_d} $threads_d {
+            dict with thread_d {
+                set now [clock seconds]
+                set r [list $thread_id $status $gid $task $nruns \
+                                       [::ngis::utils::delta_time_s [expr $now - $last_run_start]]   \
+                                       [::ngis::utils::delta_time_s [expr $now - $last_run_end]]]
+            }
+            set r
+        }]
+        set threads_t [concat $report_a(124.capts) $threads_t]
+        $data_matrix deserialize [list [llength $threads_t] 7 $threads_t]
+        
+        set report_txt [$report_a(seven_columns) printmatrix $data_matrix]
+        set rep_width  [string length [lindex $report_txt 0]]
+
+        set fstring [::ngis::reports::get_fmt_string 124]
+        $data_matrix deserialize [list 1 1 [list [list "\[124\] $fstring"]]]
+        $report_top size 0 [expr $rep_width - 4]
+        set top_txt [$report_top printmatrix $data_matrix]
+        return [append top_txt $report_txt]
+    }
 }
 
-package provide ngis::hrformat 0.5
+package provide ngis::hrformat 0.7
 

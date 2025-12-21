@@ -18,7 +18,7 @@ namespace eval ::ngis::ClientServerProtocolMap {
             SHUTDOWN    [dict create cmd SHUTDWN   has_args no    description "Immediate Client and Server termination" help sx.md] \
             EXIT        [dict create cmd EXIT      has_args no    description "Exit client" help x.md method stop_client] \
             ZZ          [dict create cmd ZZ        has_args yes   description "Send custom messages to the server" \
-                                                              method send_custom_cmd help zz.md] \
+                                                                  method      send_custom_cmd help zz.md] \
             HELP        [dict create cmd ?         has_args maybe description "List CLI Commands" method cli_help help help.md]]
 
 
@@ -35,14 +35,20 @@ namespace eval ::ngis::ClientServerProtocolMap {
 
     }
 
+
+    # build_proto_map --
+    #
+    # Reads the command files from tcloo/commands and identifies
+    # each CLI implementation. Returns a map of <command string> -> <command obj>
+    #
+
     proc build_proto_map {monitor_dir args} {
         variable verbose
 
         process_args {*}$args
-
         set cs_map_d [dict create]
-
         set cmd_flist [glob [file join $monitor_dir tcloo commands *.tcl]]
+
         foreach f $cmd_flist {
             if {$verbose} { puts "sourcing $f" }
             source $f
@@ -54,6 +60,7 @@ namespace eval ::ngis::ClientServerProtocolMap {
 
             dict set cs_map_d [namespace tail $cmd_obj] $cmd_obj
         }
+
         namespace delete ::ngis::client_server::tmp
         return $cs_map_d
     }
