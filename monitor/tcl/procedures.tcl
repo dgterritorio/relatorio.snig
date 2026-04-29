@@ -112,7 +112,7 @@ namespace eval ::ngis::procedures {
         # determine the storage space for this task. The uuid_space and
         # tmpfile_root directory are passed as arguments to the script.
 
-		set gid			 [dict get $job_d gid]
+	set gid		 [dict get $job_d gid]
         set uuid         [dict get $job_d uuid]
         set uri_type     [dict get $job_d uri_type]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid $gid]

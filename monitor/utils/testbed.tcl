@@ -33,10 +33,10 @@ while {[llength $arguments]} {
 
     set arguments [lassign $arguments argname]
     switch $argname {
-        gid {
+        -gid {
             set arguments [lassign $arguments gid]
         }
-        eid {
+        -eid {
             set arguments [lassign $arguments eid]
         }
         default {

@@ -1,7 +1,25 @@
 # -- threads_shared_db.tcl
 #
-# if we want to venture into a shared memory model of thread status management
+# if we want to venture into a shared memory model of thread status management,
 # procedures and shared state must have code common to threads
+#
+# the shared database is named 'snig`
+#
+#  sections:
+#
+#   - timestamp: timestamp stored when shared space is instantiated
+#   - threads_account <thread-id> <thread acconting>
+#
+#  thread accounting:
+#
+#   A dictionary having the following keys
+#
+#	- nruns: number of tasks carried out by the thread
+#	- last_run_start: initial time of the last run performed
+#	- last_run_end: ending time of the last run performed
+#	- status: current status (created, idle, running)
+#	- gid: the resource record of the current task
+#	- task: id of the task
 #
 
 package require Thread
@@ -17,12 +35,12 @@ namespace eval ::ngis::shared {
             if {[::tsv::keylget snig threads_account $tid thread_d]} {
                 ::ngis::logger emit "Thread $tid entry exists" error
             }
-            ::tsv::keylset snig threads_account $tid [list  nruns   0     \
-                                                            last_run_start [clock seconds] \
-                                                            last_run_end   [clock seconds] \
-                                                            status  created \
-                                                            gid     ""   \
-                                                            task    none]
+            ::tsv::keylset snig threads_account $tid [list  nruns   		0     		\
+                                                            last_run_start 	[clock seconds] \
+                                                            last_run_end   	[clock seconds] \
+                                                            status  		created 	\
+                                                            gid     		""   		\
+                                                            task    		none]
         }
     }
 
