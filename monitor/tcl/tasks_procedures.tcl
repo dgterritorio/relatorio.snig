@@ -1,6 +1,10 @@
+####################################################################
+#
 # -- tasks_procedures.tcl
 #
-# procedures to be executed by worker threads
+# worker threads central procedures. This package is to be required
+# in the process of thread creation (see tcloo/thread_master.tcl
+# method 'start_worker_thread')
 #
 
 
@@ -113,6 +117,8 @@ namespace eval ::ngis::procedures {
             after 100 [list [namespace current]::tasks_processing $task_d_l $job_d]
         }
     }
+
+    # -- start
 
     proc start_tasks_processing {job_tasks_l job_d} {
         variable task_results_l

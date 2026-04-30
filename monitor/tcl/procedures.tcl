@@ -1,5 +1,7 @@
 #
-#   -- 
+#   -- procedures.tcl
+#
+#
 #
 #
 
@@ -36,10 +38,7 @@ namespace eval ::ngis::procedures {
         ::ngis::logger emit "checking $url ping service"
         set cmd [list ping -W 20 -w 20 -c 2 -a $uri_a(host)]
         ::ngis::logger emit "executing '$cmd'"
-        if {[catch { 
-            set ping_results [exec {*}$cmd] 
-        } e einfo]} {
-            #return [list $jobname error $e $einfo ""]
+        if {[catch { set ping_results [exec {*}$cmd] } e einfo]} {
             return [::ngis::tasks::make_error_result $e $einfo ""]
         }
         return [::ngis::tasks::make_ok_result $ping_results]
@@ -112,7 +111,7 @@ namespace eval ::ngis::procedures {
         # determine the storage space for this task. The uuid_space and
         # tmpfile_root directory are passed as arguments to the script.
 
-	set gid		 [dict get $job_d gid]
+        set gid	         [dict get $job_d gid]
         set uuid         [dict get $job_d uuid]
         set uri_type     [dict get $job_d uri_type]
         set uuid_space   [file join $::ngis::data_root data $uri_type $uuid $gid]
