@@ -1,6 +1,6 @@
 # -- job.tcl
 #
-# class definining sets of tasks
+# class definining sets of tasks to be executed for a given service record
 #
 #
 
@@ -28,7 +28,7 @@ oo::class create JobFactory {
     variable timestamp
     variable assigned_thread_id
 
-    # ::ngis::Job object constructor.Creating a job for a given subset of the 
+    # ::ngis::Job object constructor. Creating a job for a given subset of the
     # registered tasks. The 2nd argument is not checked. If left undefined
     # all tasks are performed
 
@@ -96,7 +96,7 @@ oo::class create JobFactory {
 
     # -- deserialize
     #
-    # implements the reciprocal of 'serialize' (requires testing 2026-04-30)
+    # implements the reciprocal of 'serialize' (unverified: requires testing 2026-04-30)
 
     method deserialize {d} {
         set service_d [dict filter $d key gid uuid entity description uri uri_type version]
