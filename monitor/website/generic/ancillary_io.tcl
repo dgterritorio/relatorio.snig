@@ -43,7 +43,6 @@ namespace eval ::ngis::ancillary {
         return $json_data
     }
 
-
     proc connection_init {thread_id} {
         set json_data [send_command_and_wait $thread_id "FORMAT JSON"]
 

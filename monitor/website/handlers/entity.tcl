@@ -11,6 +11,8 @@ namespace eval ::rwdatas {
             $this key_class_map snig_entity_stats ::rwpage::EntityStats tcl/snig_entity_stats.tcl
             $this key_class_map snig_entity_view  ::rwpage::ViewEntity  tcl/view_entity.tcl
             
+            ::rwdatas::RWDummy::register_error invalid_entity_hash "Invalid entity hash"
+
             ::ngis::entity_hash_map::init [NGIS::get_dbhandle]
         }
 
@@ -18,7 +20,7 @@ namespace eval ::rwdatas {
             upvar $keyvar key
  
             # debugging
-            #source generic/map_entity_hash.tcl
+            # source generic/map_entity_hash.tcl
             # debugging
             set arglist [::rivetweb::strip_sticky_args $arglist]
             if {([dict size $arglist] == 1) && [dict exists $arglist stats]} {
@@ -26,6 +28,8 @@ namespace eval ::rwdatas {
                 set eid [::ngis::entity_hash_map::hash_2_eid $dbhandle [dict get $arglist stats]]
                 if { $eid == "" } {
                     # invalid entity hash
+                    set key invalid_entity_hash
+                    return -code break -errorcode rw_ok
                 } else {
                     dict set ::rivetweb::argsqs statseid $eid
                     set key snig_entity_stats
