@@ -111,11 +111,11 @@ namespace eval ::ngis::tasks {
                     set identity [exec /bin/bash $script identify]
                     lassign $identity task description
                     lappend tasks $task
-                    dict set tasks_db $task [dict create task        $task \
-                                                         function    $script \
-                                                         script      $script \
+                    dict set tasks_db $task [dict create task        $task        \
+                                                         function    $script      \
+                                                         script      $script      \
                                                          description $description \
-                                                         procedure   run_bash \
+                                                         procedure   run_bash     \
                                                          language    "Bash"]
                 } elseif {$ftype == ".tcl"} {
 
@@ -124,11 +124,11 @@ namespace eval ::ngis::tasks {
                     set identity [eval [namespace current]::identify]
                     lassign $identity task function description
                     lappend tasks $task
-                    dict set tasks_db $task [dict create task        $task \
-                                                         function    $function \
-                                                         script      $script \
-                                                         description $description \
-                                                         procedure   run_tcl \
+                    dict set tasks_db $task [dict create task        $task          \
+                                                         function    $function      \
+                                                         script      $script        \
+                                                         description $description   \
+                                                         procedure   run_tcl        \
                                                          language    "Tcl"]
                     rename [namespace current]::${function} ""
                 }

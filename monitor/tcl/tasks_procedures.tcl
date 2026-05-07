@@ -69,7 +69,8 @@ namespace eval ::ngis::procedures {
         return $status
     }
 
-    ### 
+    # -- task_processing: self submitting task processing procedure
+    #
 
     proc tasks_processing {job_tasks_l job_d} {
         variable task_results_l
@@ -119,6 +120,7 @@ namespace eval ::ngis::procedures {
     }
 
     # -- start
+    #
 
     proc start_tasks_processing {job_tasks_l job_d} {
         variable task_results_l

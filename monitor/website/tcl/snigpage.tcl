@@ -61,7 +61,6 @@ namespace eval ::rwpage {
                 if {[info command error_page] != ""} {
                     $error_page destroy
                 }
-
                 set errorCode [dict get $opts -errorcode]
                 set page_text "<b>$e</b> (code $errorCode)"
                 set pobj [::rwpage::RWBasicPage ::#auto $errorCode]

@@ -25,8 +25,11 @@ namespace eval ::ngis::ancillary {
     }
 
     proc send_command_and_wait {thread_id snig_command} {
-        if {[catch { ::thread::send $thread_id [list ::ngis::ancillary::send_command $snig_command]} e einfo] } {
-            return [json::write object code [::json::write string 505] message [::json::write string [::ngis::reports::get_fmt_string 505]]]
+        if {[catch {
+            ::thread::send $thread_id [list ::ngis::ancillary::send_command $snig_command]} e einfo] 
+        } {
+            return [json::write object code     [::json::write string 505] \
+                                       message  [::json::write string [::ngis::reports::get_fmt_string 505]]]
         }
         set status ""
         set n 0
@@ -35,7 +38,8 @@ namespace eval ::ngis::ancillary {
             after 500
             if {$n > 20} {
                 ::ngis log "ancillary thread timeout" error
-                return -code error -errorcode ancillary_thread_timeout "Timeout on sending command '$snig_command'"
+                return -code error -errorcode ancillary_thread_timeout \
+                                    "Timeout on sending command '$snig_command'"
             }
         }
         ::thread::send $thread_id [list ::ngis::ancillary::get_data] json_data
